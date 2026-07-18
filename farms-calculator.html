@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Fully self-contained SeaFeed breakeven calculator. Same pattern as
+  live-metrics.html / farms-stats-banner.html — plain fetch + vanilla JS
+  DOM updates instead of the original page-builder's reactive component
+  class, since this now runs as its own standalone document loaded via
+  iframe rather than inside that builder's runtime.
+-->
+<style>
+  html,body{ margin:0; background:transparent; }
+  body{ font-family:Verdana,Tahoma,sans-serif; }
+  .tf-wrap{ background:#e6f6ff; border:1px solid #d6e5f2; border-radius:10px; padding:30px 32px; box-sizing:border-box; }
+  .tf-status{ font-family:Tahoma,Verdana,sans-serif; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; margin:0 0 18px 0; }
+
+  .tf-box{ display:none; }
+  .tf-box.is-visible{ display:block; }
+
+  .tf-breakeven-box{ background:#ffffff; border:1px solid #5ec9a8; border-radius:10px; padding:24px 26px; margin-bottom:20px; text-align:center; }
+  .tf-warn-box{ background:#e6f6ff; border-left:3px solid #c98a2e; border-radius:3px; padding:12px 16px; color:#c98a2e; font-size:13px; line-height:1.5; margin-bottom:20px; }
+
+  .tf-grid2{ display:grid; grid-template-columns:1.3fr 1fr; gap:16px; margin-bottom:16px; align-items:start; }
+  @media (max-width:700px){ .tf-grid2{ grid-template-columns:1fr; } }
+  .tf-panel{ background:#ffffff; border:1px solid #d6e5f2; border-radius:6px; padding:20px 22px; box-sizing:border-box; }
+  .tf-panel-title{ color:#041221; font-size:14px; font-weight:700; margin:0 0 14px 0; font-family:Tahoma,Verdana,sans-serif; }
+  .tf-field-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:12px 16px; }
+  .tf-field label{ display:block; color:#73818c; font-size:12px; margin-bottom:5px; }
+  .tf-field input{ width:100%; background:#ffffff; border:1px solid #c2d2de; border-radius:3px; color:#041221; font-size:15px; padding:9px 10px; box-sizing:border-box; font-family:Verdana,Tahoma,sans-serif; }
+
+  .tf-results-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:12px; }
+  .tf-result{ text-align:center; }
+  .tf-result p:first-child{ color:#73818c; font-size:12px; margin:0 0 4px 0; }
+  .tf-result p:last-child{ font-family:Tahoma,Verdana,sans-serif; font-size:19px; font-weight:700; margin:0; }
+
+  .tf-verdict{ border-radius:6px; padding:10px 16px; margin-top:14px; font-size:13px; font-weight:700; text-align:center; }
+
+  .tf-compare-toggle{ display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+  .tf-compare-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(140px,1fr)); gap:12px; margin-top:12px; }
+  .tf-compare-card{ border-radius:3px; padding:12px 14px; }
+</style>
+</head>
+<body>
+  <div class="tf-wrap">
+    <p class="tf-status" id="data-status" style="color:#73818c;">Loading live data…</p>
+
+    <div class="tf-breakeven-box tf-box" id="breakeven-block">
+      <p style="color:#73818c; font-size:14px; margin:0 0 6px 0;">Full breakeven price (your cost of production + SeaFeed premium)</p>
+      <p style="font-family:Tahoma,Verdana,sans-serif; color:#3aa989; font-size:36px; font-weight:700; margin:0;" id="breakeven-price">—</p>
+      <p style="color:#73818c; font-size:12.5px; margin:8px 0 0 0;" id="breakeven-sub"></p>
+      <p style="color:#73818c; font-size:12px; margin:10px 0 0 0; padding-top:10px; border-top:1px solid #d6e5f2;" id="breakeven-note"></p>
+    </div>
+
+    <div class="tf-warn-box tf-box" id="no-gain-block">
+      The SeaFeed group has not shown greater weight gain than the control group in trial data so far (difference: <span id="no-gain-value"></span> kg/head). No livestock price would currently make this pay for itself on weight gain alone — methane abatement may still be valuable for other reasons, but a breakeven price cannot be calculated from productivity gain right now.
+    </div>
+
+    <div class="tf-warn-box tf-box" id="no-data-block">
+      Not enough trial data yet to calculate a breakeven price.
+    </div>
+
+    <div class="tf-grid2">
+      <div class="tf-panel">
+        <p class="tf-panel-title">Step 1 — Your cost of production</p>
+        <div class="tf-field-grid">
+          <div class="tf-field"><label>Purchase cost ($/head)</label><input type="number" step="1" min="0" id="purchaseCost" value="1192"></div>
+          <div class="tf-field"><label>Feed expenses ($/head)</label><input type="number" step="1" min="0" id="feedCost" value="187"></div>
+          <div class="tf-field"><label>Medical expenses ($/head)</label><input type="number" step="1" min="0" id="medicalCost" value="22"></div>
+          <div class="tf-field"><label>Other costs ($/head)</label><input type="number" step="1" min="0" id="otherCost" value="56"></div>
+          <div class="tf-field"><label>Sale weight (kg)</label><input type="number" step="1" min="1" id="saleWeight" value="620"></div>
+          <div class="tf-field"><label>Cost of production ($/kg)</label><input type="number" step="0.01" min="0" id="cop" value=""></div>
+        </div>
+        <p style="color:#73818c; font-size:12px; margin-top:10px; margin-bottom:0;">Cost of production is calculated automatically from the fields above — edit it directly to override.</p>
+      </div>
+
+      <div class="tf-panel" style="height:100%;">
+        <p class="tf-panel-title">Step 2 — Your expected sale</p>
+        <div class="tf-field-grid" style="grid-template-columns:1fr;">
+          <div class="tf-field"><label>Expected sale price ($/kg)</label><input type="number" step="0.01" min="0" id="price" value="3.50"></div>
+          <div class="tf-field"><label>Mob size (head)</label><input type="number" step="1" min="0" placeholder="e.g. 100" id="mobSize" value=""></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tf-panel tf-box" id="results-block" style="margin-bottom:16px;">
+      <p class="tf-panel-title">At your expected price</p>
+      <div class="tf-results-grid">
+        <div class="tf-result"><p>Net result per head</p><p id="net-per-head">—</p></div>
+        <div class="tf-result"><p>Total farm impact</p><p id="total-impact">—</p></div>
+        <div class="tf-result"><p>Payback period</p><p id="payback" style="color:#041221;">N/A</p></div>
+      </div>
+      <div class="tf-verdict tf-box" id="verdict-block"><span id="verdict-text"></span></div>
+    </div>
+
+    <div class="tf-panel" style="margin-bottom:16px;">
+      <div class="tf-compare-toggle" id="compare-toggle">
+        <span style="color:#041221; font-size:14px; font-weight:700; font-family:Tahoma,Verdana,sans-serif;">Absolute cost of production per mob</span>
+        <span style="color:#3aa989; font-size:12px; font-weight:700; white-space:nowrap;" id="compare-toggle-label">Show ▾</span>
+      </div>
+      <div class="tf-box" id="compare-block">
+        <p style="color:#73818c; font-size:12px; line-height:1.6; margin:10px 0 0 0;">A different question from the breakeven price above: not "is SeaFeed worth it over control," but simply what it costs to produce a kg of gain in each mob on its own.</p>
+        <div class="tf-compare-grid">
+          <div class="tf-compare-card" style="background:#e6f6ff; border:1px solid #5ec9a8;">
+            <p style="font-size:12px; margin:0 0 4px 0; font-weight:700; color:#3aa989;">SeaFeed</p>
+            <p style="color:#041221; font-size:17px; font-weight:700; margin:0; font-family:Tahoma,Verdana,sans-serif;" id="compare-seafeed">—</p>
+          </div>
+          <div class="tf-compare-card" style="background:#e6f6ff; border:1px solid #d6e5f2;">
+            <p style="font-size:12px; margin:0 0 4px 0; font-weight:700; color:#73818c;">Control</p>
+            <p style="color:#041221; font-size:17px; font-weight:700; margin:0; font-family:Tahoma,Verdana,sans-serif;" id="compare-control">—</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p style="color:#73818c; font-size:12px; line-height:1.65; margin:16px 0 0 0;">
+      Breakeven price is calculated from this trial's own observed cost and weight-gain difference between the SeaFeed and control groups — not a market forecast. Payback period uses the current rate of extra gain, so it reflects what's happening now, not history. This is an estimate based on trial-to-date results and does not account for seasonal price variation, transport, or other on-farm costs. It is not financial advice — for a full assessment of your operation, speak with your accountant or farm business advisor alongside using this tool.
+    </p>
+  </div>
+
+<script>
+  const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
+  const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
+  const BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
+  const PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
+
+  const MINT = '#3aa989', WARNING = '#c98a2e', DANGER = '#b2412f', HEADING = '#041221';
+
+  async function q(url, params){
+    const res = await fetch(url + "?" + new URLSearchParams(params));
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || "Query failed");
+    return data;
+  }
+  async function fetchEconLatest(){
+    const data = await q(ECON_URL, { where:"treatment IN ('seafeed','control')", outFields:"treatment,cumulative_ch4_abated_kg_per_head,representative_head_count,cost_per_kg_ch4_abated_aud,cost_per_head_aud,weight_gain_kg_per_head,cost_per_kg_gain_aud,calculation_date", orderByFields:"calculation_date DESC", resultRecordCount:"50", f:"json" });
+    const latest = {};
+    for (const f of data.features){ const t=f.attributes.treatment; if(!latest[t]) latest[t]=f.attributes; }
+    return latest;
+  }
+  async function fetchProdHistory(treatment){
+    const data = await q(PRODUCTIVITY_URL, { where:`treatment_group='${treatment}'`, outFields:"snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"2000", f:"json" });
+    return data.features.map(f => f.attributes);
+  }
+
+  // ---- state (mirrors the original page-builder component's state) ----
+  const state = {
+    purchaseCost: 1192, feedCost: 187, medicalCost: 22, otherCost: 56, saleWeight: 620,
+    cop: null, copOverridden: false,
+    price: 3.50, mobSize: '',
+    compareExpanded: false,
+    extraCostPerHead: null, extraGainPerHeadKg: null, adgAdvantageKgPerDay: null,
+    seafeedCostPerKgGain: null, controlCostPerKgGain: null
+  };
+
+  function recalcCop(){
+    if (state.copOverridden) return;
+    const sw = parseFloat(state.saleWeight);
+    if (!sw || sw <= 0) return;
+    const total = (parseFloat(state.purchaseCost)||0) + (parseFloat(state.feedCost)||0) + (parseFloat(state.medicalCost)||0) + (parseFloat(state.otherCost)||0);
+    state.cop = (total / sw).toFixed(2);
+    document.getElementById('cop').value = state.cop;
+  }
+
+  async function loadCalculator(){
+    const statusEl = document.getElementById('data-status');
+    try{
+      const [latest, seafeedProd, controlProd] = await Promise.all([
+        fetchEconLatest(), fetchProdHistory('seafeed'), fetchProdHistory('control')
+      ]);
+      const seafeed = latest['seafeed'], control = latest['control'];
+      if (seafeed && control && seafeed.cost_per_head_aud != null && control.cost_per_head_aud != null && seafeed.weight_gain_kg_per_head != null && control.weight_gain_kg_per_head != null){
+        state.extraCostPerHead = seafeed.cost_per_head_aud - control.cost_per_head_aud;
+        state.extraGainPerHeadKg = seafeed.weight_gain_kg_per_head - control.weight_gain_kg_per_head;
+      }
+      const seafeedAdg = seafeedProd.length ? seafeedProd[seafeedProd.length-1].rolling_adg : null;
+      const controlAdg = controlProd.length ? controlProd[controlProd.length-1].rolling_adg : null;
+      if (seafeedAdg != null && controlAdg != null){ state.adgAdvantageKgPerDay = (seafeedAdg - controlAdg) / 1000; }
+
+      state.seafeedCostPerKgGain = (seafeed && seafeed.cost_per_kg_gain_aud != null) ? '$' + Number(seafeed.cost_per_kg_gain_aud).toFixed(2) + ' / kg' : 'N/A';
+      state.controlCostPerKgGain = (control && control.cost_per_kg_gain_aud != null) ? '$' + Number(control.cost_per_kg_gain_aud).toFixed(2) + ' / kg' : 'N/A';
+
+      statusEl.textContent = 'Live data, updated ' + new Date().toLocaleDateString();
+      statusEl.style.color = MINT;
+    } catch (err){
+      statusEl.textContent = 'Live data unavailable';
+      statusEl.style.color = WARNING;
+      console.error(err);
+    }
+    render();
+  }
+
+  function show(el, visible){ el.classList.toggle('is-visible', visible); }
+
+  function render(){
+    const cop = parseFloat(state.cop);
+    const saleWeight = parseFloat(state.saleWeight);
+    const price = parseFloat(state.price);
+    const mobSize = parseFloat(state.mobSize);
+    const extraCostPerHead = state.extraCostPerHead;
+    const extraGainPerHeadKg = state.extraGainPerHeadKg;
+
+    const hasBreakeven = extraGainPerHeadKg != null && extraCostPerHead != null && extraGainPerHeadKg > 0;
+    const noGainAdvantage = extraGainPerHeadKg != null && extraCostPerHead != null && extraGainPerHeadKg <= 0;
+    const noDataYet = extraGainPerHeadKg == null || extraCostPerHead == null;
+
+    show(document.getElementById('breakeven-block'), hasBreakeven);
+    show(document.getElementById('no-gain-block'), noGainAdvantage);
+    show(document.getElementById('no-data-block'), noDataYet);
+
+    let currentFullBreakevenPrice = null;
+    if (hasBreakeven){
+      const seafeedOnlyPremiumText = '$' + (extraCostPerHead / extraGainPerHeadKg).toFixed(2) + '/kg';
+      const extraGainText = extraGainPerHeadKg.toFixed(2);
+      const extraCostText = '$' + extraCostPerHead.toFixed(2);
+
+      if (!isNaN(cop) && !isNaN(saleWeight) && saleWeight > 0){
+        currentFullBreakevenPrice = cop + (extraCostPerHead / saleWeight);
+        document.getElementById('breakeven-price').textContent = '$' + currentFullBreakevenPrice.toFixed(2) + ' / kg';
+        document.getElementById('breakeven-sub').textContent = '$' + cop.toFixed(2) + '/kg production cost + $' + extraCostPerHead.toFixed(2) + ' SeaFeed premium across ' + saleWeight + 'kg';
+      }
+      document.getElementById('breakeven-note').textContent = 'SeaFeed premium alone (before your production costs): ' + seafeedOnlyPremiumText + ' — based on ' + extraGainText + ' kg extra gain and ' + extraCostText + ' extra cost per head, trial-to-date';
+    } else if (noGainAdvantage){
+      document.getElementById('no-gain-value').textContent = extraGainPerHeadKg.toFixed(2);
+    }
+
+    const showResults = !isNaN(price) && hasBreakeven && currentFullBreakevenPrice != null;
+    show(document.getElementById('results-block'), showResults);
+
+    if (showResults){
+      const netPerHead = (price * extraGainPerHeadKg) - extraCostPerHead;
+      const netPerHeadEl = document.getElementById('net-per-head');
+      netPerHeadEl.textContent = (netPerHead>=0?'+':'') + '$' + netPerHead.toFixed(2);
+      netPerHeadEl.style.color = netPerHead>=0 ? MINT : DANGER;
+
+      const totalImpactEl = document.getElementById('total-impact');
+      if (!isNaN(mobSize) && mobSize > 0){
+        const totalImpact = netPerHead * mobSize;
+        totalImpactEl.textContent = (totalImpact>=0?'+':'') + '$' + totalImpact.toLocaleString(undefined,{maximumFractionDigits:0});
+        totalImpactEl.style.color = totalImpact>=0 ? MINT : DANGER;
+      } else {
+        totalImpactEl.textContent = 'Enter mob size';
+        totalImpactEl.style.color = HEADING;
+      }
+
+      const paybackEl = document.getElementById('payback');
+      if (state.adgAdvantageKgPerDay != null && state.adgAdvantageKgPerDay > 0){
+        const dailyExtraRevenue = state.adgAdvantageKgPerDay * price;
+        paybackEl.textContent = dailyExtraRevenue > 0 ? Math.ceil(extraCostPerHead / dailyExtraRevenue) + ' days' : 'N/A';
+      } else {
+        paybackEl.textContent = 'N/A';
+      }
+
+      const marginPct = ((price - currentFullBreakevenPrice) / currentFullBreakevenPrice) * 100;
+      const verdictBlock = document.getElementById('verdict-block');
+      const verdictText = document.getElementById('verdict-text');
+      show(verdictBlock, true);
+      if (marginPct > 5){
+        verdictBlock.style.background = '#e4ffff'; verdictBlock.style.borderColor = MINT; verdictBlock.style.border = '1px solid ' + MINT;
+        verdictText.style.color = MINT;
+        verdictText.textContent = 'At your inputs, SeaFeed looks likely to be cost-effective — your expected price is ' + marginPct.toFixed(0) + '% above the full breakeven price.';
+      } else if (marginPct >= -5){
+        verdictBlock.style.background = '#faf0e0'; verdictBlock.style.border = '1px solid ' + WARNING;
+        verdictText.style.color = WARNING;
+        verdictText.textContent = 'At your inputs, this is marginal — your expected price is close to the full breakeven price (within 5%).';
+      } else {
+        verdictBlock.style.background = '#f6e5e2'; verdictBlock.style.border = '1px solid ' + DANGER;
+        verdictText.style.color = DANGER;
+        verdictText.textContent = 'At your inputs, SeaFeed does not look cost-effective — your expected price is ' + Math.abs(marginPct).toFixed(0) + '% below the full breakeven price.';
+      }
+    }
+
+    document.getElementById('compare-toggle-label').textContent = state.compareExpanded ? 'Hide ▴' : 'Show ▾';
+    show(document.getElementById('compare-block'), state.compareExpanded);
+    document.getElementById('compare-seafeed').textContent = state.seafeedCostPerKgGain ?? '—';
+    document.getElementById('compare-control').textContent = state.controlCostPerKgGain ?? '—';
+  }
+
+  // ---- wire up inputs ----
+  function bindNumberInput(id, stateKey, recalc){
+    document.getElementById(id).addEventListener('input', e => {
+      state[stateKey] = e.target.value;
+      if (stateKey !== 'cop') { /* leave copOverridden untouched */ }
+      if (recalc) recalcCop();
+      render();
+    });
+  }
+  document.getElementById('purchaseCost').addEventListener('input', e => { state.purchaseCost = e.target.value; recalcCop(); render(); });
+  document.getElementById('feedCost').addEventListener('input', e => { state.feedCost = e.target.value; recalcCop(); render(); });
+  document.getElementById('medicalCost').addEventListener('input', e => { state.medicalCost = e.target.value; recalcCop(); render(); });
+  document.getElementById('otherCost').addEventListener('input', e => { state.otherCost = e.target.value; recalcCop(); render(); });
+  document.getElementById('saleWeight').addEventListener('input', e => { state.saleWeight = e.target.value; recalcCop(); render(); });
+  document.getElementById('cop').addEventListener('input', e => { state.cop = e.target.value; state.copOverridden = true; render(); });
+  document.getElementById('price').addEventListener('input', e => { state.price = e.target.value; render(); });
+  document.getElementById('mobSize').addEventListener('input', e => { state.mobSize = e.target.value; render(); });
+  document.getElementById('compare-toggle').addEventListener('click', () => { state.compareExpanded = !state.compareExpanded; render(); });
+
+  recalcCop();
+  loadCalculator();
+</script>
+</body>
+</html>
