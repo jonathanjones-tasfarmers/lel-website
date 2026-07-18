@@ -69,7 +69,7 @@
           <div class="tf-field"><label>Feed expenses ($/head)</label><input type="number" step="1" min="0" id="feedCost" value="187"></div>
           <div class="tf-field"><label>Medical expenses ($/head)</label><input type="number" step="1" min="0" id="medicalCost" value="22"></div>
           <div class="tf-field"><label>Other costs ($/head)</label><input type="number" step="1" min="0" id="otherCost" value="56"></div>
-          <div class="tf-field"><label>Sale weight (kg)</label><input type="number" step="1" min="1" id="saleWeight" value="620"></div>
+          <div class="tf-field"><label>Sale weight (kg)</label><input type="number" step="1" min="1" id="saleWeight" value="500"></div>
           <div class="tf-field"><label>Cost of production ($/kg)</label><input type="number" step="0.01" min="0" id="cop" value=""></div>
         </div>
         <p style="color:#73818c; font-size:12px; margin-top:10px; margin-bottom:0;">Cost of production is calculated automatically from the fields above — edit it directly to override.</p>
@@ -146,7 +146,7 @@
 
   // ---- state (mirrors the original page-builder component's state) ----
   const state = {
-    purchaseCost: 1192, feedCost: 187, medicalCost: 22, otherCost: 56, saleWeight: 620,
+    purchaseCost: 1192, feedCost: 187, medicalCost: 22, otherCost: 56, saleWeight: 500,
     cop: null, copOverridden: false,
     price: 3.50, mobSize: '',
     compareExpanded: false,
