@@ -1,0 +1,137 @@
+/*
+  TasFarmers LEL — shared design tokens & utility classes.
+  Host this file on GitHub (e.g. GitHub Pages) and link it from every
+  Hub HTML section with:
+    <link rel="stylesheet" href="https://YOUR-GH-PAGES-URL/tf-tokens.css">
+
+  Colours below are literal hex values computed from the original
+  oklch(from ...) relative-colour expressions, since Hub/most browsers
+  in production shouldn't be relied on for that newer CSS syntax.
+  Tweak any of these directly if they don't look quite right on screen.
+*/
+
+:root{
+  /* colour */
+  --tf-navy-900:#041221;
+  --tf-navy-800:#152535;
+  --tf-navy-700:#28394a;
+  --tf-navy-600:#3d4e61;
+  --tf-slate-400:#a9b8c4;
+  --tf-slate-300:#c2d2de;
+  --tf-slate-200:#d6e5f2;
+  --tf-slate-100:#e6f6ff;
+  --tf-slate-600:#73818c;
+  --tf-mint-500:#5ec9a8;
+  --tf-mint-600:#3aa989;
+  --tf-mint-400:#79e3c1;
+  --tf-mint-100:#e4ffff;
+  --tf-white:#ffffff;
+  --tf-success:#4a9c6d;
+  --tf-warning:#c98a2e;
+  --tf-danger:#b2412f;
+
+  --color-primary:var(--tf-navy-900);
+  --color-secondary:var(--tf-slate-400);
+  --color-accent:var(--tf-mint-500);
+  --surface-page:var(--tf-white);
+  --surface-sunken:var(--tf-slate-100);
+  --surface-card:var(--tf-white);
+  --surface-inverse:var(--tf-navy-900);
+  --text-heading:var(--tf-navy-900);
+  --text-body:#13202e;
+  --text-muted:var(--tf-slate-600);
+  --text-on-inverse:var(--tf-white);
+  --text-on-accent:var(--tf-navy-900);
+  --border-subtle:var(--tf-slate-200);
+  --border-default:var(--tf-slate-300);
+  --border-strong:var(--tf-navy-700);
+  --focus-ring:var(--tf-mint-500);
+  --link:var(--tf-navy-800);
+  --link-hover:var(--tf-mint-600);
+
+  /* type */
+  --font-display:Tahoma,Verdana,sans-serif;
+  --font-body:Verdana,Tahoma,sans-serif;
+  --text-2xs:12px;
+  --text-xs:13px;
+  --text-sm:15px;
+  --text-base:17px;
+  --text-md:19px;
+  --text-lg:23px;
+  --text-xl:28px;
+  --text-2xl:34px;
+  --text-3xl:44px;
+  --text-4xl:58px;
+  --leading-tight:1.1;
+  --leading-snug:1.25;
+  --leading-normal:1.5;
+  --leading-relaxed:1.65;
+  --tracking-tight:-0.01em;
+  --tracking-normal:0;
+  --tracking-wide:0.04em;
+  --weight-normal:400;
+  --weight-bold:700;
+
+  /* space / shape */
+  --space-1:4px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --space-8:32px;
+  --space-10:40px;
+  --space-12:48px;
+  --space-16:64px;
+  --space-20:80px;
+  --space-24:96px;
+  --radius-sm:3px;
+  --radius-md:6px;
+  --radius-lg:10px;
+  --radius-pill:999px;
+  --shadow-sm:0 1px 2px rgba(4,18,33,0.08);
+  --shadow-md:0 4px 12px rgba(4,18,33,0.12);
+  --shadow-lg:0 12px 32px rgba(4,18,33,0.16);
+  --border-width:1px;
+}
+
+/* live-data pulse dot, used on the live-metrics page */
+@keyframes tf-pulse{
+  0%{ box-shadow:0 0 0 0 rgba(94,201,168,0.55); }
+  70%{ box-shadow:0 0 0 8px rgba(94,201,168,0); }
+  100%{ box-shadow:0 0 0 0 rgba(94,201,168,0); }
+}
+.tf-live-dot{
+  width:8px; height:8px; border-radius:50%;
+  background:var(--tf-mint-500); display:inline-block;
+  animation:tf-pulse 2s infinite;
+}
+@media (prefers-reduced-motion: reduce){ .tf-live-dot{ animation:none !important; } }
+
+/* buttons — replace the original design-system <x-import> Button component */
+.tf-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-weight:700; text-decoration:none;
+  border-radius:var(--radius-md); border:1px solid transparent;
+  transition:background .15s ease, color .15s ease, border-color .15s ease;
+  cursor:pointer;
+}
+.tf-btn-md{ font-size:var(--text-sm); padding:10px 20px; }
+.tf-btn-lg{ font-size:var(--text-md); padding:12px 24px; }
+.tf-btn-primary{ background:var(--tf-mint-500); color:var(--tf-navy-900); }
+.tf-btn-primary:hover{ background:var(--tf-mint-600); }
+.tf-btn-outline-inverse{
+  background:transparent; color:var(--tf-white); border-color:var(--tf-slate-400);
+}
+.tf-btn-outline-inverse:hover{ border-color:var(--tf-white); }
+
+/* case-in-brief cards, shared by the live-metrics page */
+.tf-case-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+@media (max-width:800px){ .tf-case-grid{ grid-template-columns:1fr; } }
+.tf-card{ border-radius:var(--radius-lg); padding:22px; }
+.tf-card-accent{ background:var(--surface-card); border:1px solid var(--tf-mint-500); box-shadow:var(--shadow-sm); }
+.tf-card-sunken{ background:var(--surface-sunken); border:1px solid var(--border-subtle); }
+.tf-metric{ font-family:var(--font-display); font-size:27px; font-weight:700; color:var(--tf-mint-600); margin:0 0 4px 0; }
+.tf-metric-static{ font-family:var(--font-display); font-size:22px; font-weight:700; color:var(--text-heading); margin:0 0 4px 0; }
+.tf-card-title{ font-family:var(--font-display); font-size:14.5px; font-weight:700; color:var(--text-heading); margin:2px 0 8px 0; }
+.tf-card-sub{ font-size:13px; color:var(--text-muted); line-height:1.6; margin:0; }
