@@ -3,21 +3,51 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- Update this to your actual GitHub Pages URL once tf-tokens.css is hosted -->
-<link rel="stylesheet" href="https://YOUR-GH-PAGES-URL/tf-tokens.css">
+<!--
+  Fully self-contained — no dependency on tf-tokens.css or Hub's header code.
+  This file is served directly by GitHub Pages and loaded into an <iframe>
+  on the Hub page (see 03-case-in-brief-embed.html), so it's a normal HTML
+  document with its own <head> — a plain <style> block here is completely
+  safe, unlike pasting one into Hub's own header code field.
+-->
 <style>
   html,body{ margin:0; background:transparent; }
-  body{ font-family:var(--font-body); }
+  body{ font-family:Verdana,Tahoma,sans-serif; }
+
   .tf-wrap{ padding:0 4px; }
   .tf-heading-row{ display:flex; align-items:center; gap:10px; margin:0 0 20px 0; flex-wrap:wrap; }
-  .tf-live-badge{ display:none; align-items:center; gap:6px; font-family:var(--font-display); font-size:12px; color:var(--text-muted); }
+  .tf-h2{ font-family:Tahoma,Verdana,sans-serif; font-weight:700; color:#041221; font-size:34px; margin:0; }
+
+  .tf-live-badge{ display:none; align-items:center; gap:6px; font-family:Tahoma,Verdana,sans-serif; font-size:12px; color:#73818c; }
   .tf-live-badge.is-visible{ display:inline-flex; }
+
+  @keyframes tf-pulse{
+    0%{ box-shadow:0 0 0 0 rgba(94,201,168,0.55); }
+    70%{ box-shadow:0 0 0 8px rgba(94,201,168,0); }
+    100%{ box-shadow:0 0 0 0 rgba(94,201,168,0); }
+  }
+  .tf-live-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:#5ec9a8; display:inline-block;
+    animation:tf-pulse 2s infinite;
+  }
+  @media (prefers-reduced-motion: reduce){ .tf-live-dot{ animation:none !important; } }
+
+  .tf-case-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:800px){ .tf-case-grid{ grid-template-columns:1fr; } }
+  .tf-card{ border-radius:10px; padding:22px; }
+  .tf-card-accent{ background:#ffffff; border:1px solid #5ec9a8; box-shadow:0 1px 2px rgba(4,18,33,0.08); }
+  .tf-card-sunken{ background:#e6f6ff; border:1px solid #d6e5f2; }
+  .tf-metric{ font-family:Tahoma,Verdana,sans-serif; font-size:27px; font-weight:700; color:#3aa989; margin:0 0 4px 0; }
+  .tf-metric-static{ font-family:Tahoma,Verdana,sans-serif; font-size:22px; font-weight:700; color:#041221; margin:0 0 4px 0; }
+  .tf-card-title{ font-family:Tahoma,Verdana,sans-serif; font-size:14.5px; font-weight:700; color:#041221; margin:2px 0 8px 0; }
+  .tf-card-sub{ font-size:13px; color:#73818c; line-height:1.6; margin:0; }
 </style>
 </head>
 <body>
   <div class="tf-wrap">
     <div class="tf-heading-row">
-      <h2 class="tf-h2" style="font-family:var(--font-display); font-weight:700; color:var(--text-heading); font-size:var(--text-2xl); margin:0;">The case, in brief</h2>
+      <h2 class="tf-h2">The case, in brief</h2>
       <span class="tf-live-badge" id="tf-live-badge">
         <span class="tf-live-dot"></span>
         <span id="tf-live-text"></span>
