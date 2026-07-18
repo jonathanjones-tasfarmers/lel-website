@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Update this to your actual GitHub Pages URL once tf-tokens.css is hosted -->
+<link rel="stylesheet" href="https://YOUR-GH-PAGES-URL/tf-tokens.css">
+<style>
+  html,body{ margin:0; background:transparent; }
+  body{ font-family:var(--font-body); }
+  .tf-wrap{ padding:0 4px; }
+  .tf-heading-row{ display:flex; align-items:center; gap:10px; margin:0 0 20px 0; flex-wrap:wrap; }
+  .tf-live-badge{ display:none; align-items:center; gap:6px; font-family:var(--font-display); font-size:12px; color:var(--text-muted); }
+  .tf-live-badge.is-visible{ display:inline-flex; }
+</style>
+</head>
+<body>
+  <div class="tf-wrap">
+    <div class="tf-heading-row">
+      <h2 class="tf-h2" style="font-family:var(--font-display); font-weight:700; color:var(--text-heading); font-size:var(--text-2xl); margin:0;">The case, in brief</h2>
+      <span class="tf-live-badge" id="tf-live-badge">
+        <span class="tf-live-dot"></span>
+        <span id="tf-live-text"></span>
+      </span>
+    </div>
+
+    <div class="tf-case-grid">
+      <div class="tf-card tf-card-accent">
+        <p class="tf-metric" id="pt-abatement">—</p>
+        <h3 class="tf-card-title">Modelled methane cut</h3>
+        <p class="tf-card-sub">SeaFeed group, most recent trial reading.</p>
+      </div>
+      <div class="tf-card tf-card-accent">
+        <p class="tf-metric" id="pt-adg">—</p>
+        <h3 class="tf-card-title">Extra growth, not just less methane</h3>
+        <p class="tf-card-sub">Average daily gain, SeaFeed vs control, current.</p>
+      </div>
+      <div class="tf-card tf-card-sunken">
+        <p class="tf-metric-static">Sector‑wide</p>
+        <h3 class="tf-card-title">Built for every producer</h3>
+        <p class="tf-card-sub">Findings, an economic feasibility tool and an adoption handbook — published for all of Tasmanian agriculture, not just trial participants.</p>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Same Feature Service endpoints and query logic as the original page —
+  // rewritten as plain fetch calls instead of the page-builder's DCLogic
+  // component class, since this now runs as its own standalone document.
+  const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
+  const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
+  const BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
+  const PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
+
+  async function q(url, params){
+    const res = await fetch(url + "?" + new URLSearchParams(params));
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || "Query failed");
+    return data;
+  }
+
+  async function fetchLatestSeafeedEmissions(){
+    const data = await q(EMISSIONS_URL, {
+      where: "treatment='seafeed'", outFields: "abatement_rate,record_date",
+      orderByFields: "record_date DESC", resultRecordCount: "1", f: "json"
+    });
+    return data.features.length ? data.features[0].attributes : null;
+  }
+
+  async function fetchGwp(){
+    const data = await q(BENCHMARKS_URL, {
+      where: "metric_name='METHANE_GWP100_AR5'", outFields: "metric_value", f: "json"
+    });
+    return data.features.length ? data.features[0].attributes.metric_value : 28;
+  }
+
+  async function fetchEconByTreatment(){
+    const data = await q(ECON_URL, {
+      where: "treatment IN ('seafeed','control')",
+      outFields: "treatment,cumulative_ch4_abated_kg_per_head,representative_head_count,calculation_date",
+      orderByFields: "calculation_date DESC", resultRecordCount: "50", f: "json"
+    });
+    const latest = {};
+    for (const f of data.features){ const t=f.attributes.treatment; if(!latest[t]) latest[t]=f.attributes; }
+    return latest;
+  }
+
+  async function fetchProductivityHistory(treatment){
+    const data = await q(PRODUCTIVITY_URL, {
+      where: `treatment_group='${treatment}'`, outFields: "snapshot_date,rolling_adg",
+      orderByFields: "snapshot_date ASC", resultRecordCount: "2000", f: "json"
+    });
+    return data.features.map(f => f.attributes);
+  }
+
+  async function loadData(){
+    const badge = document.getElementById('tf-live-badge');
+    const liveText = document.getElementById('tf-live-text');
+    const ptAbatementEl = document.getElementById('pt-abatement');
+    const ptAdgEl = document.getElementById('pt-adg');
+
+    try {
+      const [emissions, gwp, econ, seafeedProd, controlProd] = await Promise.all([
+        fetchLatestSeafeedEmissions(), fetchGwp(), fetchEconByTreatment(),
+        fetchProductivityHistory('seafeed'), fetchProductivityHistory('control')
+      ]);
+
+      const abatementText = (emissions && emissions.abatement_rate != null)
+        ? emissions.abatement_rate.toFixed(1) + '%' : '—';
+
+      const seafeedAdg = seafeedProd.length ? seafeedProd[seafeedProd.length-1].rolling_adg : null;
+      const controlAdg = controlProd.length ? controlProd[controlProd.length-1].rolling_adg : null;
+      let adgText = '—';
+      if (seafeedAdg != null && controlAdg != null){
+        const diff = seafeedAdg - controlAdg;
+        adgText = (diff>=0?'+':'') + Math.round(diff) + ' g/day';
+      }
+
+      ptAbatementEl.textContent = abatementText;
+      ptAdgEl.textContent = adgText;
+
+      liveText.textContent = 'live · ' + new Date().toLocaleDateString('en-AU', {day:'numeric', month:'short'});
+      badge.classList.add('is-visible');
+    } catch (err){
+      liveText.textContent = 'reconnecting';
+      badge.classList.add('is-visible');
+      console.error('Live data fetch failed:', err);
+    }
+  }
+
+  loadData();
+</script>
+</body>
+</html>
