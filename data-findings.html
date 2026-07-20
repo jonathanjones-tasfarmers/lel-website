@@ -12,19 +12,25 @@
   Only external dependency: Chart.js from jsDelivr. If that CDN is ever blocked
   on your network or by ArcGIS Hub's content security policy, the charts simply
   won't render — worth a quick check in-browser once this is published.
+
+  Charts stacked one-per-row now instead of a 2x2 card grid, and each chart's
+  canvas sits in a div with an explicit fixed height (240px) — Chart.js needs
+  that on the parent to actually cap the chart's height when responsive is on;
+  without it the canvas had nothing constraining it and grew too tall.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   html,body{ margin:0; background:transparent; }
   body{ font-family:Verdana,Tahoma,sans-serif; }
   .tf-wrap{ padding:0 4px; }
-  .tf-status-row{ display:flex; align-items:center; gap:8px; margin:0 0 22px 0; }
+  .tf-status-row{ display:flex; align-items:center; gap:8px; margin:0 0 26px 0; }
   .tf-status{ font-family:Tahoma,Verdana,sans-serif; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; }
-  .tf-chart-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-  @media (max-width:800px){ .tf-chart-grid{ grid-template-columns:1fr; } }
-  .tf-chart-card{ background:#ffffff; border:1px solid #d6e5f2; border-radius:10px; box-shadow:0 1px 2px rgba(4,18,33,0.08); padding:22px 24px; box-sizing:border-box; }
+  .tf-chart-section{ padding:26px 0; border-bottom:1px solid #d6e5f2; }
+  .tf-chart-section:last-child{ border-bottom:0; padding-bottom:0; }
   .tf-chart-title{ font-family:Tahoma,Verdana,sans-serif; font-size:15px; font-weight:700; color:#041221; margin:0 0 4px 0; }
   .tf-chart-caption{ font-size:12.5px; color:#73818c; line-height:1.5; margin:0 0 14px 0; }
+  .tf-chart-box{ position:relative; height:240px; }
+  .tf-chart-box canvas{ width:100% !important; height:100% !important; }
   .tf-chart-empty{ font-size:13px; color:#73818c; text-align:center; padding:40px 0; }
   .tf-legend{ display:flex; gap:16px; margin-top:10px; font-size:12px; color:#73818c; }
   .tf-legend-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle; }
@@ -36,36 +42,26 @@
       <span class="tf-status" id="tf-status" style="color:#73818c;">Loading live data…</span>
     </div>
 
-    <div class="tf-chart-grid">
-      <div class="tf-chart-card">
-        <p class="tf-chart-title">Methane abatement over time</p>
-        <p class="tf-chart-caption">Modelled abatement rate, SeaFeed group, every recorded reading — not just the latest figure.</p>
-        <canvas id="chart-abatement" height="220"></canvas>
-        <p class="tf-chart-empty" id="chart-abatement-empty" style="display:none;">No emissions readings recorded yet.</p>
-      </div>
+    <div class="tf-chart-section">
+      <p class="tf-chart-title">Methane abatement over time</p>
+      <p class="tf-chart-caption">Modelled abatement rate, SeaFeed group, every recorded reading — not just the latest figure.</p>
+      <div class="tf-chart-box"><canvas id="chart-abatement"></canvas></div>
+      <p class="tf-chart-empty" id="chart-abatement-empty" style="display:none;">No emissions readings recorded yet.</p>
+    </div>
 
-      <div class="tf-chart-card">
-        <p class="tf-chart-title">Average daily gain over time</p>
-        <p class="tf-chart-caption">Rolling average daily gain, SeaFeed vs control.</p>
-        <canvas id="chart-adg" height="220"></canvas>
-        <p class="tf-chart-empty" id="chart-adg-empty" style="display:none;">No productivity readings recorded yet.</p>
-        <div class="tf-legend"><span><span class="tf-legend-dot" style="background:#3aa989;"></span>SeaFeed</span><span><span class="tf-legend-dot" style="background:#a9b8c4;"></span>Control</span></div>
-      </div>
+    <div class="tf-chart-section">
+      <p class="tf-chart-title">Average daily gain over time</p>
+      <p class="tf-chart-caption">Rolling average daily gain, SeaFeed vs control.</p>
+      <div class="tf-chart-box"><canvas id="chart-adg"></canvas></div>
+      <p class="tf-chart-empty" id="chart-adg-empty" style="display:none;">No productivity readings recorded yet.</p>
+      <div class="tf-legend"><span><span class="tf-legend-dot" style="background:#3aa989;"></span>SeaFeed</span><span><span class="tf-legend-dot" style="background:#a9b8c4;"></span>Control</span></div>
+    </div>
 
-      <div class="tf-chart-card">
-        <p class="tf-chart-title">Cost per kg CH4 abated</p>
-        <p class="tf-chart-caption">Cumulative cost efficiency, SeaFeed group, over the life of the trial.</p>
-        <canvas id="chart-cost-ch4" height="220"></canvas>
-        <p class="tf-chart-empty" id="chart-cost-ch4-empty" style="display:none;">No cost data recorded yet.</p>
-      </div>
-
-      <div class="tf-chart-card">
-        <p class="tf-chart-title">Cost per kg of weight gain</p>
-        <p class="tf-chart-caption">SeaFeed vs control — what it costs to produce a kilogram of gain in each group, independent of the breakeven question.</p>
-        <canvas id="chart-cost-gain" height="220"></canvas>
-        <p class="tf-chart-empty" id="chart-cost-gain-empty" style="display:none;">No cost data recorded yet.</p>
-        <div class="tf-legend"><span><span class="tf-legend-dot" style="background:#3aa989;"></span>SeaFeed</span><span><span class="tf-legend-dot" style="background:#a9b8c4;"></span>Control</span></div>
-      </div>
+    <div class="tf-chart-section">
+      <p class="tf-chart-title">Cost per kg CH4 abated</p>
+      <p class="tf-chart-caption">Cumulative cost efficiency, SeaFeed group, over the life of the trial.</p>
+      <div class="tf-chart-box"><canvas id="chart-cost-ch4"></canvas></div>
+      <p class="tf-chart-empty" id="chart-cost-ch4-empty" style="display:none;">No cost data recorded yet.</p>
     </div>
   </div>
 
@@ -102,7 +98,7 @@
 
   function renderLineChart(canvasId, emptyId, labels, datasets){
     if (!labels.length){
-      document.getElementById(canvasId).style.display = 'none';
+      document.getElementById(canvasId).closest('.tf-chart-box').style.display = 'none';
       document.getElementById(emptyId).style.display = 'block';
       return;
     }
@@ -150,28 +146,16 @@
   async function loadCosts(){
     try{
       const data = await q(ECON_URL, {
-        where:"treatment IN ('seafeed','control')",
-        outFields:"treatment,cost_per_kg_ch4_abated_aud,cost_per_kg_gain_aud,calculation_date",
+        where:"treatment='seafeed'",
+        outFields:"treatment,cost_per_kg_ch4_abated_aud,calculation_date",
         orderByFields:"calculation_date ASC", resultRecordCount:"2000", f:"json"
       });
-      const rows = data.features.map(f => f.attributes);
-      const sfCh4 = rows.filter(r => r.treatment === 'seafeed' && r.calculation_date != null && r.cost_per_kg_ch4_abated_aud != null);
+      const sfCh4 = data.features.map(f => f.attributes).filter(r => r.calculation_date != null && r.cost_per_kg_ch4_abated_aud != null);
       renderLineChart('chart-cost-ch4', 'chart-cost-ch4-empty',
         sfCh4.map(r => fmtDate(r.calculation_date)),
         [{ label:'Cost per kg CH4 abated ($)', data: sfCh4.map(r => r.cost_per_kg_ch4_abated_aud), borderColor: MINT, backgroundColor:'rgba(58,169,137,0.12)', fill:true, tension:0.25, pointRadius:2 }]
       );
-
-      const sfGain = rows.filter(r => r.treatment === 'seafeed' && r.calculation_date != null && r.cost_per_kg_gain_aud != null);
-      const ctGain = rows.filter(r => r.treatment === 'control' && r.calculation_date != null && r.cost_per_kg_gain_aud != null);
-      const longer = sfGain.length >= ctGain.length ? sfGain : ctGain;
-      renderLineChart('chart-cost-gain', 'chart-cost-gain-empty',
-        longer.map(r => fmtDate(r.calculation_date)),
-        [
-          { label:'SeaFeed', data: sfGain.map(r => r.cost_per_kg_gain_aud), borderColor: MINT, backgroundColor:'transparent', tension:0.25, pointRadius:2 },
-          { label:'Control', data: ctGain.map(r => r.cost_per_kg_gain_aud), borderColor: SLATE, backgroundColor:'transparent', tension:0.25, pointRadius:2 }
-        ]
-      );
-    } catch(err){ console.error('Cost charts failed:', err); }
+    } catch(err){ console.error('Cost chart failed:', err); }
   }
 
   async function loadAll(){
