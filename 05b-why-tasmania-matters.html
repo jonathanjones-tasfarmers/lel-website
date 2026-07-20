@@ -199,7 +199,7 @@
   <div class="chip-row">
     <div class="chip">
       <p class="chip-value">32.7%</p>
-      <p class="chip-label">of Tasmania's emissions (excl. LULUCF) come from agriculture — the state's single largest sector</p>
+      <p class="chip-label">of Tasmania's emissions (excl. LULUCF) come from agriculture, the state's single largest sector</p>
     </div>
     <div class="chip">
       <p class="chip-value">1.59 Mt CO2‑e / year</p>
@@ -232,7 +232,7 @@
 
   <div class="disclosure-box">
     <div class="disclosure-summary" id="disclosure-toggle-row">
-      <p class="disclosure-title">⚠ Illustrative scenario, not a forecast — see basis</p>
+      <p class="disclosure-title">⚠ Illustrative scenario, not a forecast, see basis</p>
       <span class="disclosure-toggle" id="disclosure-toggle-label">Why? ▾</span>
     </div>
     <div class="disclosure-details" id="disclosure-details">
@@ -241,7 +241,7 @@
         (Tasmanian Greenhouse Gas Emissions Report 2026, ReCFIT, Dept of State Growth) and
         this trial's current modelled abatement rate of <span id="rate-out">—</span>%, applied
         at the selected adoption share. Cattle head estimate based on the MLA Beef Producer
-        Intentions Survey, April 2024 (~1.3M head) — a lower-confidence figure than the ReCFIT
+        Intentions Survey, April 2024 (~1.3M head), a lower-confidence figure than the ReCFIT
         emissions data above. This is a scaling exercise on the trial's own modelled figures,
         not a prediction of actual statewide adoption or outcomes.
       </p>
@@ -326,7 +326,7 @@
       statusEl.textContent = 'Live data, updated ' + new Date().toLocaleDateString();
       statusEl.style.color = '#3aa989';
     } catch (err) {
-      statusEl.textContent = 'Showing last-known figures — live data temporarily unavailable';
+      statusEl.textContent = 'Showing last-known figures, live data temporarily unavailable';
       statusEl.style.color = '#c98a2e';
       console.error('Live data fetch failed, using fallback values:', err);
     }
