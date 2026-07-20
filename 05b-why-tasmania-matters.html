@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What this could mean for Tasmania</title>
+<style>
+  body {
+    margin: 0;
+    background: #ffffff;
+    font-family: Verdana, Tahoma, sans-serif;
+    padding: 0;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 28px;
+    box-sizing: border-box;
+  }
+  .eyebrow {
+    font-family: Tahoma, Verdana, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #3aa989;
+    margin: 0 0 10px 0;
+  }
+  h2 {
+    font-family: Tahoma, Verdana, sans-serif;
+    font-weight: 700;
+    color: #041221;
+    font-size: 26px;
+    margin: 0 0 12px 0;
+  }
+  .intro {
+    color: #73818c;
+    font-size: 15px;
+    line-height: 1.65;
+    max-width: 74ch;
+    margin: 0 0 22px 0;
+  }
+  .status {
+    color: #6b7c8a;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 22px 0;
+  }
+
+  /* --- context chips (static ReCFIT figures) --- */
+  .chip-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 34px;
+  }
+  .chip {
+    flex: 1;
+    min-width: 240px;
+    background: #e6f6ff;
+    border: 1px solid #d6e5f2;
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .chip-value {
+    font-family: Tahoma, Verdana, sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #041221;
+    margin: 0 0 4px 0;
+  }
+  .chip-label {
+    font-size: 12.5px;
+    color: #73818c;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* --- slider scenario block --- */
+  .scenario-box {
+    background: #ffffff;
+    border: 1px solid #5ec9a8;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(4,18,33,0.08);
+    padding: 28px 30px;
+    margin-bottom: 22px;
+  }
+  .scenario-title {
+    font-family: Tahoma, Verdana, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: #041221;
+    margin: 0 0 18px 0;
+  }
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 26px;
+  }
+  .slider-row label {
+    color: #73818c;
+    font-size: 13.5px;
+    white-space: nowrap;
+  }
+  input[type="range"] {
+    flex: 1;
+    accent-color: #3aa989;
+  }
+  .slider-val {
+    color: #041221;
+    font-family: Tahoma, Verdana, sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    min-width: 48px;
+    text-align: right;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 720px) { .stats { grid-template-columns: 1fr; } }
+  .stat-card {
+    background: #e6f6ff;
+    border: 1px solid #d6e5f2;
+    border-radius: 8px;
+    padding: 18px 20px;
+  }
+  .stat-label {
+    font-size: 12.5px;
+    color: #73818c;
+    margin: 0 0 8px 0;
+  }
+  .stat-value {
+    font-family: Tahoma, Verdana, sans-serif;
+    color: #3aa989;
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  /* --- disclosure --- */
+  .disclosure-box {
+    background: #fff6e8;
+    border: 1px solid #c98a2e;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 18px 0 22px 0;
+  }
+  .disclosure-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .disclosure-title {
+    font-family: Tahoma, Verdana, sans-serif;
+    color: #8a5a12;
+    font-size: 12.5px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .disclosure-toggle {
+    color: #8a5a12;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .disclosure-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+  }
+  .disclosure-details.expanded { max-height: 400px; }
+  .disclosure-text {
+    color: #6b5327;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 12px 0 0 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Tasmania, at scale</p>
+  <h2>What this could mean beyond the trial</h2>
+  <p class="intro">
+    This trial runs on a handful of Tasmanian properties, but livestock methane is a
+    statewide question. Here's how the trial's own numbers scale against Tasmania's
+    official emissions figures.
+  </p>
+  <p class="status" id="data-status">Loading live data…</p>
+
+  <div class="chip-row">
+    <div class="chip">
+      <p class="chip-value">32.7%</p>
+      <p class="chip-label">of Tasmania's emissions (excl. LULUCF) come from agriculture — the state's single largest sector</p>
+    </div>
+    <div class="chip">
+      <p class="chip-value">1.59 Mt CO2‑e / year</p>
+      <p class="chip-label">from cattle enteric fermentation alone, before sheep, dairy or other agricultural sources</p>
+    </div>
+  </div>
+
+  <div class="scenario-box">
+    <p class="scenario-title">If SeaFeed were adopted across the Tasmanian herd</p>
+    <div class="slider-row">
+      <label for="adoption">Herd adoption</label>
+      <input type="range" min="0" max="80" step="10" value="20" id="adoption">
+      <span class="slider-val" id="adoption-out">20%</span>
+    </div>
+    <div class="stats">
+      <div class="stat-card">
+        <p class="stat-label">CO2‑e avoided per year</p>
+        <p class="stat-value" id="co2e-out">—</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Share of Tas agriculture emissions</p>
+        <p class="stat-value" id="ag-share-out">—</p>
+      </div>
+      <div class="stat-card">
+        <p class="stat-label">Cattle covered</p>
+        <p class="stat-value" id="head-out">—</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="disclosure-box">
+    <div class="disclosure-summary" id="disclosure-toggle-row">
+      <p class="disclosure-title">⚠ Illustrative scenario, not a forecast — see basis</p>
+      <span class="disclosure-toggle" id="disclosure-toggle-label">Why? ▾</span>
+    </div>
+    <div class="disclosure-details" id="disclosure-details">
+      <p class="disclosure-text">
+        Based on Tasmania's cattle enteric fermentation emissions of 1.5874 Mt CO2‑e/year
+        (Tasmanian Greenhouse Gas Emissions Report 2026, ReCFIT, Dept of State Growth) and
+        this trial's current modelled abatement rate of <span id="rate-out">—</span>%, applied
+        at the selected adoption share. Cattle head estimate based on the MLA Beef Producer
+        Intentions Survey, April 2024 (~1.3M head) — a lower-confidence figure than the ReCFIT
+        emissions data above. This is a scaling exercise on the trial's own modelled figures,
+        not a prediction of actual statewide adoption or outcomes.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
+  const BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
+
+  // Fallback values — used ONLY if a live fetch fails, so the section
+  // still renders something sensible rather than breaking.
+  let CATTLE_ENTERIC_MT = 1.5874;
+  let AG_TOTAL_MT = 2.6466;
+  let BEEF_HEAD = 1300000;
+  let ABATEMENT_PCT = 30;
+
+  async function fetchBenchmarks() {
+    const params = new URLSearchParams({ where: "1=1", outFields: "metric_name,metric_value", f: "json" });
+    const res = await fetch(BENCHMARKS_URL + "?" + params);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || "Benchmarks query failed");
+    const values = {};
+    for (const feat of data.features) values[feat.attributes.metric_name] = feat.attributes.metric_value;
+    if (values.TAS_CATTLE_ENTERIC_FERMENTATION_MT_CO2E != null) CATTLE_ENTERIC_MT = values.TAS_CATTLE_ENTERIC_FERMENTATION_MT_CO2E;
+    if (values.TAS_AGRICULTURE_TOTAL_MT_CO2E != null) AG_TOTAL_MT = values.TAS_AGRICULTURE_TOTAL_MT_CO2E;
+    if (values.TAS_BEEF_CATTLE_HEAD_COUNT_APPROX != null) BEEF_HEAD = values.TAS_BEEF_CATTLE_HEAD_COUNT_APPROX;
+  }
+
+  async function fetchLatestAbatementRate() {
+    const params = new URLSearchParams({
+      where: "treatment='seafeed'", outFields: "abatement_rate,record_date",
+      orderByFields: "record_date DESC", resultRecordCount: "1", f: "json"
+    });
+    const res = await fetch(EMISSIONS_URL + "?" + params);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || "Emissions query failed");
+    if (data.features && data.features.length > 0 && data.features[0].attributes.abatement_rate != null) {
+      ABATEMENT_PCT = data.features[0].attributes.abatement_rate;
+    }
+  }
+
+  // --- disclosure toggle ---
+  const disclosureToggleRow = document.getElementById('disclosure-toggle-row');
+  const disclosureDetails = document.getElementById('disclosure-details');
+  const disclosureToggleLabel = document.getElementById('disclosure-toggle-label');
+  disclosureToggleRow.addEventListener('click', function () {
+    const isExpanded = disclosureDetails.classList.toggle('expanded');
+    disclosureToggleLabel.textContent = isExpanded ? 'Hide ▴' : 'Why? ▾';
+  });
+
+  // --- scenario slider ---
+  const slider = document.getElementById('adoption');
+  const adoptionOut = document.getElementById('adoption-out');
+  const co2eOut = document.getElementById('co2e-out');
+  const agShareOut = document.getElementById('ag-share-out');
+  const headOut = document.getElementById('head-out');
+  const rateOut = document.getElementById('rate-out');
+
+  function updateScenario() {
+    const adoption = Number(slider.value);
+    const avoidedMt = CATTLE_ENTERIC_MT * (adoption / 100) * (ABATEMENT_PCT / 100);
+    const avoidedT = Math.round(avoidedMt * 1000000);
+    const agShare = (avoidedMt / AG_TOTAL_MT) * 100;
+    const head = Math.round(BEEF_HEAD * (adoption / 100));
+
+    adoptionOut.textContent = adoption + '%';
+    co2eOut.textContent = avoidedT.toLocaleString() + ' t';
+    agShareOut.textContent = agShare.toFixed(1) + '%';
+    headOut.textContent = head.toLocaleString();
+    rateOut.textContent = ABATEMENT_PCT;
+  }
+  slider.addEventListener('input', updateScenario);
+
+  const statusEl = document.getElementById('data-status');
+
+  async function init() {
+    try {
+      await Promise.all([fetchBenchmarks(), fetchLatestAbatementRate()]);
+      statusEl.textContent = 'Live data, updated ' + new Date().toLocaleDateString();
+      statusEl.style.color = '#3aa989';
+    } catch (err) {
+      statusEl.textContent = 'Showing last-known figures — live data temporarily unavailable';
+      statusEl.style.color = '#c98a2e';
+      console.error('Live data fetch failed, using fallback values:', err);
+    }
+    updateScenario();
+  }
+
+  init();
+</script>
+</body>
+</html>
