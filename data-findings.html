@@ -15,7 +15,6 @@
   canvas sits in a div with an explicit fixed height (240px) — Chart.js needs
   that on the parent to actually cap the chart's height when responsive is on;
   without it the canvas had nothing constraining it and grew too tall.
-
   FIX (see chat): loadAdg() previously built the shared x-axis labels from
   whichever treatment had more daily readings, then plotted both datasets as
   plain arrays. Chart.js aligns plain-array data to labels by array index, not
@@ -23,8 +22,11 @@
   after SeaFeed) got silently plotted against the wrong dates and appeared to
   stop partway through the chart. Fixed by building one deduplicated, sorted
   timeline across both treatments and looking each value up by its actual
-  snapshot_date, with nulls (which Chart.js renders as a gap, not a false
-  flat line) wherever a treatment has no reading for that date.
+  snapshot_date, with nulls wherever a treatment has no reading for that date.
+  UPDATE: all line datasets now set spanGaps:true, so a null reading no longer
+  breaks the line — Chart.js draws straight through the gap to the next real
+  point instead. tension is set on every dataset (0.35) so all three charts
+  render as smoothed curves rather than straight-segment lines.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -112,9 +114,13 @@
       document.getElementById(emptyId).style.display = 'block';
       return;
     }
+    // Every dataset gets spanGaps + tension here as a backstop, in case a
+    // caller forgets to set them — the individual dataset definitions below
+    // also set them explicitly.
+    const styledDatasets = datasets.map(d => Object.assign({ spanGaps:true, tension:0.35, cubicInterpolationMode:'monotone' }, d));
     new Chart(document.getElementById(canvasId), {
       type:'line',
-      data:{ labels, datasets },
+      data:{ labels, datasets: styledDatasets },
       options: baseLineOptions(yAxisLabel)
     });
   }
@@ -127,7 +133,7 @@
       const rows = data.features.map(f => f.attributes).filter(a => a.record_date != null && a.abatement_rate != null);
       renderLineChart('chart-abatement', 'chart-abatement-empty',
         rows.map(r => fmtDate(r.record_date)),
-        [{ label:'Abatement rate (%)', data: rows.map(r => r.abatement_rate), borderColor: MINT, backgroundColor:'rgba(58,169,137,0.12)', fill:true, tension:0.25, pointRadius:2 }],
+        [{ label:'Abatement rate (%)', data: rows.map(r => r.abatement_rate), borderColor: MINT, backgroundColor:'rgba(58,169,137,0.12)', fill:true, tension:0.35, spanGaps:true, pointRadius:2 }],
         'Abatement rate (%)'
       );
     } catch(err){ console.error('Abatement chart failed:', err); }
@@ -140,24 +146,21 @@
       ]);
       const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
       const ctRows = control.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
-
-      // Build one shared, deduplicated, sorted timeline across BOTH treatments,
-      // then look each treatment's value up by date rather than by array
-      // index. Mismatched-length series (SeaFeed's session started over a
-      // month before Control's) previously got silently misaligned, since
-      // Chart.js plots plain-array datasets against the labels array purely
-      // by position, not by date, values are left as null (not zero, not the
-      // previous value) wherever a treatment has no reading for a given date,
-      // so Chart.js draws a genuine gap rather than a misleading flat line.
+      // Shared, deduplicated, sorted timeline across BOTH treatments, values
+      // looked up by date rather than by array index (see header comment for
+      // why that matters). Missing readings are left as null so Chart.js
+      // knows there's no data point there — but with spanGaps:true below,
+      // the line is still drawn straight through to the next real point
+      // instead of breaking, so a short reporting gap in one treatment
+      // doesn't cut its line off early.
       const sfByDate = new Map(sfRows.map(r => [r.snapshot_date, r.rolling_adg]));
       const ctByDate = new Map(ctRows.map(r => [r.snapshot_date, r.rolling_adg]));
       const allDates = Array.from(new Set([...sfByDate.keys(), ...ctByDate.keys()])).sort((a, b) => a - b);
-
       renderLineChart('chart-adg', 'chart-adg-empty',
         allDates.map(d => fmtDate(d)),
         [
-          { label:'SeaFeed', data: allDates.map(d => sfByDate.has(d) ? sfByDate.get(d) : null), borderColor: MINT, backgroundColor:'transparent', tension:0.25, pointRadius:2 },
-          { label:'Control', data: allDates.map(d => ctByDate.has(d) ? ctByDate.get(d) : null), borderColor: SLATE, backgroundColor:'transparent', tension:0.25, pointRadius:2 }
+          { label:'SeaFeed', data: allDates.map(d => sfByDate.has(d) ? sfByDate.get(d) : null), borderColor: MINT, backgroundColor:'transparent', tension:0.35, spanGaps:true, pointRadius:2 },
+          { label:'Control', data: allDates.map(d => ctByDate.has(d) ? ctByDate.get(d) : null), borderColor: SLATE, backgroundColor:'transparent', tension:0.35, spanGaps:true, pointRadius:2 }
         ],
         'Average daily gain (g/day)'
       );
@@ -173,7 +176,7 @@
       const sfCh4 = data.features.map(f => f.attributes).filter(r => r.calculation_date != null && r.cost_per_kg_ch4_abated_aud != null);
       renderLineChart('chart-cost-ch4', 'chart-cost-ch4-empty',
         sfCh4.map(r => fmtDate(r.calculation_date)),
-        [{ label:'Cost per kg CH4 abated ($)', data: sfCh4.map(r => r.cost_per_kg_ch4_abated_aud), borderColor: MINT, backgroundColor:'rgba(58,169,137,0.12)', fill:true, tension:0.25, pointRadius:2 }],
+        [{ label:'Cost per kg CH4 abated ($)', data: sfCh4.map(r => r.cost_per_kg_ch4_abated_aud), borderColor: MINT, backgroundColor:'rgba(58,169,137,0.12)', fill:true, tension:0.35, spanGaps:true, pointRadius:2 }],
         'Cost ($ AUD / kg CH4 abated)'
       );
     } catch(err){ console.error('Cost chart failed:', err); }
