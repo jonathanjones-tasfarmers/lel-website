@@ -8,15 +8,23 @@
   / farms-calculator.html — loaded via iframe into a Hub page, not pasted directly
   into Hub (charts need real JS, which Hub's content blocks won't reliably run
   the way this standalone document will).
-
   Only external dependency: Chart.js from jsDelivr. If that CDN is ever blocked
   on your network or by ArcGIS Hub's content security policy, the charts simply
   won't render — worth a quick check in-browser once this is published.
-
   Charts stacked one-per-row now instead of a 2x2 card grid, and each chart's
   canvas sits in a div with an explicit fixed height (240px) — Chart.js needs
   that on the parent to actually cap the chart's height when responsive is on;
   without it the canvas had nothing constraining it and grew too tall.
+
+  FIX (see chat): loadAdg() previously built the shared x-axis labels from
+  whichever treatment had more daily readings, then plotted both datasets as
+  plain arrays. Chart.js aligns plain-array data to labels by array index, not
+  by date, so the shorter series (Control, which started tracking over a month
+  after SeaFeed) got silently plotted against the wrong dates and appeared to
+  stop partway through the chart. Fixed by building one deduplicated, sorted
+  timeline across both treatments and looking each value up by its actual
+  snapshot_date, with nulls (which Chart.js renders as a gap, not a false
+  flat line) wherever a treatment has no reading for that date.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -41,14 +49,12 @@
     <div class="tf-status-row">
       <span class="tf-status" id="tf-status" style="color:#73818c;">Loading live data…</span>
     </div>
-
     <div class="tf-chart-section">
       <p class="tf-chart-title">Methane abatement over time</p>
       <p class="tf-chart-caption">Modelled abatement rate, SeaFeed group, every recorded reading, not just the latest figure.</p>
       <div class="tf-chart-box"><canvas id="chart-abatement"></canvas></div>
       <p class="tf-chart-empty" id="chart-abatement-empty" style="display:none;">No emissions readings recorded yet.</p>
     </div>
-
     <div class="tf-chart-section">
       <p class="tf-chart-title">Average daily gain over time</p>
       <p class="tf-chart-caption">Rolling average daily gain, SeaFeed vs control.</p>
@@ -56,7 +62,6 @@
       <p class="tf-chart-empty" id="chart-adg-empty" style="display:none;">No productivity readings recorded yet.</p>
       <div class="tf-legend"><span><span class="tf-legend-dot" style="background:#3aa989;"></span>SeaFeed</span><span><span class="tf-legend-dot" style="background:#a9b8c4;"></span>Control</span></div>
     </div>
-
     <div class="tf-chart-section">
       <p class="tf-chart-title">Cost per kg CH4 abated</p>
       <p class="tf-chart-caption">Cumulative cost efficiency, SeaFeed group, over the life of the trial.</p>
@@ -64,29 +69,23 @@
       <p class="tf-chart-empty" id="chart-cost-ch4-empty" style="display:none;">No cost data recorded yet.</p>
     </div>
   </div>
-
 <script>
   const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
   const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
   const PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
-
   const MINT = '#3aa989', SLATE = '#a9b8c4', WARNING = '#c98a2e';
-
   async function q(url, params){
     const res = await fetch(url + "?" + new URLSearchParams(params));
     const data = await res.json();
     if (data.error) throw new Error(data.error.message || "Query failed");
     return data;
   }
-
   function fmtDate(epochMs){
     return new Date(epochMs).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'2-digit' });
   }
-
   function axisTitle(text){
     return { display:true, text, font:{ family:'Tahoma,Verdana,sans-serif', size:12, weight:'bold' }, color:'#041221', padding:{ top:8 } };
   }
-
   function baseLineOptions(yAxisLabel){
     return {
       responsive:true,
@@ -107,7 +106,6 @@
       }
     };
   }
-
   function renderLineChart(canvasId, emptyId, labels, datasets, yAxisLabel){
     if (!labels.length){
       document.getElementById(canvasId).closest('.tf-chart-box').style.display = 'none';
@@ -120,7 +118,6 @@
       options: baseLineOptions(yAxisLabel)
     });
   }
-
   async function loadAbatement(){
     try{
       const data = await q(EMISSIONS_URL, {
@@ -135,7 +132,6 @@
       );
     } catch(err){ console.error('Abatement chart failed:', err); }
   }
-
   async function loadAdg(){
     try{
       const [seafeed, control] = await Promise.all([
@@ -144,19 +140,29 @@
       ]);
       const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
       const ctRows = control.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
-      // Use the longer series for labels so both lines plot against a shared timeline.
-      const longer = sfRows.length >= ctRows.length ? sfRows : ctRows;
+
+      // Build one shared, deduplicated, sorted timeline across BOTH treatments,
+      // then look each treatment's value up by date rather than by array
+      // index. Mismatched-length series (SeaFeed's session started over a
+      // month before Control's) previously got silently misaligned, since
+      // Chart.js plots plain-array datasets against the labels array purely
+      // by position, not by date, values are left as null (not zero, not the
+      // previous value) wherever a treatment has no reading for a given date,
+      // so Chart.js draws a genuine gap rather than a misleading flat line.
+      const sfByDate = new Map(sfRows.map(r => [r.snapshot_date, r.rolling_adg]));
+      const ctByDate = new Map(ctRows.map(r => [r.snapshot_date, r.rolling_adg]));
+      const allDates = Array.from(new Set([...sfByDate.keys(), ...ctByDate.keys()])).sort((a, b) => a - b);
+
       renderLineChart('chart-adg', 'chart-adg-empty',
-        longer.map(r => fmtDate(r.snapshot_date)),
+        allDates.map(d => fmtDate(d)),
         [
-          { label:'SeaFeed', data: sfRows.map(r => r.rolling_adg), borderColor: MINT, backgroundColor:'transparent', tension:0.25, pointRadius:2 },
-          { label:'Control', data: ctRows.map(r => r.rolling_adg), borderColor: SLATE, backgroundColor:'transparent', tension:0.25, pointRadius:2 }
+          { label:'SeaFeed', data: allDates.map(d => sfByDate.has(d) ? sfByDate.get(d) : null), borderColor: MINT, backgroundColor:'transparent', tension:0.25, pointRadius:2 },
+          { label:'Control', data: allDates.map(d => ctByDate.has(d) ? ctByDate.get(d) : null), borderColor: SLATE, backgroundColor:'transparent', tension:0.25, pointRadius:2 }
         ],
         'Average daily gain (g/day)'
       );
     } catch(err){ console.error('ADG chart failed:', err); }
   }
-
   async function loadCosts(){
     try{
       const data = await q(ECON_URL, {
@@ -172,7 +178,6 @@
       );
     } catch(err){ console.error('Cost chart failed:', err); }
   }
-
   async function loadAll(){
     const statusEl = document.getElementById('tf-status');
     try{
@@ -185,7 +190,6 @@
       console.error(err);
     }
   }
-
   loadAll();
 </script>
 </body>
