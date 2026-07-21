@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Same pattern/family as lel-data-findings.html — self-contained, loaded via
+  iframe into a Hub page. Three headline indicator cards: latest ADG for
+  SeaFeed, latest ADG for Control, and the SeaFeed-Control delta.
+
+  DATA SOURCE (updated): pulls adg_all straight from the OptiWeigh Assets
+  view layer (public view over Methane_Trial_Assets), not the rolling-average
+  layer used elsewhere on the page. adg_all is the OptiWeigh device's own
+  per-session ADG figure — the true source, rather than a value derived
+  after the fact — per the trial lead's call.
+
+  TREATMENT MATCHING: Treatment_Type is the intended field for telling
+  SeaFeed and Control sessions apart, but as of build time it was null on
+  every row, so it's matched case-insensitively via LIKE against variants
+  ("SEAFEED", "SEA FEED", "CONTROL") to be forward-compatible with however
+  it ends up populated. Once Treatment_Type is consistently populated
+  upstream this will just work — no code change needed. Until then, or for
+  any row where it's still null, that row won't match either card and the
+  card will show "No data".
+
+  "LATEST" = most recent snapshot_date, tie-broken by OBJECTID (highest =
+  most recently entered). SeaFeed and Control are queried and dated
+  independently — see lel-data-findings.html's ADG chart fix for why the two
+  treatments don't always share a reporting date. Each card shows its own
+  date rather than implying a same-day snapshot, and flags itself as
+  possibly stale if that date is more than STALE_AFTER_DAYS old.
+-->
+<style>
+  html,body{ margin:0; background:transparent; }
+  body{ font-family:Verdana,Tahoma,sans-serif; }
+  .tf-wrap{ padding:0 4px; }
+  .tf-status-row{ display:flex; align-items:center; gap:8px; margin:0 0 18px 0; }
+  .tf-status{ font-family:Tahoma,Verdana,sans-serif; font-size:11px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase; }
+  .tf-indicator-row{ display:flex; gap:16px; flex-wrap:wrap; }
+  .tf-indicator-card{ flex:1 1 200px; background:#f4f9fc; border:1px solid #d6e5f2; border-radius:6px; padding:18px 20px; }
+  .tf-indicator-label{ font-family:Tahoma,Verdana,sans-serif; font-size:12px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; color:#041221; margin:0 0 8px 0; }
+  .tf-indicator-value{ font-family:Tahoma,Verdana,sans-serif; font-size:32px; font-weight:700; color:#041221; line-height:1; }
+  .tf-indicator-value .unit{ font-size:14px; font-weight:400; color:#73818c; margin-left:4px; }
+  .tf-indicator-meta{ font-size:12px; color:#73818c; margin-top:8px; }
+  .tf-indicator-meta.stale{ color:#c98a2e; font-weight:700; }
+  .tf-indicator-empty{ font-size:13px; color:#73818c; }
+</style>
+</head>
+<body>
+  <div class="tf-wrap">
+    <div class="tf-status-row">
+      <span class="tf-status" id="tf-status" style="color:#73818c;">Loading live data…</span>
+    </div>
+    <div class="tf-indicator-row" id="indicator-row">
+      <div class="tf-indicator-card">
+        <p class="tf-indicator-label" style="color:#3aa989;">SeaFeed — current ADG</p>
+        <div class="tf-indicator-value" id="ind-seafeed">—</div>
+        <p class="tf-indicator-meta" id="ind-seafeed-date">Loading…</p>
+      </div>
+      <div class="tf-indicator-card">
+        <p class="tf-indicator-label" style="color:#73818c;">Control — current ADG</p>
+        <div class="tf-indicator-value" id="ind-control">—</div>
+        <p class="tf-indicator-meta" id="ind-control-date">Loading…</p>
+      </div>
+      <div class="tf-indicator-card">
+        <p class="tf-indicator-label" style="color:#041221;">SeaFeed vs Control</p>
+        <div class="tf-indicator-value" id="ind-delta">—</div>
+        <p class="tf-indicator-meta" id="ind-delta-date">&nbsp;</p>
+      </div>
+    </div>
+  </div>
+<script>
+  const ASSETS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Assets_view/FeatureServer/0/query";
+  const MINT = '#3aa989', SLATE = '#a9b8c4', WARNING = '#c98a2e';
+  const STALE_AFTER_DAYS = 14;
+
+  async function q(params){
+    const res = await fetch(ASSETS_URL + "?" + new URLSearchParams(params));
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || "Query failed");
+    return data;
+  }
+
+  // snapshot_date is a Date Only field ("YYYY-MM-DD" string, no time/zone).
+  // Parsed as local y/m/d components rather than new Date(string) so it
+  // doesn't shift a day in either direction depending on browser timezone.
+  function parseDateOnly(dateStr){
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  function fmtDateOnly(dateStr){
+    return parseDateOnly(dateStr).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'2-digit' });
+  }
+  function daysSince(dateStr){
+    return (Date.now() - parseDateOnly(dateStr).getTime()) / (1000 * 60 * 60 * 24);
+  }
+
+  async function latestForTreatment(likePatterns){
+    const treatmentClause = likePatterns.map(p => `UPPER(Treatment_Type) LIKE '%${p}%'`).join(' OR ');
+    const data = await q({
+      where: `adg_all IS NOT NULL AND snapshot_date IS NOT NULL AND (${treatmentClause})`,
+      outFields: "session_id,session_name,adg_all,snapshot_date,Treatment_Type",
+      orderByFields: "snapshot_date DESC, OBJECTID DESC",
+      resultRecordCount: "1",
+      f: "json"
+    });
+    const row = data.features[0]?.attributes;
+    return row ? { date: row.snapshot_date, value: row.adg_all, session: row.session_name } : null;
+  }
+
+  function renderCard(valueId, metaId, reading){
+    const valueEl = document.getElementById(valueId);
+    const metaEl = document.getElementById(metaId);
+    if (!reading){
+      valueEl.innerHTML = '<span class="tf-indicator-empty">No data</span>';
+      metaEl.textContent = 'Waiting on Treatment_Type to be populated';
+      return;
+    }
+    valueEl.innerHTML = reading.value.toFixed(2) + '<span class="unit">kg/day</span>';
+    const stale = daysSince(reading.date) > STALE_AFTER_DAYS;
+    metaEl.textContent = 'As at ' + fmtDateOnly(reading.date) + (stale ? ' — reading may be out of date' : '');
+    metaEl.classList.toggle('stale', stale);
+  }
+
+  function renderDelta(seafeed, control){
+    const valueEl = document.getElementById('ind-delta');
+    const metaEl = document.getElementById('ind-delta-date');
+    if (!seafeed || !control){
+      valueEl.innerHTML = '<span class="tf-indicator-empty">Not enough data</span>';
+      metaEl.textContent = '';
+      return;
+    }
+    const diff = seafeed.value - control.value;
+    const pct = control.value !== 0 ? (diff / control.value) * 100 : null;
+    const sign = diff >= 0 ? '+' : '';
+    const color = diff >= 0 ? MINT : WARNING;
+    valueEl.innerHTML = `<span style="color:${color};">${sign}${diff.toFixed(2)}<span class="unit">kg/day</span></span>`;
+    metaEl.textContent = pct !== null ? `${sign}${pct.toFixed(1)}% vs Control` : '';
+    if (seafeed.date !== control.date){
+      metaEl.textContent += ' (readings on different dates — see cards above)';
+    }
+  }
+
+  async function loadAll(){
+    const statusEl = document.getElementById('tf-status');
+    try{
+      const [seafeed, control] = await Promise.all([
+        latestForTreatment(['SEAFEED', 'SEA FEED']),
+        latestForTreatment(['CONTROL'])
+      ]);
+      renderCard('ind-seafeed', 'ind-seafeed-date', seafeed);
+      renderCard('ind-control', 'ind-control-date', control);
+      renderDelta(seafeed, control);
+      statusEl.textContent = 'Live data, updated ' + new Date().toLocaleDateString();
+      statusEl.style.color = MINT;
+    } catch(err){
+      statusEl.textContent = 'Live data unavailable right now';
+      statusEl.style.color = WARNING;
+      console.error(err);
+    }
+  }
+  loadAll();
+</script>
+</body>
+</html>
