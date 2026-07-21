@@ -4,37 +4,39 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!--
-  Same pattern/family as lel-data-findings.html — self-contained, loaded via
+  Same pattern/family as lel-data-findings.html: self-contained, loaded via
   iframe into a Hub page. Three headline indicator cards: latest ADG for
-  SeaFeed, latest ADG for Control, and the SeaFeed-Control delta.
+  SeaFeed, latest ADG for Control, and the SeaFeed vs Control delta.
 
   DATA SOURCE: pulls adg_all straight from the OptiWeigh Assets view layer
   (public view over Methane_Trial_Assets), not the rolling-average layer
   used elsewhere on the page. adg_all is the OptiWeigh device's own
-  per-session ADG figure — the true source, rather than a value derived
-  after the fact — per the trial lead's call.
+  per-session ADG figure, the true source, rather than a value derived
+  after the fact, per the trial lead's call.
 
   TREATMENT MATCHING: Treatment_Type is the intended field for telling
   SeaFeed and Control sessions apart. Matched case-insensitively via LIKE
   against variants ("SEAFEED", "SEA FEED", "CONTROL") to be forward-compatible
   with however it ends up populated. The sync script now derives it from
   session_name ("sea" -> SeaFeed, "con" -> Control), so this should be
-  populated going forward — any row where it's still null won't match
+  populated going forward. Any row where it's still null won't match
   either card, and the card will show "No data".
 
   "LATEST" = most recent snapshot_date, tie-broken by OBJECTID (highest =
   most recently entered). SeaFeed and Control are queried and dated
-  independently — see lel-data-findings.html's ADG chart fix for why the two
+  independently, see lel-data-findings.html's ADG chart fix for why the two
   treatments don't always share a reporting date. Each card shows its own
   date rather than implying a same-day snapshot, and flags itself as
   possibly stale if that date is more than STALE_AFTER_DAYS old.
 
-  CONTRAST UPDATE: the "SeaFeed vs Control" delta card now gets a solid
-  colour fill instead of the same neutral card background as the other two
-  — mint if SeaFeed is ahead, amber if behind — so it reads as the headline
-  takeaway rather than a third equal-weight stat, and the colour itself is
-  a plain-English "which way is this going" signal before you even read
-  the number.
+  DELTA CARD COLOUR: uses one constant fill (dark mint, matches the trial's
+  brand accent) rather than flipping colour by outcome. Kept it simple and
+  consistent with the delta card in lel-data-findings.html's Cost of
+  Production section, which has the opposite good/bad sign convention
+  (lower cost is good there, higher ADG is good here) so a shared
+  good/bad colour code would have meant green and amber meaning opposite
+  things depending which card you're looking at. One fixed colour sidesteps
+  that entirely.
 -->
 <style>
   html,body{ margin:0; background:transparent; }
@@ -51,11 +53,9 @@
   .tf-indicator-meta.stale{ color:#c98a2e; font-weight:700; }
   .tf-indicator-empty{ font-size:13px; color:#73818c; }
 
-  /* Delta card: solid fill, flips colour by outcome, larger figure so it
-     reads as the headline stat rather than a third equal-weight card. */
-  .tf-indicator-card--delta{ background:#4a5a68; border-color:transparent; display:flex; flex-direction:column; justify-content:center; }
-  .tf-indicator-card--delta.positive{ background:#2f8f71; }
-  .tf-indicator-card--delta.negative{ background:#b5762a; }
+  /* Delta card: solid, constant fill (dark mint) so it reads as the headline
+     stat rather than a third equal-weight card, larger figure to match. */
+  .tf-indicator-card--delta{ background:#2f8f71; border-color:transparent; display:flex; flex-direction:column; justify-content:center; }
   .tf-indicator-card--delta .tf-indicator-label{ color:rgba(255,255,255,0.85); }
   .tf-indicator-card--delta .tf-indicator-value{ color:#ffffff; font-size:38px; }
   .tf-indicator-card--delta .tf-indicator-value .unit{ color:rgba(255,255,255,0.75); }
@@ -70,18 +70,18 @@
     </div>
     <div class="tf-indicator-row" id="indicator-row">
       <div class="tf-indicator-card">
-        <p class="tf-indicator-label" style="color:#3aa989;">SeaFeed — current ADG</p>
-        <div class="tf-indicator-value" id="ind-seafeed">—</div>
+        <p class="tf-indicator-label" style="color:#3aa989;">SeaFeed: current ADG</p>
+        <div class="tf-indicator-value" id="ind-seafeed">-</div>
         <p class="tf-indicator-meta" id="ind-seafeed-date">Loading…</p>
       </div>
       <div class="tf-indicator-card">
-        <p class="tf-indicator-label" style="color:#73818c;">Control — current ADG</p>
-        <div class="tf-indicator-value" id="ind-control">—</div>
+        <p class="tf-indicator-label" style="color:#73818c;">Control: current ADG</p>
+        <div class="tf-indicator-value" id="ind-control">-</div>
         <p class="tf-indicator-meta" id="ind-control-date">Loading…</p>
       </div>
       <div class="tf-indicator-card tf-indicator-card--delta" id="card-delta">
         <p class="tf-indicator-label">SeaFeed vs Control</p>
-        <div class="tf-indicator-value" id="ind-delta">—</div>
+        <div class="tf-indicator-value" id="ind-delta">-</div>
         <p class="tf-indicator-meta" id="ind-delta-date">&nbsp;</p>
       </div>
     </div>
@@ -135,16 +135,14 @@
     }
     valueEl.innerHTML = reading.value.toFixed(2) + '<span class="unit">kg/day</span>';
     const stale = daysSince(reading.date) > STALE_AFTER_DAYS;
-    metaEl.textContent = 'As at ' + fmtDateOnly(reading.date) + (stale ? ' — reading may be out of date' : '');
+    metaEl.textContent = 'As at ' + fmtDateOnly(reading.date) + (stale ? ', reading may be out of date' : '');
     metaEl.classList.toggle('stale', stale);
   }
 
   function renderDelta(seafeed, control){
-    const cardEl = document.getElementById('card-delta');
     const valueEl = document.getElementById('ind-delta');
     const metaEl = document.getElementById('ind-delta-date');
     if (!seafeed || !control){
-      cardEl.classList.remove('positive', 'negative');
       valueEl.innerHTML = '<span class="tf-indicator-empty">Not enough data</span>';
       metaEl.textContent = '';
       return;
@@ -152,12 +150,10 @@
     const diff = seafeed.value - control.value;
     const pct = control.value !== 0 ? (diff / control.value) * 100 : null;
     const sign = diff >= 0 ? '+' : '';
-    cardEl.classList.toggle('positive', diff >= 0);
-    cardEl.classList.toggle('negative', diff < 0);
     valueEl.innerHTML = `${sign}${diff.toFixed(2)}<span class="unit">kg/day</span>`;
     metaEl.textContent = pct !== null ? `${sign}${pct.toFixed(1)}% vs Control` : '';
     if (seafeed.date !== control.date){
-      metaEl.textContent += ' (readings on different dates — see cards above)';
+      metaEl.textContent += ' (readings on different dates, see cards above)';
     }
   }
 
