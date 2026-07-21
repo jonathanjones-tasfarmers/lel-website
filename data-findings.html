@@ -3,46 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!--
-  Fully self-contained, same pattern as live-metrics.html / farms-stats-banner.html
-  / farms-calculator.html: loaded via iframe into a Hub page, not pasted directly
-  into Hub (charts need real JS, which Hub's content blocks won't reliably run
-  the way this standalone document will).
-  Only external dependency: Chart.js from jsDelivr. If that CDN is ever blocked
-  on your network or by ArcGIS Hub's content security policy, the charts simply
-  won't render: worth a quick check in-browser once this is published.
-  Charts stacked one-per-row now instead of a 2x2 card grid, and each chart's
-  canvas sits in a div with an explicit fixed height (240px): Chart.js needs
-  that on the parent to actually cap the chart's height when responsive is on;
-  without it the canvas had nothing constraining it and grew too tall.
-  FIX (see chat): loadAdg() previously built the shared x-axis labels from
-  whichever treatment had more daily readings, then plotted both datasets as
-  plain arrays. Chart.js aligns plain-array data to labels by array index, not
-  by date, so the shorter series (Control, which started tracking over a month
-  after SeaFeed) got silently plotted against the wrong dates and appeared to
-  stop partway through the chart. Fixed by building one deduplicated, sorted
-  timeline across both treatments and looking each value up by its actual
-  snapshot_date, with nulls wherever a treatment has no reading for that date.
-  UPDATE: all line datasets now set spanGaps:true, so a null reading no longer
-  breaks the line: Chart.js draws straight through the gap to the next real
-  point instead. tension is set on every dataset (0.35) so all three charts
-  render as smoothed curves rather than straight-segment lines.
 
-  UPDATE (see chat): third section replaced. It was "Cost per kg CH4 abated"
-  (SeaFeed only, cost_per_kg_ch4_abated_aud): that metric is undefined for
-  Control (no abatement to divide against, per the economics pipeline's own
-  notes field), so it was never a comparison in the first place. Swapped for
-  indicator cards on cost_per_kg_gain_aud: cost of production PER KG OF
-  LIVEWEIGHT GAIN, already computed for both treatments in
-  04. Economics_Pipeline.py but not previously surfaced anywhere. This is the
-  equitable comparison: raw cumulative_cost_aud / cost_per_head_aud makes
-  SeaFeed look far more expensive mostly because that mob has eaten more
-  (pricier) lick blocks, which conflates spend with output. Dividing by
-  actual weight gain indexes both treatments to what they produced. Worth
-  knowing: SeaFeed still comes out ahead on raw spend but behind on this
-  fair metric (currently ~2.7x Control's $/kg gain): that's a genuine
-  finding, not an artifact of the indexing.
--->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   html,body{ margin:0; background:transparent; }
