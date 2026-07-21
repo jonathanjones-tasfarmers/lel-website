@@ -3,7 +3,43 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Self-contained page, loaded via iframe into a Hub page (not pasted directly
+  into Hub, since Hub's content blocks won't reliably run real JS). Same
+  pattern as live-metrics.html / farms-stats-banner.html / farms-calculator.html.
+  Only external dependency: Chart.js from jsDelivr. If that CDN is ever
+  blocked on your network or by ArcGIS Hub's content security policy, the
+  charts won't render, worth a quick check in-browser after publishing.
 
+  Layout: two line charts (methane abatement, average daily gain) followed
+  by one section of indicator cards (cost of production). Each chart's
+  canvas sits inside a div with an explicit fixed height (.tf-chart-box) -
+  Chart.js needs that on the parent to cap the chart's height when
+  responsive is on, otherwise the canvas has nothing constraining it.
+
+  Three things worth knowing before editing the data-loading functions below:
+
+  1. ADG chart (loadAdg): SeaFeed and Control don't share the same set of
+     reporting dates (Control started tracking over a month after SeaFeed).
+     Both series are looked up by actual snapshot_date against one shared,
+     deduplicated timeline, not plotted as plain arrays, since Chart.js
+     aligns plain-array datasets to labels by index, not by date, and the
+     shorter series would silently end up plotted against the wrong dates.
+
+  2. All line datasets set spanGaps:true and tension:0.35, so a missing
+     reading doesn't break the line (Chart.js draws through the gap to the
+     next real point) and every chart renders as a smoothed curve.
+
+  3. Cost of production section (loadCostOfProduction): uses
+     cost_per_kg_gain_aud, not raw cumulative_cost_aud / cost_per_head_aud.
+     Raw spend makes SeaFeed look far more expensive mostly because that mob
+     eats more (pricier) lick blocks, conflating spend with output.
+     Dividing cost by actual weight gain indexes both treatments to what
+     they produced, which is the fair comparison. Worth knowing: SeaFeed
+     still comes out behind Control on this fair metric too (currently
+     about 2.7x Control's cost per kg gain), that's a genuine finding, not
+     an artifact of the indexing.
+-->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   html,body{ margin:0; background:transparent; }
@@ -30,12 +66,12 @@
   .tf-indicator-meta{ font-size:12px; color:#73818c; margin-top:8px; line-height:1.4; }
   .tf-indicator-meta.stale{ color:#c98a2e; font-weight:700; }
   .tf-indicator-empty{ font-size:13px; color:#73818c; }
-  /* Delta card: solid, constant fill (dark mint), same colour used for the
-     equivalent card in lel-adg-indicators.html. Deliberately not
-     colour-coded by outcome: this card's good/bad direction is the
-     opposite of the ADG card's (lower cost is good here, higher ADG is
-     good there), so a shared green/amber convention would mean opposite
-     things on the two cards. One fixed colour avoids that confusion. */
+  /* Delta card: solid, constant fill (dark mint), matches the equivalent
+     card in lel-adg-indicators.html. Deliberately not colour-coded by
+     outcome: this card's good/bad direction is the opposite of the ADG
+     card's (lower cost is good here, higher ADG is good there), so a
+     shared green/amber convention would mean opposite things on the two
+     cards. One fixed colour avoids that. */
   .tf-indicator-card--delta{ background:#2f8f71; border-color:transparent; display:flex; flex-direction:column; justify-content:center; }
   .tf-indicator-card--delta .tf-indicator-label{ color:rgba(255,255,255,0.85); }
   .tf-indicator-card--delta .tf-indicator-value{ color:#ffffff; font-size:38px; }
@@ -49,12 +85,14 @@
     <div class="tf-status-row">
       <span class="tf-status" id="tf-status" style="color:#73818c;">Loading live data…</span>
     </div>
+
     <div class="tf-chart-section">
       <p class="tf-chart-title">Methane abatement over time</p>
       <p class="tf-chart-caption">Modelled abatement rate, SeaFeed group, every recorded reading, not just the latest figure.</p>
       <div class="tf-chart-box"><canvas id="chart-abatement"></canvas></div>
       <p class="tf-chart-empty" id="chart-abatement-empty" style="display:none;">No emissions readings recorded yet.</p>
     </div>
+
     <div class="tf-chart-section">
       <p class="tf-chart-title">Average daily gain over time</p>
       <p class="tf-chart-caption">Rolling average daily gain, SeaFeed vs control.</p>
@@ -62,10 +100,11 @@
       <p class="tf-chart-empty" id="chart-adg-empty" style="display:none;">No productivity readings recorded yet.</p>
       <div class="tf-legend"><span><span class="tf-legend-dot" style="background:#3aa989;"></span>SeaFeed</span><span><span class="tf-legend-dot" style="background:#a9b8c4;"></span>Control</span></div>
     </div>
+
     <div class="tf-chart-section">
       <p class="tf-chart-title">Cost of production: SeaFeed vs Control</p>
       <p class="tf-chart-caption">Cost per kg of liveweight gain, not raw spend per head: this indexes both treatments to what they actually produced, so the comparison isn't skewed by SeaFeed's higher lick block intake and cost.</p>
-      <div class="tf-indicator-row" id="cop-indicator-row">
+      <div class="tf-indicator-row">
         <div class="tf-indicator-card">
           <p class="tf-indicator-label" style="color:#3aa989;">SeaFeed: cost of production</p>
           <div class="tf-indicator-value" id="ind-cop-seafeed">-</div>
@@ -76,13 +115,12 @@
           <div class="tf-indicator-value" id="ind-cop-control">-</div>
           <p class="tf-indicator-meta" id="ind-cop-control-meta">Loading…</p>
         </div>
-        <div class="tf-indicator-card tf-indicator-card--delta" id="card-cop-delta">
+        <div class="tf-indicator-card tf-indicator-card--delta">
           <p class="tf-indicator-label">SeaFeed vs Control</p>
           <div class="tf-indicator-value" id="ind-cop-delta">-</div>
           <p class="tf-indicator-meta" id="ind-cop-delta-meta">&nbsp;</p>
         </div>
       </div>
-      <p class="tf-chart-empty" id="chart-cost-ch4-empty" style="display:none;">No cost data recorded yet.</p>
     </div>
   </div>
 <script>
@@ -133,9 +171,9 @@
       document.getElementById(emptyId).style.display = 'block';
       return;
     }
-    // Every dataset gets spanGaps + tension here as a backstop, in case a
-    // caller forgets to set them: the individual dataset definitions below
-    // also set them explicitly.
+    // spanGaps + tension applied here as a backstop even though every caller
+    // already sets them per-dataset, so a future dataset that forgets still
+    // renders consistently with the rest.
     const styledDatasets = datasets.map(d => Object.assign({ spanGaps:true, tension:0.35, cubicInterpolationMode:'monotone' }, d));
     new Chart(document.getElementById(canvasId), {
       type:'line',
@@ -143,6 +181,7 @@
       options: baseLineOptions(yAxisLabel)
     });
   }
+
   async function loadAbatement(){
     try{
       const data = await q(EMISSIONS_URL, {
@@ -157,6 +196,7 @@
       );
     } catch(err){ console.error('Abatement chart failed:', err); }
   }
+
   async function loadAdg(){
     try{
       const [seafeed, control] = await Promise.all([
@@ -165,13 +205,8 @@
       ]);
       const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
       const ctRows = control.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
-      // Shared, deduplicated, sorted timeline across BOTH treatments, values
-      // looked up by date rather than by array index (see header comment for
-      // why that matters). Missing readings are left as null so Chart.js
-      // knows there's no data point there: but with spanGaps:true below,
-      // the line is still drawn straight through to the next real point
-      // instead of breaking, so a short reporting gap in one treatment
-      // doesn't cut its line off early.
+      // See header comment (point 1) for why this is a date-keyed lookup
+      // against a shared timeline, not two plain arrays.
       const sfByDate = new Map(sfRows.map(r => [r.snapshot_date, r.rolling_adg]));
       const ctByDate = new Map(ctRows.map(r => [r.snapshot_date, r.rolling_adg]));
       const allDates = Array.from(new Set([...sfByDate.keys(), ...ctByDate.keys()])).sort((a, b) => a - b);
@@ -187,8 +222,8 @@
   }
 
   // Latest cost-of-production snapshot for one treatment. cost_per_kg_gain_aud
-  // is the equitable metric: see header comment for why raw cost_per_head_aud
-  // isn't used here.
+  // is the equitable metric, see header comment (point 3) for why raw
+  // cost_per_head_aud isn't used here.
   async function latestCostOfProduction(treatment){
     const data = await q(ECON_URL, {
       where: `treatment='${treatment}' AND cost_per_kg_gain_aud IS NOT NULL`,
