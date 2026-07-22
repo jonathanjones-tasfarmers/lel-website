@@ -7,13 +7,11 @@
   Same pattern/family as lel-data-findings.html: self-contained, loaded via
   iframe into a Hub page. Three headline indicator cards: latest ADG for
   SeaFeed, latest ADG for Control, and the SeaFeed vs Control delta.
-
   DATA SOURCE: pulls adg_all straight from the OptiWeigh Assets view layer
   (public view over Methane_Trial_Assets), not the rolling-average layer
   used elsewhere on the page. adg_all is the OptiWeigh device's own
   per-session ADG figure, the true source, rather than a value derived
   after the fact, per the trial lead's call.
-
   TREATMENT MATCHING: Treatment_Type is the intended field for telling
   SeaFeed and Control sessions apart. Matched case-insensitively via LIKE
   against variants ("SEAFEED", "SEA FEED", "CONTROL") to be forward-compatible
@@ -21,14 +19,12 @@
   session_name ("sea" -> SeaFeed, "con" -> Control), so this should be
   populated going forward. Any row where it's still null won't match
   either card, and the card will show "No data".
-
   "LATEST" = most recent snapshot_date, tie-broken by OBJECTID (highest =
   most recently entered). SeaFeed and Control are queried and dated
   independently, see lel-data-findings.html's ADG chart fix for why the two
   treatments don't always share a reporting date. Each card shows its own
   date rather than implying a same-day snapshot, and flags itself as
   possibly stale if that date is more than STALE_AFTER_DAYS old.
-
   DELTA CARD COLOUR: uses one constant fill (dark mint, matches the trial's
   brand accent) rather than flipping colour by outcome. Kept it simple and
   consistent with the delta card in lel-data-findings.html's Cost of
@@ -37,6 +33,11 @@
   good/bad colour code would have meant green and amber meaning opposite
   things depending which card you're looking at. One fixed colour sidesteps
   that entirely.
+  LOADING STATE: value/meta cells start as an animated skeleton bar rather
+  than "-"/"Loading…" text, so the cards don't read as broken while the
+  ArcGIS REST query is in flight. renderCard()/renderDelta() overwrite the
+  cell's innerHTML/textContent once data arrives, so no JS logic changed
+  to support this, only the initial markup + CSS.
 -->
 <style>
   html,body{ margin:0; background:transparent; }
@@ -47,12 +48,11 @@
   .tf-indicator-row{ display:flex; gap:16px; flex-wrap:wrap; }
   .tf-indicator-card{ flex:1 1 200px; background:#f4f9fc; border:1px solid #d6e5f2; border-radius:6px; padding:18px 20px; }
   .tf-indicator-label{ font-family:Tahoma,Verdana,sans-serif; font-size:12px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; color:#041221; margin:0 0 8px 0; }
-  .tf-indicator-value{ font-family:Tahoma,Verdana,sans-serif; font-size:32px; font-weight:700; color:#041221; line-height:1; }
+  .tf-indicator-value{ font-family:Tahoma,Verdana,sans-serif; font-size:32px; font-weight:700; color:#041221; line-height:1; min-height:32px; display:flex; align-items:center; }
   .tf-indicator-value .unit{ font-size:14px; font-weight:400; color:#73818c; margin-left:4px; }
-  .tf-indicator-meta{ font-size:12px; color:#73818c; margin-top:8px; }
+  .tf-indicator-meta{ font-size:12px; color:#73818c; margin-top:8px; min-height:16px; }
   .tf-indicator-meta.stale{ color:#c98a2e; font-weight:700; }
   .tf-indicator-empty{ font-size:13px; color:#73818c; }
-
   /* Delta card: solid, constant fill (dark mint) so it reads as the headline
      stat rather than a third equal-weight card, larger figure to match. */
   .tf-indicator-card--delta{ background:#2f8f71; border-color:transparent; display:flex; flex-direction:column; justify-content:center; }
@@ -61,6 +61,24 @@
   .tf-indicator-card--delta .tf-indicator-value .unit{ color:rgba(255,255,255,0.75); }
   .tf-indicator-card--delta .tf-indicator-meta{ color:rgba(255,255,255,0.85); }
   .tf-indicator-card--delta .tf-indicator-empty{ color:rgba(255,255,255,0.85); }
+  /* --- loading skeleton --- */
+  @keyframes tf-shimmer{
+    0%{ background-position:-400px 0; }
+    100%{ background-position:400px 0; }
+  }
+  .tf-skeleton{
+    display:inline-block;
+    border-radius:4px;
+    background:linear-gradient(90deg, #e2e8ee 25%, #eef2f6 37%, #e2e8ee 63%);
+    background-size:400px 100%;
+    animation:tf-shimmer 1.2s ease-in-out infinite;
+  }
+  .tf-skeleton-value{ width:76px; height:26px; }
+  .tf-skeleton-meta{ width:130px; height:12px; }
+  .tf-indicator-card--delta .tf-skeleton{
+    background:linear-gradient(90deg, rgba(255,255,255,0.25) 25%, rgba(255,255,255,0.45) 37%, rgba(255,255,255,0.25) 63%);
+    background-size:400px 100%;
+  }
 </style>
 </head>
 <body>
@@ -71,18 +89,18 @@
     <div class="tf-indicator-row" id="indicator-row">
       <div class="tf-indicator-card">
         <p class="tf-indicator-label" style="color:#3aa989;">SeaFeed: current ADG</p>
-        <div class="tf-indicator-value" id="ind-seafeed">-</div>
-        <p class="tf-indicator-meta" id="ind-seafeed-date">Loading…</p>
+        <div class="tf-indicator-value" id="ind-seafeed"><span class="tf-skeleton tf-skeleton-value"></span></div>
+        <p class="tf-indicator-meta" id="ind-seafeed-date"><span class="tf-skeleton tf-skeleton-meta"></span></p>
       </div>
       <div class="tf-indicator-card">
         <p class="tf-indicator-label" style="color:#73818c;">Control: current ADG</p>
-        <div class="tf-indicator-value" id="ind-control">-</div>
-        <p class="tf-indicator-meta" id="ind-control-date">Loading…</p>
+        <div class="tf-indicator-value" id="ind-control"><span class="tf-skeleton tf-skeleton-value"></span></div>
+        <p class="tf-indicator-meta" id="ind-control-date"><span class="tf-skeleton tf-skeleton-meta"></span></p>
       </div>
       <div class="tf-indicator-card tf-indicator-card--delta" id="card-delta">
         <p class="tf-indicator-label">SeaFeed vs Control</p>
-        <div class="tf-indicator-value" id="ind-delta">-</div>
-        <p class="tf-indicator-meta" id="ind-delta-date">&nbsp;</p>
+        <div class="tf-indicator-value" id="ind-delta"><span class="tf-skeleton tf-skeleton-value"></span></div>
+        <p class="tf-indicator-meta" id="ind-delta-date"><span class="tf-skeleton tf-skeleton-meta"></span></p>
       </div>
     </div>
   </div>
@@ -90,14 +108,12 @@
   const ASSETS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Assets_view/FeatureServer/0/query";
   const MINT = '#3aa989', SLATE = '#a9b8c4', WARNING = '#c98a2e';
   const STALE_AFTER_DAYS = 14;
-
   async function q(params){
     const res = await fetch(ASSETS_URL + "?" + new URLSearchParams(params));
     const data = await res.json();
     if (data.error) throw new Error(data.error.message || "Query failed");
     return data;
   }
-
   // snapshot_date is a Date Only field ("YYYY-MM-DD" string, no time/zone).
   // Parsed as local y/m/d components rather than new Date(string) so it
   // doesn't shift a day in either direction depending on browser timezone.
@@ -111,7 +127,6 @@
   function daysSince(dateStr){
     return (Date.now() - parseDateOnly(dateStr).getTime()) / (1000 * 60 * 60 * 24);
   }
-
   async function latestForTreatment(likePatterns){
     const treatmentClause = likePatterns.map(p => `UPPER(Treatment_Type) LIKE '%${p}%'`).join(' OR ');
     const data = await q({
@@ -124,7 +139,6 @@
     const row = data.features[0]?.attributes;
     return row ? { date: row.snapshot_date, value: row.adg_all, session: row.session_name } : null;
   }
-
   function renderCard(valueId, metaId, reading){
     const valueEl = document.getElementById(valueId);
     const metaEl = document.getElementById(metaId);
@@ -138,7 +152,6 @@
     metaEl.textContent = 'As at ' + fmtDateOnly(reading.date) + (stale ? ', reading may be out of date' : '');
     metaEl.classList.toggle('stale', stale);
   }
-
   function renderDelta(seafeed, control){
     const valueEl = document.getElementById('ind-delta');
     const metaEl = document.getElementById('ind-delta-date');
@@ -156,7 +169,6 @@
       metaEl.textContent += ' (readings on different dates, see cards above)';
     }
   }
-
   async function loadAll(){
     const statusEl = document.getElementById('tf-status');
     try{
