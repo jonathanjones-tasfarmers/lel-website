@@ -38,6 +38,13 @@
   ArcGIS REST query is in flight. renderCard()/renderDelta() overwrite the
   cell's innerHTML/textContent once data arrives, so no JS logic changed
   to support this, only the initial markup + CSS.
+  UNITS: adg_all comes back from the layer in kg/day; renderCard()/
+  renderDelta() multiply by 1000 for display, since g/day is the
+  convention used everywhere else on this dashboard (lel-data-findings.html's
+  ADG chart, the 01 sync's rolling_adg field, etc). The delta card's percent
+  figure is still computed from the raw kg values first, before conversion,
+  since a ratio is unit-independent, this just keeps the underlying maths
+  exactly as it was.
 -->
 <style>
   html,body{ margin:0; background:transparent; }
@@ -147,7 +154,7 @@
       metaEl.textContent = 'Waiting on Treatment_Type to be populated';
       return;
     }
-    valueEl.innerHTML = reading.value.toFixed(2) + '<span class="unit">kg/day</span>';
+    valueEl.innerHTML = (reading.value * 1000).toFixed(0) + '<span class="unit">g/day</span>';
     const stale = daysSince(reading.date) > STALE_AFTER_DAYS;
     metaEl.textContent = 'As at ' + fmtDateOnly(reading.date) + (stale ? ', reading may be out of date' : '');
     metaEl.classList.toggle('stale', stale);
@@ -160,10 +167,11 @@
       metaEl.textContent = '';
       return;
     }
-    const diff = seafeed.value - control.value;
-    const pct = control.value !== 0 ? (diff / control.value) * 100 : null;
-    const sign = diff >= 0 ? '+' : '';
-    valueEl.innerHTML = `${sign}${diff.toFixed(2)}<span class="unit">kg/day</span>`;
+    const diffKg = seafeed.value - control.value;
+    const pct = control.value !== 0 ? (diffKg / control.value) * 100 : null;
+    const diffG = diffKg * 1000;
+    const sign = diffG >= 0 ? '+' : '';
+    valueEl.innerHTML = `${sign}${diffG.toFixed(0)}<span class="unit">g/day</span>`;
     metaEl.textContent = pct !== null ? `${sign}${pct.toFixed(1)}% vs Control` : '';
     if (seafeed.date !== control.date){
       metaEl.textContent += ' (readings on different dates, see cards above)';
