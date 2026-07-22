@@ -47,7 +47,6 @@
     letter-spacing: 0.5px;
     margin: 0 0 22px 0;
   }
-
   /* --- disclosure --- */
   .disclosure-box {
     background: #fff6e8;
@@ -89,7 +88,6 @@
     line-height: 1.6;
     margin: 12px 0 0 0;
   }
-
   /* --- illustrative value block --- */
   .value-box {
     background: #041221;
@@ -133,7 +131,6 @@
   }
   .detail-label { font-size: 11.5px; color: #a9b8c4; margin: 0 0 4px 0; }
   .detail-value { font-size: 16px; color: #ffffff; font-weight: 700; margin: 0; }
-
   .more-info-toggle {
     display: inline-flex;
     align-items: center;
@@ -166,7 +163,6 @@
     max-width: 90ch;
   }
   .footnote a { color: #3aa989; }
-
   /* --- your herd calculator --- */
   .calc-box {
     background: #ffffff;
@@ -263,7 +259,6 @@
 </head>
 <body>
 <div class="wrap">
-
   <p class="eyebrow">Illustrative value</p>
   <h2>What the abatement to date could be worth</h2>
   <p class="intro">
@@ -273,7 +268,6 @@
     could look like for your own herd.
   </p>
   <p class="status" id="data-status">Loading live data…</p>
-
   <div class="disclosure-box">
     <div class="disclosure-summary" id="disclosure-toggle-row">
       <p class="disclosure-title">⚠ Not actual carbon credits, none have been issued or sold</p>
@@ -294,7 +288,6 @@
       </p>
     </div>
   </div>
-
   <div class="value-box">
     <div>
       <p class="value-label">Illustrative value of abatement to date</p>
@@ -316,7 +309,6 @@
       </div>
     </div>
   </div>
-
   <a href="#" class="more-info-toggle" id="footnote-toggle">More info ▾</a>
   <div class="footnote-wrap" id="footnote-wrap">
     <p class="footnote">
@@ -329,7 +321,6 @@
       Whether this trial's methodology would qualify for a registered ACCU method has not been assessed.
     </p>
   </div>
-
   <div class="calc-box">
     <p class="calc-title">Estimate it for your own herd</p>
     <p class="calc-intro">
@@ -346,17 +337,17 @@
     <div class="calc-stats">
       <div class="calc-stat-card">
         <p class="calc-stat-label">CO2‑e abated per year</p>
-        <p class="calc-stat-value" id="calc-co2e-out">—</p>
+        <p class="calc-stat-value" id="calc-co2e-out">Loading…</p>
         <p class="calc-stat-sub" id="calc-rate-sub">—</p>
       </div>
       <div class="calc-stat-card accent">
         <p class="calc-stat-label">Illustrative value per year</p>
-        <p class="calc-stat-value" id="calc-value-out">—</p>
+        <p class="calc-stat-value" id="calc-value-out">Loading…</p>
         <p class="calc-stat-sub">At the $32.50/t reference price, not realisable income, see disclosure above</p>
       </div>
       <div class="calc-stat-card">
         <p class="calc-stat-label">Estimated SeaFeed cost per year</p>
-        <p class="calc-stat-value" id="calc-cost-out">—</p>
+        <p class="calc-stat-value" id="calc-cost-out">Loading…</p>
         <p class="calc-stat-sub">Indicative, based on the trial's average cost to date</p>
       </div>
     </div>
@@ -365,21 +356,16 @@
       <p class="calc-note" id="calc-note">Loading live trial data…</p>
     </div>
   </div>
-
 </div>
-
 <script>
   const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
   const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
   const BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
-
   // Source: EY "Australian Carbon Market Outlook 2026", see footnote.
   // Update if EY (or an equivalent credible source) publishes a
   // materially different outlook.
   const REFERENCE_PRICE_AUD_PER_TONNE = 32.5;
-
   let GWP = 28;
-
   async function fetchGwp() {
     const params = new URLSearchParams({
       where: "metric_name='METHANE_GWP100_AR5'",
@@ -393,7 +379,6 @@
       GWP = data.features[0].attributes.metric_value;
     }
   }
-
   async function fetchLatestEconomics() {
     const params = new URLSearchParams({
       where: "treatment='seafeed'",
@@ -408,7 +393,6 @@
     if (!data.features || data.features.length === 0) throw new Error("No economics records found");
     return data.features[0].attributes;
   }
-
   async function fetchLatestEmissions() {
     const params = new URLSearchParams({
       where: "treatment='seafeed'",
@@ -423,7 +407,6 @@
     if (!data.features || data.features.length === 0) throw new Error("No emissions records found");
     return data.features[0].attributes;
   }
-
   // --- disclosure toggle ---
   const disclosureToggleRow = document.getElementById('disclosure-toggle-row');
   const disclosureDetails = document.getElementById('disclosure-details');
@@ -432,7 +415,6 @@
     const isExpanded = disclosureDetails.classList.toggle('expanded');
     disclosureToggleLabel.textContent = isExpanded ? 'Hide ▴' : 'Why? ▾';
   });
-
   // --- footnote "more info" toggle ---
   const footnoteToggle = document.getElementById('footnote-toggle');
   const footnoteWrap = document.getElementById('footnote-wrap');
@@ -441,13 +423,11 @@
     const isExpanded = footnoteWrap.classList.toggle('expanded');
     footnoteToggle.textContent = isExpanded ? 'Hide ▴' : 'More info ▾';
   });
-
   const statusEl = document.getElementById('data-status');
   const valueOut = document.getElementById('value-out');
   const co2eOut = document.getElementById('co2e-out');
   const priceOut = document.getElementById('price-out');
   const daysOut = document.getElementById('days-out');
-
   // --- your herd calculator ---
   const herdSizeInput = document.getElementById('herd-size');
   const calcCo2eOut = document.getElementById('calc-co2e-out');
@@ -462,29 +442,23 @@
     const isExpanded = calcInfoWrap.classList.toggle('expanded');
     calcInfoToggle.textContent = isExpanded ? 'Hide ▴' : 'Information ▾';
   });
-
   let latestEmissions = null;
   let latestEconomics = null;
-
   function updateHerdCalculator() {
     if (!latestEmissions) {
       calcNote.textContent = 'Live trial data unavailable right now, try again shortly.';
       calcNote.style.color = '#c98a2e';
       return;
     }
-
     let herdSize = Number(herdSizeInput.value);
     if (!herdSize || herdSize < 1) herdSize = 0;
-
     const methaneGPerHdDay = latestEmissions.methane_abated_g_per_hd_day || 0;
     const abatementRate = latestEmissions.abatement_rate;
     const intakeGPerHdDay = latestEmissions.intake_g_per_hd_day;
-
     // Per-head annual abatement, scaled to herd size.
     const co2eKgPerHeadPerYear = (methaneGPerHdDay * 365 / 1000) * GWP;
     const herdCo2eTonnesPerYear = (co2eKgPerHeadPerYear * herdSize) / 1000;
     const herdValuePerYear = herdCo2eTonnesPerYear * REFERENCE_PRICE_AUD_PER_TONNE;
-
     calcCo2eOut.textContent = herdCo2eTonnesPerYear >= 1
       ? herdCo2eTonnesPerYear.toFixed(1) + ' t'
       : Math.round(herdCo2eTonnesPerYear * 1000).toLocaleString() + ' kg';
@@ -492,7 +466,6 @@
       ? 'At the trial’s current ' + abatementRate.toFixed(1) + '% modelled abatement rate'
       : '';
     calcValueOut.textContent = '$' + herdValuePerYear.toLocaleString(undefined, { maximumFractionDigits: 0 });
-
     // Estimated feeding cost, derived from the trial's average cost-per-head
     // to date (cost_per_head_aud / days_of_data), annualised. Indicative
     // only, actual cost depends on your supplier price and intake.
@@ -503,38 +476,33 @@
     } else {
       calcCostOut.textContent = '—';
     }
-
     const intakeNote = intakeGPerHdDay != null ? ' (' + intakeGPerHdDay.toFixed(0) + ' g SeaFeed/head/day)' : '';
     calcNote.textContent = 'Based on the trial’s most recent per-head daily methane abatement' + intakeNote + '. Illustrative only, see disclosure above.';
     calcNote.style.color = '#6b7c8a';
   }
-
   herdSizeInput.addEventListener('input', updateHerdCalculator);
-
   async function init() {
     try {
       await fetchGwp();
+    } catch (err) {
+      console.error('GWP fetch failed, using default 28:', err);
+    }
+    try {
       const [econ, emissions] = await Promise.all([fetchLatestEconomics(), fetchLatestEmissions()]);
       latestEconomics = econ;
       latestEmissions = emissions;
-
       const abatedPerHead = econ.cumulative_ch4_abated_kg_per_head || 0;
       const headCount = econ.representative_head_count || 0;
       const totalKgCh4 = abatedPerHead * headCount;
       const totalKgCo2e = totalKgCh4 * GWP;
       const totalTonnesCo2e = totalKgCo2e / 1000;
-
       const illustrativeValue = totalTonnesCo2e * REFERENCE_PRICE_AUD_PER_TONNE;
-
       valueOut.textContent = '$' + illustrativeValue.toLocaleString(undefined, { maximumFractionDigits: 0 });
-
       co2eOut.textContent = totalTonnesCo2e >= 1
         ? totalTonnesCo2e.toFixed(2) + ' t'
         : Math.round(totalKgCo2e).toLocaleString() + ' kg';
-
       priceOut.textContent = '$' + REFERENCE_PRICE_AUD_PER_TONNE + '/t';
       daysOut.textContent = (econ.days_of_data != null) ? econ.days_of_data : '—';
-
       statusEl.textContent = 'Live data, updated ' + new Date().toLocaleDateString();
       statusEl.style.color = '#3aa989';
     } catch (err) {
@@ -544,7 +512,6 @@
     }
     updateHerdCalculator();
   }
-
   init();
 </script>
 </body>
