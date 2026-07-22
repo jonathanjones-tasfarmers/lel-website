@@ -10,26 +10,21 @@
   Only external dependency: Chart.js from jsDelivr. If that CDN is ever
   blocked on your network or by ArcGIS Hub's content security policy, the
   charts won't render, worth a quick check in-browser after publishing.
-
   Layout: two line charts (methane abatement, average daily gain) followed
   by one section of indicator cards (cost of production). Each chart's
   canvas sits inside a div with an explicit fixed height (.tf-chart-box) -
   Chart.js needs that on the parent to cap the chart's height when
   responsive is on, otherwise the canvas has nothing constraining it.
-
   Three things worth knowing before editing the data-loading functions below:
-
   1. ADG chart (loadAdg): SeaFeed and Control don't share the same set of
      reporting dates (Control started tracking over a month after SeaFeed).
      Both series are looked up by actual snapshot_date against one shared,
      deduplicated timeline, not plotted as plain arrays, since Chart.js
      aligns plain-array datasets to labels by index, not by date, and the
      shorter series would silently end up plotted against the wrong dates.
-
   2. All line datasets set spanGaps:true and tension:0.35, so a missing
      reading doesn't break the line (Chart.js draws through the gap to the
      next real point) and every chart renders as a smoothed curve.
-
   3. Cost of production section (loadCostOfProduction): uses
      cost_per_kg_gain_aud, not raw cumulative_cost_aud / cost_per_head_aud.
      Raw spend makes SeaFeed look far more expensive mostly because that mob
@@ -39,6 +34,20 @@
      still comes out behind Control on this fair metric too (currently
      about 2.7x Control's cost per kg gain), that's a genuine finding, not
      an artifact of the indexing.
+  4. ADG plausibility filter (isPlausibleAdg, in loadAdg): rolling_adg
+     readings occasionally come through at physically impossible values for
+     cattle (seen as far out as roughly -3,000 to +5,000 g/day), almost
+     certainly OptiWeigh measurement noise on short weighing intervals
+     rather than real growth/loss. Filtered out client-side, and the y-axis
+     is hard-capped to the same plausible range as a backstop, so a handful
+     of bad readings can't blow out the whole chart's scale. This treats the
+     symptom for display purposes only, the source data/pipeline should
+     still be checked for what's producing them.
+  5. Loading state: chart boxes show an animated skeleton placeholder, and
+     indicator cards show skeleton bars instead of "-"/"Loading…" text,
+     while their respective queries are in flight. Each render/catch path
+     is responsible for hiding its own skeleton, whether it succeeds, comes
+     back empty, or fails.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -56,14 +65,13 @@
   .tf-chart-empty{ font-size:13px; color:#73818c; text-align:center; padding:40px 0; }
   .tf-legend{ display:flex; gap:16px; margin-top:10px; font-size:12px; color:#73818c; }
   .tf-legend-dot{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:5px; vertical-align:middle; }
-
   /* Indicator cards: same family as lel-adg-indicators.html */
   .tf-indicator-row{ display:flex; gap:16px; flex-wrap:wrap; }
   .tf-indicator-card{ flex:1 1 200px; background:#f4f9fc; border:1px solid #d6e5f2; border-radius:6px; padding:18px 20px; }
   .tf-indicator-label{ font-family:Tahoma,Verdana,sans-serif; font-size:12px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; color:#041221; margin:0 0 8px 0; }
-  .tf-indicator-value{ font-family:Tahoma,Verdana,sans-serif; font-size:32px; font-weight:700; color:#041221; line-height:1; }
+  .tf-indicator-value{ font-family:Tahoma,Verdana,sans-serif; font-size:32px; font-weight:700; color:#041221; line-height:1; min-height:32px; display:flex; align-items:center; }
   .tf-indicator-value .unit{ font-size:14px; font-weight:400; color:#73818c; margin-left:4px; }
-  .tf-indicator-meta{ font-size:12px; color:#73818c; margin-top:8px; line-height:1.4; }
+  .tf-indicator-meta{ font-size:12px; color:#73818c; margin-top:8px; line-height:1.4; min-height:16px; }
   .tf-indicator-meta.stale{ color:#c98a2e; font-weight:700; }
   .tf-indicator-empty{ font-size:13px; color:#73818c; }
   /* Delta card: solid, constant fill (dark mint), matches the equivalent
@@ -78,6 +86,32 @@
   .tf-indicator-card--delta .tf-indicator-value .unit{ color:rgba(255,255,255,0.75); }
   .tf-indicator-card--delta .tf-indicator-meta{ color:rgba(255,255,255,0.85); }
   .tf-indicator-card--delta .tf-indicator-empty{ color:rgba(255,255,255,0.85); }
+  /* --- loading skeleton --- */
+  @keyframes tf-shimmer{
+    0%{ background-position:-400px 0; }
+    100%{ background-position:400px 0; }
+  }
+  .tf-skeleton{
+    display:inline-block;
+    border-radius:4px;
+    background:linear-gradient(90deg, #e2e8ee 25%, #eef2f6 37%, #e2e8ee 63%);
+    background-size:400px 100%;
+    animation:tf-shimmer 1.2s ease-in-out infinite;
+  }
+  .tf-skeleton-value{ width:76px; height:26px; }
+  .tf-skeleton-meta{ width:150px; height:12px; }
+  .tf-indicator-card--delta .tf-skeleton{
+    background:linear-gradient(90deg, rgba(255,255,255,0.25) 25%, rgba(255,255,255,0.45) 37%, rgba(255,255,255,0.25) 63%);
+    background-size:400px 100%;
+  }
+  .tf-chart-skeleton{
+    position:absolute;
+    inset:0;
+    border-radius:6px;
+    background:linear-gradient(90deg, #eef2f6 25%, #f6f9fb 37%, #eef2f6 63%);
+    background-size:400px 100%;
+    animation:tf-shimmer 1.2s ease-in-out infinite;
+  }
 </style>
 </head>
 <body>
@@ -85,40 +119,43 @@
     <div class="tf-status-row">
       <span class="tf-status" id="tf-status" style="color:#73818c;">Loading live data…</span>
     </div>
-
     <div class="tf-chart-section">
       <p class="tf-chart-title">Methane abatement over time</p>
       <p class="tf-chart-caption">Modelled abatement rate, SeaFeed group, every recorded reading, not just the latest figure.</p>
-      <div class="tf-chart-box"><canvas id="chart-abatement"></canvas></div>
+      <div class="tf-chart-box">
+        <div class="tf-chart-skeleton" id="chart-abatement-skeleton"></div>
+        <canvas id="chart-abatement"></canvas>
+      </div>
       <p class="tf-chart-empty" id="chart-abatement-empty" style="display:none;">No emissions readings recorded yet.</p>
     </div>
-
     <div class="tf-chart-section">
       <p class="tf-chart-title">Average daily gain over time</p>
-      <p class="tf-chart-caption">Rolling average daily gain, SeaFeed vs control.</p>
-      <div class="tf-chart-box"><canvas id="chart-adg"></canvas></div>
+      <p class="tf-chart-caption">Rolling average daily gain, SeaFeed vs control. Early-trial readings can swing more than later ones simply because each is based on fewer weighing sessions; a small number of readings outside a physically plausible range for cattle are treated as measurement noise and excluded.</p>
+      <div class="tf-chart-box">
+        <div class="tf-chart-skeleton" id="chart-adg-skeleton"></div>
+        <canvas id="chart-adg"></canvas>
+      </div>
       <p class="tf-chart-empty" id="chart-adg-empty" style="display:none;">No productivity readings recorded yet.</p>
       <div class="tf-legend"><span><span class="tf-legend-dot" style="background:#3aa989;"></span>SeaFeed</span><span><span class="tf-legend-dot" style="background:#a9b8c4;"></span>Control</span></div>
     </div>
-
     <div class="tf-chart-section">
       <p class="tf-chart-title">Cost of production: SeaFeed vs Control</p>
       <p class="tf-chart-caption">Cost per kg of liveweight gain, not raw spend per head: this indexes both treatments to what they actually produced, so the comparison isn't skewed by SeaFeed's higher lick block intake and cost.</p>
       <div class="tf-indicator-row">
         <div class="tf-indicator-card">
           <p class="tf-indicator-label" style="color:#3aa989;">SeaFeed: cost of production</p>
-          <div class="tf-indicator-value" id="ind-cop-seafeed">-</div>
-          <p class="tf-indicator-meta" id="ind-cop-seafeed-meta">Loading…</p>
+          <div class="tf-indicator-value" id="ind-cop-seafeed"><span class="tf-skeleton tf-skeleton-value"></span></div>
+          <p class="tf-indicator-meta" id="ind-cop-seafeed-meta"><span class="tf-skeleton tf-skeleton-meta"></span></p>
         </div>
         <div class="tf-indicator-card">
           <p class="tf-indicator-label" style="color:#73818c;">Control: cost of production</p>
-          <div class="tf-indicator-value" id="ind-cop-control">-</div>
-          <p class="tf-indicator-meta" id="ind-cop-control-meta">Loading…</p>
+          <div class="tf-indicator-value" id="ind-cop-control"><span class="tf-skeleton tf-skeleton-value"></span></div>
+          <p class="tf-indicator-meta" id="ind-cop-control-meta"><span class="tf-skeleton tf-skeleton-meta"></span></p>
         </div>
         <div class="tf-indicator-card tf-indicator-card--delta">
           <p class="tf-indicator-label">SeaFeed vs Control</p>
-          <div class="tf-indicator-value" id="ind-cop-delta">-</div>
-          <p class="tf-indicator-meta" id="ind-cop-delta-meta">&nbsp;</p>
+          <div class="tf-indicator-value" id="ind-cop-delta"><span class="tf-skeleton tf-skeleton-value"></span></div>
+          <p class="tf-indicator-meta" id="ind-cop-delta-meta"><span class="tf-skeleton tf-skeleton-meta"></span></p>
         </div>
       </div>
     </div>
@@ -129,7 +166,17 @@
   const PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
   const MINT = '#3aa989', SLATE = '#a9b8c4', WARNING = '#c98a2e';
   const STALE_AFTER_DAYS = 14;
-
+  // Physically plausible ADG range for cattle, in g/day. Readings outside
+  // this are almost certainly weighing/measurement noise (a short interval
+  // between sessions with even a small scale error can produce huge implied
+  // ADG swings), not real growth or loss. Adjust if your herd's genuine
+  // range differs, but the underlying data pipeline is still worth checking
+  // for whatever's producing the out-of-range readings in the first place.
+  const PLAUSIBLE_ADG_MIN_G = -1000;
+  const PLAUSIBLE_ADG_MAX_G = 3000;
+  function isPlausibleAdg(value){
+    return value != null && value >= PLAUSIBLE_ADG_MIN_G && value <= PLAUSIBLE_ADG_MAX_G;
+  }
   async function q(url, params){
     const res = await fetch(url + "?" + new URLSearchParams(params));
     const data = await res.json();
@@ -145,7 +192,14 @@
   function axisTitle(text){
     return { display:true, text, font:{ family:'Tahoma,Verdana,sans-serif', size:12, weight:'bold' }, color:'#041221', padding:{ top:8 } };
   }
-  function baseLineOptions(yAxisLabel){
+  function baseLineOptions(yAxisLabel, yMin, yMax){
+    const yScale = {
+      title: axisTitle(yAxisLabel),
+      ticks:{ font:{ family:'Verdana,Tahoma,sans-serif', size:11 }, color:'#73818c' },
+      grid:{ color:'#e6f6ff' }
+    };
+    if (yMin != null) yScale.min = yMin;
+    if (yMax != null) yScale.max = yMax;
     return {
       responsive:true,
       maintainAspectRatio:false,
@@ -157,15 +211,23 @@
           ticks:{ font:{ family:'Verdana,Tahoma,sans-serif', size:11 }, color:'#73818c', maxRotation:0, autoSkip:true, maxTicksLimit:8 },
           grid:{ display:false }
         },
-        y:{
-          title: axisTitle(yAxisLabel),
-          ticks:{ font:{ family:'Verdana,Tahoma,sans-serif', size:11 }, color:'#73818c' },
-          grid:{ color:'#e6f6ff' }
-        }
+        y: yScale
       }
     };
   }
-  function renderLineChart(canvasId, emptyId, labels, datasets, yAxisLabel){
+  function hideChartSkeleton(canvasId){
+    const skeletonEl = document.getElementById(canvasId + '-skeleton');
+    if (skeletonEl) skeletonEl.style.display = 'none';
+  }
+  function showChartError(canvasId, emptyId, message){
+    hideChartSkeleton(canvasId);
+    document.getElementById(canvasId).closest('.tf-chart-box').style.display = 'none';
+    const emptyEl = document.getElementById(emptyId);
+    emptyEl.textContent = message;
+    emptyEl.style.display = 'block';
+  }
+  function renderLineChart(canvasId, emptyId, labels, datasets, yAxisLabel, yMin, yMax){
+    hideChartSkeleton(canvasId);
     if (!labels.length){
       document.getElementById(canvasId).closest('.tf-chart-box').style.display = 'none';
       document.getElementById(emptyId).style.display = 'block';
@@ -178,10 +240,9 @@
     new Chart(document.getElementById(canvasId), {
       type:'line',
       data:{ labels, datasets: styledDatasets },
-      options: baseLineOptions(yAxisLabel)
+      options: baseLineOptions(yAxisLabel, yMin, yMax)
     });
   }
-
   async function loadAbatement(){
     try{
       const data = await q(EMISSIONS_URL, {
@@ -194,17 +255,22 @@
         [{ label:'Abatement rate (%)', data: rows.map(r => r.abatement_rate), borderColor: MINT, backgroundColor:'rgba(58,169,137,0.12)', fill:true, tension:0.35, spanGaps:true, pointRadius:2 }],
         'Abatement rate (%)'
       );
-    } catch(err){ console.error('Abatement chart failed:', err); }
+    } catch(err){
+      console.error('Abatement chart failed:', err);
+      showChartError('chart-abatement', 'chart-abatement-empty', 'Chart data unavailable right now.');
+    }
   }
-
   async function loadAdg(){
     try{
       const [seafeed, control] = await Promise.all([
         q(PRODUCTIVITY_URL, { where:"treatment_group='seafeed'", outFields:"snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"2000", f:"json" }),
         q(PRODUCTIVITY_URL, { where:"treatment_group='control'", outFields:"snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"2000", f:"json" })
       ]);
-      const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
-      const ctRows = control.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
+      // See header comment (point 4): out-of-range readings are filtered
+      // client-side as noise, rather than plotted and left to blow out the
+      // axis.
+      const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.snapshot_date != null && isPlausibleAdg(a.rolling_adg));
+      const ctRows = control.features.map(f => f.attributes).filter(a => a.snapshot_date != null && isPlausibleAdg(a.rolling_adg));
       // See header comment (point 1) for why this is a date-keyed lookup
       // against a shared timeline, not two plain arrays.
       const sfByDate = new Map(sfRows.map(r => [r.snapshot_date, r.rolling_adg]));
@@ -216,11 +282,14 @@
           { label:'SeaFeed', data: allDates.map(d => sfByDate.has(d) ? sfByDate.get(d) : null), borderColor: MINT, backgroundColor:'transparent', tension:0.35, spanGaps:true, pointRadius:2 },
           { label:'Control', data: allDates.map(d => ctByDate.has(d) ? ctByDate.get(d) : null), borderColor: SLATE, backgroundColor:'transparent', tension:0.35, spanGaps:true, pointRadius:2 }
         ],
-        'Average daily gain (g/day)'
+        'Average daily gain (g/day)',
+        PLAUSIBLE_ADG_MIN_G, PLAUSIBLE_ADG_MAX_G
       );
-    } catch(err){ console.error('ADG chart failed:', err); }
+    } catch(err){
+      console.error('ADG chart failed:', err);
+      showChartError('chart-adg', 'chart-adg-empty', 'Chart data unavailable right now.');
+    }
   }
-
   // Latest cost-of-production snapshot for one treatment. cost_per_kg_gain_aud
   // is the equitable metric, see header comment (point 3) for why raw
   // cost_per_head_aud isn't used here.
@@ -240,7 +309,6 @@
       weightGainKg: row.weight_gain_kg_per_head
     } : null;
   }
-
   function renderCopCard(valueId, metaId, reading){
     const valueEl = document.getElementById(valueId);
     const metaEl = document.getElementById(metaId);
@@ -257,7 +325,6 @@
     metaEl.textContent = basis + 'as at ' + fmtDate(reading.date) + (stale ? ': may be out of date' : '');
     metaEl.classList.toggle('stale', stale);
   }
-
   function renderCopDelta(seafeed, control){
     const valueEl = document.getElementById('ind-cop-delta');
     const metaEl = document.getElementById('ind-cop-delta-meta');
@@ -275,7 +342,6 @@
       metaEl.textContent += ' (readings from different calculation runs)';
     }
   }
-
   async function loadCostOfProduction(){
     try{
       const [seafeed, control] = await Promise.all([
@@ -285,9 +351,16 @@
       renderCopCard('ind-cop-seafeed', 'ind-cop-seafeed-meta', seafeed);
       renderCopCard('ind-cop-control', 'ind-cop-control-meta', control);
       renderCopDelta(seafeed, control);
-    } catch(err){ console.error('Cost of production cards failed:', err); }
+    } catch(err){
+      console.error('Cost of production cards failed:', err);
+      ['ind-cop-seafeed', 'ind-cop-control', 'ind-cop-delta'].forEach(id => {
+        document.getElementById(id).innerHTML = '<span class="tf-indicator-empty">Unavailable</span>';
+      });
+      ['ind-cop-seafeed-meta', 'ind-cop-control-meta', 'ind-cop-delta-meta'].forEach(id => {
+        document.getElementById(id).textContent = 'Data unavailable right now';
+      });
+    }
   }
-
   async function loadAll(){
     const statusEl = document.getElementById('tf-status');
     try{
