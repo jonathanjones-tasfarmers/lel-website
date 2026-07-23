@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Fully self-contained, same pattern as live-metrics.html on the Home page.
+
   ADG ADVANTAGE (updated): now pulls from the same source and method as
   lel-adg-indicators.html, OptiWeigh_Assets_view's adg_all field (the
   OptiWeigh device's own per-session ADG figure), matched to SeaFeed/Control
@@ -14,15 +15,18 @@
   always displayed it. Flags itself (amber, does not hide) if either reading
   is more than STALE_AFTER_DAYS old, and notes it when SeaFeed and Control
   readings come from different dates.
+
   TOTAL CO2e ABATED (replaces the old "cost per kg CH4 abated" card): same
   calculation as farms-illustrative-carbon-value.html, cumulative CH4 abated
   per head x representative head count x the trial's GWP100 factor, sourced
   live from LEL_Industry_Benchmarks (metric_name='METHANE_GWP100_AR5',
   falls back to AR5's 28 if that lookup fails) rather than hardcoding it
   twice. SeaFeed group, trial-to-date, not annualised or scaled to a herd.
+
   The other two stats (abatement rate, days of trial data) are unchanged and
   still read from LEL_Emissions_Data_view / OptiWeigh_Cattle_Weights.
-  LOADING SKELETONS (added 22 Jul 2026): each stat value renders as a
+
+  LOADING SKELETONS (added 23 Jul 2026): each stat value renders as a
   shimmering placeholder span until loadBanner() resolves. Success path
   needs no extra handling — setting .textContent on the stat <p> replaces
   the skeleton span automatically. The catch{} block now explicitly writes
@@ -38,7 +42,6 @@
   @media (max-width:700px){ .tf-stats-grid{ grid-template-columns:1fr; } }
   .tf-stack{ display:flex; flex-direction:column; gap:16px; }
   .tf-adg-meta.stale{ color:#c98a2e !important; font-weight:700; }
-
   @keyframes tf-shimmer{
     0%{ background-position:150% 0; }
     100%{ background-position:-50% 0; }
@@ -94,9 +97,114 @@
   const PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
   const ASSETS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Assets_view/FeatureServer/0/query";
   const STALE_AFTER_DAYS = 14;
+
   // Same lookup as farms-illustrative-carbon-value.html, live GWP100 factor
   // rather than a second hardcoded copy. Falls back to AR5's 28 if the
   // benchmarks lookup fails for any reason.
   let GWP = 28;
   async function fetchGwp(){
     try{
+      const data = await q(BENCHMARKS_URL, { where:"metric_name='METHANE_GWP100_AR5'", outFields:"metric_value", f:"json" });
+      if (data.features && data.features.length > 0) GWP = data.features[0].attributes.metric_value;
+    } catch(err){ console.error('GWP lookup failed, using default 28:', err); }
+  }
+
+  async function q(url, params){
+    const res = await fetch(url + "?" + new URLSearchParams(params));
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message || "Query failed");
+    return data;
+  }
+  async function fetchLatestSeafeedEmissions(){
+    const data = await q(EMISSIONS_URL, { where:"treatment='seafeed'", outFields:"abatement_rate,record_date", orderByFields:"record_date DESC", resultRecordCount:"1", f:"json" });
+    return data.features.length ? data.features[0].attributes : null;
+  }
+  async function fetchEconLatest(){
+    const data = await q(ECON_URL, { where:"treatment IN ('seafeed','control')", outFields:"treatment,cumulative_ch4_abated_kg_per_head,representative_head_count,cost_per_kg_ch4_abated_aud,cost_per_head_aud,weight_gain_kg_per_head,cost_per_kg_gain_aud,calculation_date", orderByFields:"calculation_date DESC", resultRecordCount:"50", f:"json" });
+    const latest = {};
+    for (const f of data.features){ const t=f.attributes.treatment; if(!latest[t]) latest[t]=f.attributes; }
+    return latest;
+  }
+  async function fetchProdHistory(treatment){
+    const data = await q(PRODUCTIVITY_URL, { where:`treatment_group='${treatment}'`, outFields:"snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"2000", f:"json" });
+    return data.features.map(f => f.attributes);
+  }
+
+  // snapshot_date on OptiWeigh_Assets_view is a Date Only field
+  // ("YYYY-MM-DD" string, no time/zone). Parsed as local y/m/d components
+  // so it doesn't shift a day in either direction depending on browser
+  // timezone, same as lel-adg-indicators.html.
+  function parseDateOnly(dateStr){
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+  function daysSince(dateStr){
+    return (Date.now() - parseDateOnly(dateStr).getTime()) / 86400000;
+  }
+  async function latestAdgForTreatment(likePatterns){
+    const treatmentClause = likePatterns.map(p => `UPPER(Treatment_Type) LIKE '%${p}%'`).join(' OR ');
+    const data = await q(ASSETS_URL, {
+      where: `adg_all IS NOT NULL AND snapshot_date IS NOT NULL AND (${treatmentClause})`,
+      outFields: "session_id,session_name,adg_all,snapshot_date,Treatment_Type",
+      orderByFields: "snapshot_date DESC, OBJECTID DESC",
+      resultRecordCount: "1",
+      f: "json"
+    });
+    const row = data.features[0]?.attributes;
+    return row ? { date: row.snapshot_date, value: row.adg_all } : null;
+  }
+
+  async function loadBanner(){
+    const statusEl = document.getElementById('banner-status');
+    try{
+      const [, emissions, econ, seafeedProd, controlProd, seafeedAdgReading, controlAdgReading] = await Promise.all([
+        fetchGwp(), fetchLatestSeafeedEmissions(), fetchEconLatest(), fetchProdHistory('seafeed'), fetchProdHistory('control'),
+        latestAdgForTreatment(['SEAFEED', 'SEA FEED']), latestAdgForTreatment(['CONTROL'])
+      ]);
+      const abatement = (emissions && emissions.abatement_rate != null) ? emissions.abatement_rate.toFixed(1)+'%' : '—';
+
+      const adgMetaEl = document.getElementById('b-adg-meta');
+      let adg = '—';
+      if (seafeedAdgReading != null && controlAdgReading != null){
+        const diffGramsPerDay = (seafeedAdgReading.value - controlAdgReading.value) * 1000;
+        adg = (diffGramsPerDay>=0?'+':'') + Math.round(diffGramsPerDay) + ' g/day';
+        const stale = daysSince(seafeedAdgReading.date) > STALE_AFTER_DAYS || daysSince(controlAdgReading.date) > STALE_AFTER_DAYS;
+        let meta = 'SeaFeed vs control';
+        if (stale) meta += ', reading may be out of date';
+        if (seafeedAdgReading.date !== controlAdgReading.date) meta += ' (readings on different dates)';
+        adgMetaEl.textContent = meta;
+        adgMetaEl.classList.toggle('stale', stale);
+      } else {
+        adgMetaEl.textContent = 'SeaFeed vs control';
+        adgMetaEl.classList.remove('stale');
+      }
+
+      const seafeedEcon = econ['seafeed'];
+      let co2e = '—';
+      if (seafeedEcon && seafeedEcon.cumulative_ch4_abated_kg_per_head != null && seafeedEcon.representative_head_count != null){
+        const totalKgCh4 = seafeedEcon.cumulative_ch4_abated_kg_per_head * seafeedEcon.representative_head_count;
+        const totalTonnesCo2e = (totalKgCh4 * GWP) / 1000;
+        co2e = totalTonnesCo2e >= 1 ? totalTonnesCo2e.toFixed(2) + ' t' : Math.round(totalTonnesCo2e * 1000).toLocaleString() + ' kg';
+      }
+      const allDates = seafeedProd.concat(controlProd).map(r=>r.snapshot_date).filter(d=>d!=null);
+      const days = allDates.length ? Math.round((Date.now()-Math.min(...allDates))/86400000).toLocaleString() : '—';
+      document.getElementById('b-abatement').textContent = abatement;
+      document.getElementById('b-adg').textContent = adg;
+      document.getElementById('b-co2e').textContent = co2e;
+      document.getElementById('b-days').textContent = days;
+      statusEl.textContent = 'Live data, updated ' + new Date().toLocaleDateString();
+      statusEl.style.color = '#3aa989';
+    } catch (err){
+      document.getElementById('b-abatement').textContent = '—';
+      document.getElementById('b-adg').textContent = '—';
+      document.getElementById('b-co2e').textContent = '—';
+      document.getElementById('b-days').textContent = '—';
+      statusEl.textContent = 'Live data unavailable right now';
+      statusEl.style.color = '#c98a2e';
+      console.error(err);
+    }
+  }
+  loadBanner();
+</script>
+</body>
+</html>
