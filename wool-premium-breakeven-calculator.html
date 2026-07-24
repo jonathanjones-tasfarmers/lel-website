@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wool premium breakeven calculator</title>
+<!--
+  FIRST-PASS DRAFT: theoretical / fixed-value calculator, not built from live
+  trial data (see seafeed-cost-of-production-calculator.html for the beef
+  version, which IS live-data-driven; this one deliberately is not, because
+  no wool trial currently exists for this project).
+
+  MODEL: unlike the beef tool, SeaFeed is not expected to change fleece
+  weight or wool quality (see the "about the no-impact assumption" note in
+  the page; this rests on a single 120-day farm pilot, not a controlled
+  trial). That means there is no productivity upside to offset the feed
+  cost, the entire economic case for a woolgrower rests on whether a market
+  premium exists. Because no low-emissions-specific wool premium market
+  currently exists (checked July 2026; only RWS, a welfare/traceability
+  certification, has a real tradeable premium), this calculator does NOT
+  assume a premium. It solves for the breakeven premium required, and lets
+  the farmer separately judge whether that's realistic, then optionally
+  layer in their own assumed premium to see a net position.
+
+  All cost inputs default to figures from TasFarmers' own TLEL Project
+  Budget (Supplement Costs / Farmer Break-Even tabs, "01. TLEL Project
+  Budget.xlsx"), not published averages: same sourcing discipline as the
+  beef tool, just without a live feature-layer query since there's no trial
+  data pipeline to query.
+-->
+<style>
+  :root {
+    --tf-navy-900:#041221; --tf-navy-800:#152535; --tf-navy-700:#28394a;
+    --tf-slate-400:#a9b8c4; --tf-slate-300:#c2d2de; --tf-slate-200:#d6e5f2; --tf-slate-100:#e6f6ff;
+    --tf-slate-600:#73818c;
+    --tf-mint-500:#5ec9a8; --tf-mint-600:#3aa989; --tf-mint-100:#e4ffff;
+    --tf-white:#ffffff;
+    --tf-warning:#c98a2e; --tf-danger:#b2412f;
+    --font-display: Tahoma, Verdana, sans-serif;
+    --font-body: Verdana, Tahoma, sans-serif;
+  }
+  html, body { margin: 0; background: transparent; }
+  body { font-family: var(--font-body); color: var(--tf-navy-900); }
+  .tf-wrap { max-width: 780px; margin: 0 auto; }
+
+  .tf-status-row { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 6px 14px; border-radius: 999px; background: #fbf3e7; border: 1px solid #eeddb8; cursor: default; }
+  .tf-live-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--tf-warning); }
+  .tf-status-text { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #8a5a12; }
+
+  .tf-panel { background: var(--tf-slate-100); border: 1px solid var(--tf-slate-300); border-radius: 10px; padding: 20px 22px; margin-bottom: 16px; box-sizing: border-box; }
+  .tf-panel-accent { background: var(--tf-white); border: 2px solid var(--tf-navy-900); }
+  .tf-panel-accent input:focus { border-color: var(--tf-navy-900) !important; }
+  .tf-panel-title { font-family: var(--font-display); color: var(--tf-navy-900); font-size: 14px; font-weight: 700; margin: 0 0 14px 0; }
+  .tf-field-icon.accent { color: var(--tf-white); }
+  .tf-field-icon.accent svg { width: 16px; height: 16px; }
+  .tf-field-icon.accent-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--tf-navy-900); vertical-align: -7px; margin-right: 8px; }
+  .tf-field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px 16px; align-items: start; }
+  .tf-field { display: flex; flex-direction: column; }
+  .tf-field label { display: block; color: var(--tf-slate-600); font-size: 12px; line-height: 1.35; margin-bottom: 5px; min-height: 32px; }
+  .tf-field-icon { display: inline-flex; vertical-align: -3px; margin-right: 6px; color: var(--tf-mint-600); }
+  .tf-field-icon svg { width: 14px; height: 14px; display: block; }
+  .tf-field input { width: 100%; box-sizing: border-box; background: var(--tf-white); border: 1px solid var(--tf-slate-300); border-radius: 5px; color: var(--tf-navy-900); font-size: 15px; padding: 9px 10px; font-family: var(--font-body); }
+  .tf-field input:focus { outline: none; border-color: var(--tf-mint-500); }
+  .tf-field-note { font-size: 11px; color: var(--tf-slate-600); line-height: 1.5; margin: 12px 0 0 0; }
+  .tf-field-hint { font-size: 10.5px; color: var(--tf-slate-600); margin-top: 4px; }
+
+  .tf-subgroup-label { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--tf-slate-600); margin: 18px 0 8px 0; }
+  .tf-subgroup-label.first { margin-top: 4px; }
+  .tf-computed-row { display: flex; align-items: baseline; justify-content: space-between; background: var(--tf-white); border: 1px dashed var(--tf-slate-300); border-radius: 6px; padding: 10px 14px; margin-top: 14px; }
+  .tf-computed-label { font-size: 12.5px; color: var(--tf-slate-600); }
+  .tf-computed-value { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--tf-navy-900); }
+
+  .tf-results-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 560px) { .tf-results-grid { grid-template-columns: 1fr; } }
+  .tf-metric-card { border-radius: 10px; padding: 16px 18px; }
+  .tf-metric-card.cost { background: var(--tf-slate-100); border: 1px solid var(--tf-slate-200); }
+  .tf-metric-card.premium { background: #e9f8f2; border: 1px solid var(--tf-mint-500); }
+  .tf-metric-label { font-size: 12.5px; margin: 0 0 4px 0; color: var(--tf-slate-600); }
+  .tf-metric-card.premium .tf-metric-label { color: var(--tf-mint-600); font-weight: 700; }
+  .tf-metric-value { font-family: var(--font-display); font-size: 24px; font-weight: 700; margin: 0; color: var(--tf-navy-900); }
+
+  .tf-hero-card { background: #e9f8f2; border: 1px solid var(--tf-mint-500); border-radius: 12px; padding: 22px 24px 18px; margin-bottom: 16px; }
+  .tf-hero-card.negative { background: #fbecea; border-color: var(--tf-danger); }
+  .tf-hero-card.neutral { background: var(--tf-slate-100); border-color: var(--tf-slate-300); }
+  .tf-hero-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 14px 0; }
+  .tf-hero-card.negative .tf-hero-eyebrow { color: var(--tf-danger); }
+  .tf-hero-card.neutral .tf-hero-eyebrow { color: var(--tf-slate-600); }
+  .tf-hero-stats-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; }
+  .tf-hero-divider { width: 1px; align-self: stretch; background: var(--tf-slate-200); }
+  .tf-hero-stat { text-align: left; }
+  .tf-hero-icon { width: 34px; height: 34px; border-radius: 50%; background: var(--tf-white); display: flex; align-items: center; justify-content: center; margin: 0 0 10px 0; color: var(--tf-mint-600); box-shadow: 0 1px 2px rgba(4,18,33,0.08); }
+  .tf-hero-card.negative .tf-hero-icon { color: var(--tf-danger); }
+  .tf-hero-card.neutral .tf-hero-icon { color: var(--tf-slate-600); }
+  .tf-hero-icon svg { width: 18px; height: 18px; }
+  .tf-hero-value { font-family: var(--font-display); font-size: 30px; font-weight: 700; margin: 0; line-height: 1.15; color: var(--tf-navy-900); }
+  .tf-hero-value .unit { font-size: 14px; font-weight: 400; color: var(--tf-slate-600); margin-left: 2px; }
+  .tf-hero-caption { font-size: 12.5px; color: var(--tf-slate-600); margin: 6px 0 0 0; line-height: 1.4; }
+  @media (max-width: 480px) { .tf-hero-stats-grid { grid-template-columns: 1fr; gap: 14px; } .tf-hero-divider { width: 100%; height: 1px; } }
+
+  .tf-cobenefit-card { display: flex; align-items: center; gap: 12px; background: var(--tf-white); border: 1px solid var(--tf-slate-200); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; }
+  .tf-cobenefit-icon { width: 30px; height: 30px; border-radius: 50%; background: var(--tf-mint-100); display: flex; align-items: center; justify-content: center; color: var(--tf-mint-600); flex-shrink: 0; }
+  .tf-cobenefit-icon svg { width: 16px; height: 16px; }
+  .tf-cobenefit-text { font-size: 12.5px; color: var(--tf-navy-900); line-height: 1.4; }
+  .tf-cobenefit-text strong { font-family: var(--font-display); }
+  .tf-cobenefit-text .tf-cobenefit-note { display: block; color: var(--tf-slate-600); font-size: 11px; margin-top: 2px; }
+
+  .tf-breakdown-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; padding: 12px 2px; border-top: 1px solid var(--tf-slate-200); border-bottom: 1px solid var(--tf-slate-200); margin: 0 0 14px 0; }
+  .tf-breakdown-toggle-label { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--tf-navy-900); }
+  .tf-breakdown-toggle-arrow { font-size: 12px; font-weight: 700; color: var(--tf-mint-600); white-space: nowrap; }
+  .tf-breakdown-content { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+  .tf-breakdown-content.expanded { max-height: 1000px; }
+
+  .tf-footnote { font-size: 11.5px; color: var(--tf-slate-600); line-height: 1.6; margin: 12px 0 0 0; text-align: center; }
+  .tf-warn-box { background: #fbf3e7; border-left: 3px solid var(--tf-warning); border-radius: 3px; padding: 12px 16px; color: #8a5a12; font-size: 13px; line-height: 1.5; margin-bottom: 16px; }
+
+  .tf-warn-wrapper { margin-bottom: 16px; }
+  .tf-warn-toggle { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; user-select: none; background: #fbf3e7; border-left: 3px solid var(--tf-warning); border-radius: 3px; padding: 12px 16px; }
+  .tf-warn-toggle-label { font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: #8a5a12; }
+  .tf-warn-toggle-arrow { font-size: 11px; font-weight: 700; color: #8a5a12; white-space: nowrap; flex-shrink: 0; }
+  .tf-warn-content { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; background: #fbf3e7; border-left: 3px solid var(--tf-warning); }
+  .tf-warn-content.expanded { max-height: 300px; }
+  .tf-warn-text { margin: 0; padding: 0 16px 14px 16px; color: #8a5a12; font-size: 13px; line-height: 1.5; }
+
+  .tf-info-toggle { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); font-size: 11.5px; font-weight: 700; color: var(--tf-mint-600); text-decoration: none; border-bottom: 1px solid var(--tf-mint-600); padding-bottom: 1px; cursor: pointer; user-select: none; margin-top: 12px; }
+  .tf-info-wrap { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+  .tf-info-wrap.expanded { max-height: 600px; margin-top: 10px; }
+  .tf-info-wrap ul { margin: 6px 0 0 0; padding-left: 18px; }
+  .tf-info-wrap li { margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<div class="tf-wrap">
+
+  <div class="tf-status-row" title="This is a fixed-value model, not drawn from a live trial data pipeline like the beef calculator.">
+    <span class="tf-live-dot"></span>
+    <span class="tf-status-text">Theoretical model: no wool trial currently running</span>
+  </div>
+
+  <div class="tf-warn-wrapper">
+    <div class="tf-warn-toggle" id="warn-toggle">
+      <span class="tf-warn-toggle-label">⚠ Fixed-value model: read before using</span>
+      <span class="tf-warn-toggle-arrow" id="warn-arrow">Hide ▴</span>
+    </div>
+    <div class="tf-warn-content expanded" id="warn-content">
+      <p class="tf-warn-text">This calculator uses fixed cost assumptions from TasFarmers' own SeaFeed project budget, not live trial results; there is currently no LEL wool trial to draw data from. It does not assume a market premium exists; it works out what premium you'd need to break even, so you can judge for yourself whether that's realistic for your wool.</p>
+    </div>
+  </div>
+
+  <div class="tf-panel" id="input-panel">
+    <p class="tf-panel-title">Your flock</p>
+    <div class="tf-field-grid">
+      <div class="tf-field">
+        <label for="flockSize"><span class="tf-field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="15" rx="8" ry="5"></ellipse><circle cx="12" cy="7" r="3.5"></circle><path d="M9 5L7.5 3M15 5l1.5-2"></path></svg></span>Flock size (head)</label>
+        <input id="flockSize" type="number" value="500" min="1">
+      </div>
+      <div class="tf-field">
+        <label for="fleeceWeight"><span class="tf-field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 12h8M12 8v8"></path></svg></span>Greasy fleece weight (kg/head/year)</label>
+        <input id="fleeceWeight" type="number" step="0.1" value="5.0" min="0.1">
+        <p class="tf-field-hint">Typical Tasmanian Merino range is around 4.5–5.5kg greasy. Override with your own clip average.</p>
+      </div>
+      <div class="tf-field">
+        <label for="daysOnFeed"><span class="tf-field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="4" y1="11" x2="20" y2="11"></line></svg></span>Days on SeaFeed per year</label>
+        <input id="daysOnFeed" type="number" value="365" min="1" max="365">
+      </div>
+    </div>
+  </div>
+
+  <div class="tf-panel" id="cost-panel">
+    <p class="tf-panel-title">SeaFeed cost assumptions</p>
+    <p class="tf-field-note" style="margin:0 0 14px 0;">Defaults below come from TasFarmers' own TLEL project budget (Supplement Costs / Farmer Break-Even tabs), not published averages. Change them if your own delivery cost or dosing differs.</p>
+    <div class="tf-field-grid">
+      <div class="tf-field">
+        <label for="doseRate">Dose rate (g/head/day)</label>
+        <input id="doseRate" type="number" step="0.1" value="15" min="0.1">
+      </div>
+      <div class="tf-field">
+        <label for="seafeedPrice">SeaFeed lick block price ($/kg)</label>
+        <input id="seafeedPrice" type="number" step="0.01" value="3.66" min="0">
+      </div>
+      <div class="tf-field">
+        <label for="visitationRate">Visitation rate (%)</label>
+        <input id="visitationRate" type="number" step="1" value="60" min="1" max="100">
+        <p class="tf-field-hint">Share of the flock estimated to visit a self-fed lick block on a given day. Set to 100% if you're hand-feeding or otherwise guaranteeing full dose delivery.</p>
+      </div>
+    </div>
+    <div class="tf-computed-row">
+      <span class="tf-computed-label">Effective SeaFeed cost per head, per year</span>
+      <span class="tf-computed-value" id="costPerHeadYear">—</span>
+    </div>
+  </div>
+
+  <div class="tf-panel tf-panel-accent" id="price-panel">
+    <p class="tf-panel-title">
+      <span class="tf-field-icon accent accent-badge"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle><text x="12" y="16.5" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor" font-family="Verdana, Tahoma, sans-serif">$</text></svg></span>
+      Assumed market premium (optional)
+    </p>
+    <div class="tf-field" style="max-width:260px;">
+      <label for="premium">$ per kg greasy wool</label>
+      <input id="premium" type="number" step="0.01" value="" min="0" placeholder="0.00">
+    </div>
+    <a href="#" class="tf-info-toggle" id="price-info-toggle">About this premium ▾</a>
+    <div class="tf-info-wrap" id="price-info-wrap">
+      <p class="tf-field-note">
+        No established market premium currently exists for verified low-emissions or low-methane wool. This field is left blank deliberately rather than defaulted, so the calculator doesn't assert a premium that hasn't been proven in the market.
+      </p>
+      <p class="tf-field-note">
+        For context: Responsible Wool Standard (RWS) certified wool (a welfare and traceability certification, not an emissions certification) has recently traded at premiums of roughly 20c to 150c per kg <em>clean</em>, currently sitting around 70c/kg clean (Mecardo, April 2026). Clean-to-greasy yield (typically 60–70%) would reduce this further on a greasy basis. Treat this as the closest available comparable, not a low-emissions wool price.
+      </p>
+    </div>
+  </div>
+
+  <div id="results-panel">
+    <div class="tf-hero-card" id="hero-card">
+      <p class="tf-hero-eyebrow" id="hero-eyebrow">Breakeven premium</p>
+      <div class="tf-hero-stats-grid">
+        <div class="tf-hero-stat">
+          <div class="tf-hero-icon" id="hero-icon-1"></div>
+          <p class="tf-hero-value" id="hero-value-1">—</p>
+          <p class="tf-hero-caption" id="hero-caption-1">Premium needed on greasy wool just to cover SeaFeed cost</p>
+        </div>
+        <div class="tf-hero-divider"></div>
+        <div class="tf-hero-stat">
+          <div class="tf-hero-icon" id="hero-icon-2"></div>
+          <p class="tf-hero-value" id="hero-value-2">—</p>
+          <p class="tf-hero-caption" id="hero-caption-2">Enter an assumed premium above to see your net position</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tf-cobenefit-card">
+      <div class="tf-cobenefit-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"></path></svg>
+      </div>
+      <div class="tf-cobenefit-text">
+        <strong>~43% enteric methane reduction</strong>, a non-financial co-benefit not converted to a dollar value here.
+        <span class="tf-cobenefit-note">Based on a single 120-day Sea Forest / Congi Farm pilot (NSW, reported via Beef Central, April 2026), not this project's own trial data.</span>
+      </div>
+    </div>
+
+    <div class="tf-breakdown-toggle" id="breakdown-toggle">
+      <span class="tf-breakdown-toggle-label">See the full breakdown</span>
+      <span class="tf-breakdown-toggle-arrow" id="breakdown-arrow">Show ▾</span>
+    </div>
+    <div class="tf-breakdown-content" id="breakdown-content">
+      <div class="tf-results-grid">
+        <div class="tf-metric-card cost">
+          <p class="tf-metric-label">SeaFeed cost, whole flock/year</p>
+          <p class="tf-metric-value" id="costFlock">—</p>
+        </div>
+        <div class="tf-metric-card premium">
+          <p class="tf-metric-label">Premium revenue, whole flock/year</p>
+          <p class="tf-metric-value" id="revenueFlock">—</p>
+        </div>
+      </div>
+      <div class="tf-results-grid">
+        <div class="tf-metric-card cost">
+          <p class="tf-metric-label">SeaFeed cost, per head/year</p>
+          <p class="tf-metric-value" id="costHead">—</p>
+        </div>
+        <div class="tf-metric-card premium">
+          <p class="tf-metric-label">Premium revenue, per head/year</p>
+          <p class="tf-metric-value" id="revenueHead">—</p>
+        </div>
+      </div>
+      <p class="tf-field-note" style="margin-bottom:12px;">
+        This only weighs SeaFeed cost against premium wool revenue. It doesn't include any change in fleece weight or quality, because current evidence (see below) suggests SeaFeed doesn't meaningfully change either. It's a narrower comparison than the beef tool's gross margin, deliberately, because there's no productivity side to this ledger.
+      </p>
+    </div>
+  </div>
+
+  <div style="text-align:center;">
+    <a href="#" class="tf-info-toggle" id="assumptions-toggle">About this calculator ▾</a>
+  </div>
+  <div class="tf-info-wrap" id="assumptions-wrap">
+    <p class="tf-footnote">
+      This is a fixed-value, desktop-study calculator, not built from live LEL trial data. No wool trial is currently running under this project. Treat every figure here as a planning estimate to stress-test, not a guarantee.
+    </p>
+    <ul class="tf-footnote" style="text-align:left;">
+      <li>SeaFeed cost defaults are sourced from TasFarmers' own TLEL project budget (Supplement Costs tab), not a published market rate.</li>
+      <li>The assumption that SeaFeed doesn't reduce fleece weight or quality rests on one 120-day farm pilot (Sea Forest / Congi Farm / Theory's "Regal Wool" program, reported April 2026), not a controlled trial or peer-reviewed study. Treat it as a stated assumption, not a proven result.</li>
+      <li>No established price-premium market exists for verified low-emissions or low-methane wool. The RWS comparison shown is the closest real, tradeable analogue available, but RWS certifies animal welfare and traceability, not emissions.</li>
+      <li>The 43% methane reduction co-benefit figure comes from the same single pilot above, not from independently replicated research specific to this project's flocks.</li>
+    </ul>
+    <p class="tf-footnote">Not financial advice. For a full assessment of your operation, speak with your accountant or farm business advisor alongside using this tool.</p>
+  </div>
+
+</div>
+
+<script>
+  const el = id => document.getElementById(id);
+  const num = id => parseFloat(el(id).value) || 0;
+
+  const fmtMoney2 = v => "$" + v.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const fmtMoney0 = v => "$" + v.toLocaleString(undefined, {maximumFractionDigits: 0});
+
+  const ICON_TAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.17L4 3a1 1 0 0 0-1 1l.17 5.59a2 2 0 0 0 .66 1.41l9.59 9.59a2 2 0 0 0 2.83 0l4.34-4.34a2 2 0 0 0 0-2.83z"></path><circle cx="7.5" cy="7.5" r="1.5"></circle></svg>';
+  const ICON_CASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 12h.01M17 12h.01"></path></svg>';
+
+  function wireInfoToggle(toggleId, wrapId, label) {
+    const toggle = el(toggleId);
+    const wrap = el(wrapId);
+    toggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      const expanded = wrap.classList.toggle("expanded");
+      toggle.textContent = expanded ? "Hide ▴" : label + " ▾";
+    });
+  }
+  wireInfoToggle("price-info-toggle", "price-info-wrap", "About this premium");
+  wireInfoToggle("assumptions-toggle", "assumptions-wrap", "About this calculator");
+
+  el("warn-toggle").addEventListener("click", () => {
+    const expanded = el("warn-content").classList.toggle("expanded");
+    el("warn-arrow").textContent = expanded ? "Hide ▴" : "Show ▾";
+  });
+
+  el("breakdown-toggle").addEventListener("click", () => {
+    const expanded = el("breakdown-content").classList.toggle("expanded");
+    el("breakdown-arrow").textContent = expanded ? "Hide ▴" : "Show ▾";
+  });
+
+  function calc() {
+    const flock = num("flockSize");
+    const fleece = Math.max(num("fleeceWeight"), 0.01);
+    const days = num("daysOnFeed");
+
+    const doseKg = num("doseRate") / 1000;
+    const price = num("seafeedPrice");
+    const visitation = num("visitationRate") / 100;
+
+    const costPerHeadDay = doseKg * price * visitation;
+    const costPerHeadYear = costPerHeadDay * days;
+    const costFlockYear = costPerHeadYear * flock;
+
+    el("costPerHeadYear").textContent = fmtMoney2(costPerHeadYear) + " /head/yr";
+
+    const breakevenPremium = costPerHeadYear / fleece;
+
+    el("hero-icon-1").innerHTML = ICON_TAG;
+    el("hero-value-1").innerHTML = `${fmtMoney2(breakevenPremium)}<span class="unit">/kg greasy</span>`;
+
+    const premiumInput = el("premium").value;
+    const hasPremium = premiumInput !== "" && !isNaN(parseFloat(premiumInput));
+
+    let heroCardClass = "tf-hero-card neutral";
+    el("hero-icon-2").innerHTML = ICON_CASH;
+
+    if (hasPremium) {
+      const premium = parseFloat(premiumInput);
+      const revenuePerHeadYear = premium * fleece;
+      const revenueFlockYear = revenuePerHeadYear * flock;
+      const netPerHeadYear = revenuePerHeadYear - costPerHeadYear;
+      const netFlockYear = netPerHeadYear * flock;
+
+      const positive = netFlockYear >= 0;
+      heroCardClass = "tf-hero-card" + (positive ? "" : " negative");
+      el("hero-eyebrow").textContent = positive ? "At this premium, SeaFeed covers its cost" : "At this premium, SeaFeed costs more than it recovers";
+      el("hero-value-2").innerHTML = `${fmtMoney0(Math.abs(netFlockYear))}<span class="unit">${netFlockYear >= 0 ? "net gain" : "net cost"}</span>`;
+      el("hero-caption-2").textContent = `Whole flock, per year, at $${premium.toFixed(2)}/kg premium and a ${flock}-head flock`;
+
+      el("costFlock").textContent = fmtMoney0(costFlockYear);
+      el("revenueFlock").textContent = fmtMoney0(revenueFlockYear);
+      el("costHead").textContent = fmtMoney2(costPerHeadYear);
+      el("revenueHead").textContent = fmtMoney2(revenuePerHeadYear);
+    } else {
+      el("hero-eyebrow").textContent = "Breakeven premium";
+      el("hero-value-2").innerHTML = `—`;
+      el("hero-caption-2").textContent = "Enter an assumed premium above to see your net position";
+
+      el("costFlock").textContent = fmtMoney0(costFlockYear);
+      el("revenueFlock").textContent = "—";
+      el("costHead").textContent = fmtMoney2(costPerHeadYear);
+      el("revenueHead").textContent = "—";
+    }
+
+    el("hero-card").className = heroCardClass;
+  }
+
+  ["flockSize","fleeceWeight","daysOnFeed","doseRate","seafeedPrice","visitationRate","premium"]
+    .forEach(id => el(id).addEventListener("input", calc));
+
+  calc();
+</script>
+</body>
+</html>
