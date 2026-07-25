@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Could Tasmania grow the world's first proven low-emissions wool?</title>
+<!--
+  V3 — design pass only, copy is unchanged from the version already
+  approved. Researched DesignRush's "13 Most Beautiful Website Designs of
+  2026" (loveara.ph, myluxecierge.com, bohostudio.pl, vwa.org.au,
+  elkridgeresort.com, dreamwellness.ca, evolvingforests.com, artandmap.com,
+  gardenofcedar.org, and others) and pulled the principles that fit a
+  credible, no-hype farming/industry brand rather than the ones that
+  don't (rejected: meme/satire tone from Odesa Subway, Gen-Z high-energy
+  colour blocking from The Send, since neither suits TasFarmers' voice):
+
+  - Full-bleed, immersive photography as the dominant device, not photos
+    boxed into a grid column (Elk Ridge Resort, Evolving Forests, Garden
+    of Cedar). Applied to the "why here" section (was a boxed 2-column
+    photo, now a full-bleed band with a floating content card) and a new
+    photo-divider section before the close, using the paddock image that
+    was licensed but unused in v2.
+  - Generous white space / restraint (Love Ara, LUXECIERGE, Emily Martin
+    Design) — increased section padding throughout rather than packing
+    content edge-to-edge.
+  - A few punctuating "visual moments" rather than constant density
+    (LUXECIERGE's "three striking visual moments" approach) — this page
+    now has three full-bleed photo beats: hero, origin section, closing
+    divider, not photography scattered everywhere.
+  - Restrained, purposeful motion, not decoration for its own sake
+    (Evolving Forests: "restrained yet impactful ... message remains
+    central focus"). Added scroll-reveal fades on major blocks and a
+    count-up animation on the proof-strip numbers only, the single best
+    showcase moment for it, deliberately not applied everywhere so it
+    doesn't read as gimmicky.
+  - A structural motif tied to the subject matter, the way Victorian
+    Woodworkers Association's thick black lines echo their logo and
+    joinery. Added a stitched-line divider (dashed, thread-like) between
+    sections as a subtle, on-theme alternative to a plain border.
+  - Confident, sparing use of the accent colour in headline typography
+    (Boho Studio's coloured wordmark treatment) instead of leaving every
+    headline flat navy.
+
+  Everything else, copy, information architecture, honesty framing (the
+  "vision & opportunity" scope tag, the precision callout distinguishing
+  Tasmania from Congi Farm, the no-CTA decision, the sourced stats) is
+  unchanged from the version already reviewed. Colour tokens are still
+  the real Hub design system tokens (see v2's header comment), not
+  altered here, per the brief to keep the colour scheme in line with the
+  rest of the Low Emissions Livestock site.
+
+  Vanilla CSS/JS only, no build step, no external libraries, matching the
+  self-contained pattern used across every other file in this project
+  (see seafeed-cost-of-production-calculator.html's own header comment).
+-->
+<style>
+  :root{
+    --tf-navy-900:#041221;
+    --tf-navy-800:oklch(from var(--tf-navy-900) calc(l + 0.08) c h);
+    --tf-navy-700:oklch(from var(--tf-navy-900) calc(l + 0.16) c h);
+    --tf-slate-400:#a9b8c4;
+    --tf-slate-300:oklch(from var(--tf-slate-400) calc(l + 0.08) c h);
+    --tf-slate-200:oklch(from var(--tf-slate-400) calc(l + 0.14) c h);
+    --tf-slate-100:oklch(from var(--tf-slate-400) calc(l + 0.19) c h);
+    --tf-slate-600:oklch(from var(--tf-slate-400) calc(l - 0.18) c h);
+    --tf-mint-500:#5ec9a8;
+    --tf-mint-600:oklch(from var(--tf-mint-500) calc(l - 0.1) c h);
+    --tf-mint-400:oklch(from var(--tf-mint-500) calc(l + 0.08) c h);
+    --tf-mint-100:oklch(from var(--tf-mint-500) calc(l + 0.32) calc(c - 0.03) h);
+    --tf-white:#ffffff;
+    --tf-warning:#c98a2e;
+    --surface-page:var(--tf-white);
+    --surface-sunken:var(--tf-slate-100);
+    --surface-card:var(--tf-white);
+    --text-heading:var(--tf-navy-900);
+    --text-body:oklch(from var(--tf-navy-900) calc(l + 0.06) calc(c - 0.005) h);
+    --text-muted:var(--tf-slate-600);
+    --border-subtle:var(--tf-slate-200);
+    --border-default:var(--tf-slate-300);
+    --radius-lg:12px; --radius-md:10px; --radius-sm:6px;
+    --shadow-sm:0 1px 2px rgba(4,18,33,0.08);
+    --shadow-md:0 12px 32px rgba(4,18,33,0.16);
+    --font-display:Tahoma,Verdana,sans-serif;
+    --font-body:Verdana,Tahoma,sans-serif;
+  }
+  html, body { margin: 0; background: var(--surface-page); }
+  body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
+  .wp-page { max-width: 1180px; margin: 0 auto; }
+  .wp-section { padding: 92px 28px; box-sizing: border-box; }
+  .wp-narrow { max-width: 760px; }
+  @media (max-width: 720px) { .wp-section { padding: 56px 20px; } }
+
+  .wp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
+  .wp-eyebrow.on-dark { color: var(--tf-mint-400); }
+  .wp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px,4.4vw,48px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px 0; max-width: 20ch; }
+  .wp-h1 .accent { color: var(--tf-mint-400); }
+  .wp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 28px; line-height: 1.2; margin: 0 0 12px 0; }
+  .wp-h2 .accent { color: var(--tf-mint-600); }
+  @media (max-width: 720px) { .wp-h2 { font-size: 23px; } }
+  .wp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 17px; margin: 0 0 10px 0; }
+  .wp-lede { color: var(--tf-slate-300); font-size: 18px; line-height: 1.6; max-width: 58ch; margin: 0; }
+  .wp-section-intro { color: var(--text-muted); font-size: 15.5px; max-width: 66ch; margin: 0 0 34px 0; }
+  .wp-body { color: var(--text-body); font-size: 15.5px; line-height: 1.8; max-width: 68ch; margin: 0 0 20px 0; }
+
+  /* --- scroll-reveal: restrained, applied to major blocks only --- */
+  .wp-reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .wp-reveal.is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .wp-reveal { opacity: 1; transform: none; transition: none; } }
+
+  /* --- stitched-line divider, a subtle nod to wool/thread --- */
+  .wp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
+  .wp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
+
+  /* --- hero, real photo, parallax on desktop only --- */
+  .wp-hero { position: relative; min-height: 480px; display: flex; align-items: flex-end; background-image: url('../05. Website/design_handoff_low_emissions_livestock_site/assets/hero-seaweed-farm-aerial.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; }
+  @media (min-width: 900px) and (prefers-reduced-motion: no-preference) { .wp-hero { background-attachment: fixed; } }
+  .wp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.62) 65%, oklch(from var(--tf-navy-900) l c h / 0.9) 100%); }
+  .wp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 76px 28px 52px; width: 100%; box-sizing: border-box; }
+  .wp-scope-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.22); border-radius: 999px; padding: 7px 16px; margin-bottom: 24px; }
+  .wp-scope-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tf-mint-400); flex-shrink: 0; }
+  .wp-scope-text { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tf-slate-200); }
+  .wp-hero-caption { font-size: 11.5px; color: var(--tf-slate-300); margin: 18px 0 0 0; }
+
+  /* --- proof strip --- */
+  .wp-proof-strip { background: var(--tf-navy-900); padding: 64px 28px 76px; }
+  .wp-proof-header { max-width: 1180px; margin: 0 auto 28px; }
+  .wp-proof-header p { color: var(--tf-slate-300); font-size: 14.5px; line-height: 1.65; max-width: 66ch; margin: 0; }
+  .wp-proof-grid { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  @media (max-width: 860px) { .wp-proof-grid { grid-template-columns: repeat(2, 1fr); } }
+  .wp-proof-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); border-radius: var(--radius-lg); padding: 26px 22px; transition: transform 0.35s ease, background 0.35s ease; }
+  .wp-proof-card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.09); }
+  .wp-proof-value { font-family: var(--font-display); font-size: 32px; font-weight: 700; color: var(--tf-mint-400); margin: 0 0 8px 0; line-height: 1.1; }
+  .wp-proof-label { font-size: 12.5px; color: var(--tf-slate-300); line-height: 1.55; margin: 0; }
+  .wp-proof-source { text-align: left; font-size: 11.5px; color: var(--tf-slate-400); max-width:1180px; margin: 22px auto 0; }
+
+  /* --- fact grid (mill-facing, real industry stats) --- */
+  .wp-fact-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 18px; margin-top: 30px; }
+  @media (max-width: 860px) { .wp-fact-grid { grid-template-columns: 1fr 1fr; } }
+  .wp-fact-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 24px 24px; transition: box-shadow 0.3s ease, transform 0.3s ease; }
+  .wp-fact-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+  .wp-fact-value { font-family: var(--font-display); font-size: 27px; font-weight: 700; color: var(--text-heading); margin: 0 0 8px 0; }
+  .wp-fact-label { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin: 0; }
+  .wp-fact-card.headline { grid-row: span 2; background: var(--tf-navy-900); border-color: var(--tf-navy-900); display:flex; flex-direction:column; justify-content:center; }
+  @media (max-width: 860px) { .wp-fact-card.headline { grid-column: span 2; grid-row: auto; } }
+  .wp-fact-card.headline .wp-fact-value { color: var(--tf-mint-400); font-size: 38px; }
+  .wp-fact-card.headline .wp-fact-label { color: var(--tf-slate-300); font-size: 13.5px; }
+  .wp-source-note { font-size: 12px; color: var(--text-muted); line-height: 1.65; margin-top: 18px; }
+
+  /* --- origin: full-bleed photo band with floating card --- */
+  .wp-origin-band { position: relative; min-height: 620px; display: flex; align-items: center; background-image: url('../05. Website/design_handoff_low_emissions_livestock_site/assets/hero-seaweed-harvest.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; }
+  .wp-origin-band::before { content:""; position:absolute; inset:0; background: linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.78) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.12) 68%); }
+  .wp-origin-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 90px 28px; width: 100%; box-sizing: border-box; }
+  .wp-origin-card { max-width: 600px; }
+  .wp-origin-card .wp-h2, .wp-origin-card .wp-eyebrow { color: var(--tf-white); }
+  .wp-origin-card .wp-eyebrow { color: var(--tf-mint-400); }
+  .wp-origin-card .wp-body { color: var(--tf-slate-200); }
+  .wp-precision-box { background: rgba(255,255,255,0.94); border-left: 3px solid var(--tf-mint-500); border-radius: var(--radius-sm); padding: 18px 20px; margin: 20px 0; box-shadow: var(--shadow-md); }
+  .wp-precision-box p { margin: 0; font-size: 14px; color: var(--text-body); line-height: 1.65; }
+  .wp-precision-box strong { color: var(--text-heading); }
+  @media (max-width: 720px) { .wp-origin-band { min-height: auto; } .wp-origin-band::before { background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.55) 0%, oklch(from var(--tf-navy-900) l c h / 0.86) 100%); } .wp-origin-inner { padding: 56px 20px; } }
+
+  /* --- photo divider (paddock), a second punctuating full-bleed moment --- */
+  .wp-photo-divider { position: relative; min-height: 260px; background-image: url('../05. Website/design_handoff_low_emissions_livestock_site/assets/hero-paddock.jpg'); background-position: center 65%; background-size: cover; background-repeat: no-repeat; }
+  @media (min-width: 900px) and (prefers-reduced-motion: no-preference) { .wp-photo-divider { background-attachment: fixed; } }
+  .wp-photo-divider::before { content:""; position:absolute; inset:0; background: linear-gradient(0deg, var(--tf-navy-900) 0%, oklch(from var(--tf-navy-900) l c h / 0.25) 40%, oklch(from var(--tf-navy-900) l c h / 0.25) 60%, var(--tf-navy-900) 100%); }
+  .wp-photo-divider-caption { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; padding: 60px 28px; text-align: center; }
+  .wp-photo-divider-caption p { font-family: var(--font-display); color: var(--tf-white); font-size: 15px; font-weight: 700; letter-spacing: 0.02em; max-width: 44ch; margin: 0; }
+
+  /* --- garment stat visual --- */
+  .wp-scale-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 34px 36px; margin-top: 34px; box-shadow: var(--shadow-sm); }
+  .wp-scale-row { display: flex; align-items: center; gap: 24px; }
+  @media (max-width: 640px) { .wp-scale-row { flex-direction: column; align-items: stretch; } }
+  .wp-scale-block { flex: 1; text-align: center; padding: 20px 14px; }
+  .wp-scale-figure { font-family: var(--font-display); font-size: 36px; font-weight: 700; color: var(--text-heading); margin: 0 0 6px 0; }
+  .wp-scale-figure .unit { font-size: 15px; font-weight: 400; color: var(--text-muted); }
+  .wp-scale-caption { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin: 0; }
+  .wp-scale-arrow { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--tf-mint-500); flex-shrink: 0; }
+  @media (max-width: 640px) { .wp-scale-arrow { transform: rotate(90deg); margin: 0 auto; } }
+  .wp-scale-note { font-size: 12.5px; color: var(--text-muted); line-height: 1.6; margin: 20px 0 0 0; border-top: 1px solid var(--border-subtle); padding-top: 18px; }
+
+  /* --- chain diagram, stitched connector --- */
+  .wp-chain { display: flex; align-items: stretch; gap: 0; margin-top: 34px; flex-wrap: wrap; }
+  .wp-chain-step { flex: 1; min-width: 130px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 0 8px; position: relative; }
+  .wp-chain-icon { width: 54px; height: 54px; border-radius: 50%; background: var(--surface-card); border: 2px solid var(--tf-mint-500); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; color: var(--tf-mint-600); flex-shrink: 0; position: relative; z-index: 1; transition: transform 0.3s ease; }
+  .wp-chain-step:hover .wp-chain-icon { transform: scale(1.08); }
+  .wp-chain-step.origin .wp-chain-icon { background: var(--tf-navy-900); border-color: var(--tf-navy-900); color: var(--tf-mint-400); }
+  .wp-chain-step.proven .wp-chain-icon { border-color: var(--tf-slate-400); color: var(--tf-slate-600); }
+  .wp-chain-icon svg { width: 25px; height: 25px; }
+  .wp-chain-label { font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: var(--text-heading); margin: 0 0 4px 0; }
+  .wp-chain-sub { font-size: 11px; color: var(--text-muted); line-height: 1.45; }
+  .wp-chain-tag { display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; color:var(--tf-slate-600); background:var(--surface-sunken); border-radius:999px; padding:2px 8px; margin-top:8px; }
+  .wp-chain-connector { position: absolute; top: 27px; left: calc(50% + 34px); width: calc(100% - 22px); height: 0; border-top: 2px dashed var(--border-default); z-index: 0; }
+  .wp-chain-step:last-child .wp-chain-connector { display: none; }
+  @media (max-width: 760px) { .wp-chain { flex-direction: column; } .wp-chain-connector { display: none; } .wp-chain-step { flex-direction: row; text-align: left; padding: 12px 0; } .wp-chain-icon { margin-bottom: 0; margin-right: 16px; flex-shrink:0; } }
+
+  /* --- dual track --- */
+  .wp-track-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 12px; }
+  @media (max-width: 780px) { .wp-track-grid { grid-template-columns: 1fr; } }
+  .wp-track-card { border-radius: var(--radius-lg); padding: 32px 30px; transition: box-shadow 0.3s ease; }
+  .wp-track-card.brands { background: var(--tf-navy-900); }
+  .wp-track-card.farmers { background: var(--surface-card); border: 1px solid var(--border-subtle); box-shadow: var(--shadow-sm); }
+  .wp-track-card.farmers:hover { box-shadow: var(--shadow-md); }
+  .wp-track-badge { display: inline-block; font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; border-radius: 999px; padding: 5px 14px; margin-bottom: 18px; }
+  .wp-track-card.brands .wp-track-badge { background: rgba(94,201,168,0.16); color: var(--tf-mint-400); }
+  .wp-track-card.farmers .wp-track-badge { background: var(--tf-mint-100); color: var(--tf-mint-600); }
+  .wp-track-card.brands .wp-h3 { color: var(--tf-white); }
+  .wp-track-list { margin: 0; padding-left: 20px; }
+  .wp-track-list li { margin-bottom: 13px; line-height: 1.65; font-size: 14.5px; }
+  .wp-track-card.brands .wp-track-list li { color: var(--tf-slate-200); }
+  .wp-track-card.farmers .wp-track-list li { color: var(--text-body); }
+
+  /* --- grower FAQ panel --- */
+  .wp-faq-panel { background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 34px 36px; margin-top: 32px; }
+  .wp-faq-item { padding: 18px 0; border-bottom: 1px solid var(--border-default); }
+  .wp-faq-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .wp-faq-item:first-child { padding-top: 0; }
+  .wp-faq-q { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; color: var(--text-heading); margin: 0 0 7px 0; }
+  .wp-faq-a { font-size: 14px; color: var(--text-body); line-height: 1.7; margin: 0; }
+
+  /* --- closing --- */
+  .wp-closing { background: linear-gradient(160deg, var(--tf-navy-900) 0%, #0d2a2a 100%); padding: 96px 28px; text-align: center; }
+  .wp-closing-inner { max-width: 720px; margin: 0 auto; }
+  .wp-closing-quote { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: 25px; line-height: 1.55; margin: 0 0 20px 0; }
+  @media (max-width: 720px) { .wp-closing-quote { font-size: 20px; } }
+  .wp-closing-sub { color: var(--tf-slate-300); font-size: 14px; line-height: 1.7; max-width: 56ch; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO (real photo: Sea Forest's own seaweed farm, Tasmania) ============ -->
+<div class="wp-hero">
+  <div class="wp-hero-inner">
+    <div class="wp-scope-tag">
+      <span class="wp-scope-dot"></span>
+      <span class="wp-scope-text">Vision & opportunity — a wool trial has not yet begun under this project</span>
+    </div>
+    <p class="wp-eyebrow on-dark">Beyond the herd</p>
+    <h1 class="wp-h1">Could Tasmania grow the world's first proven <span class="accent">low-emissions wool</span>?</h1>
+    <p class="wp-lede">The seaweed behind this idea is grown a short drive from here. A global fashion brand has already built a product on it, just not with Tasmanian wool yet. Here's the opportunity in front of us.</p>
+    <p class="wp-hero-caption">Sea Forest's Asparagopsis cultivation site, Tasmania.</p>
+  </div>
+</div>
+
+<!-- ============ PROOF STRIP: proven elsewhere, not yet here ============ -->
+<div class="wp-proof-strip">
+  <div class="wp-proof-header wp-reveal">
+    <p class="wp-eyebrow on-dark" style="margin-bottom:10px;">Proven elsewhere, not yet here</p>
+    <p>These numbers are real, but they're not Tasmania's. They come from one external pilot on a New South Wales sheep property, included here because they're the strongest evidence anywhere that this works on wool, not because Tasmania produced them.</p>
+  </div>
+  <div class="wp-proof-grid">
+    <div class="wp-proof-card wp-reveal">
+      <p class="wp-proof-value" data-count-to="43" data-count-suffix="%">0%</p>
+      <p class="wp-proof-label">cut in enteric methane emissions from a Merino flock fed a seaweed supplement, over a 120-day pilot</p>
+    </div>
+    <div class="wp-proof-card wp-reveal">
+      <p class="wp-proof-value" data-count-to="2000" data-count-format="comma">0</p>
+      <p class="wp-proof-label">Merino sheep involved, on one property, Congi Farm, New South Wales</p>
+    </div>
+    <div class="wp-proof-card wp-reveal">
+      <p class="wp-proof-value" data-count-to="0" data-count-static="0">0</p>
+      <p class="wp-proof-label">measurable loss in fleece weight or wool quality reported from the same pilot</p>
+    </div>
+    <div class="wp-proof-card wp-reveal">
+      <p class="wp-proof-value" data-count-to="1" data-count-static="1">0</p>
+      <p class="wp-proof-label">global apparel brand, Theory, already selling garments built around that result</p>
+    </div>
+  </div>
+  <p class="wp-proof-source wp-reveal">Source: Sea Forest / Congi Farm methane-reduction pilot, reported by Beef Central, 22 April 2026.</p>
+</div>
+
+<div class="wp-stitch" aria-hidden="true">
+  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ============ TASMANIA TODAY: real industry facts, mill-facing ============ -->
+<div class="wp-section" style="background:var(--surface-page);">
+  <div class="wp-page">
+    <p class="wp-eyebrow wp-reveal">Independent of any trial</p>
+    <h2 class="wp-h2 wp-narrow wp-reveal">Tasmania already grows wool the <span class="accent">world pays for</span></h2>
+    <p class="wp-section-intro wp-reveal">This part isn't a vision, it's already happening, every season, with no methane story attached at all. It's the foundation any low-emissions wool would be built on top of, not instead of.</p>
+
+    <div class="wp-fact-grid">
+      <div class="wp-fact-card headline wp-reveal">
+        <p class="wp-fact-value">$330 / kg</p>
+        <p class="wp-fact-label">paid for a 12.7-micron bale from 'Ashby', Ross, Tasmania, at Melbourne auction in October 2025, bought by Italian luxury house Loro Piana and milled at Verrone, Biella, the same district Botto Giuseppe calls home.</p>
+      </div>
+      <div class="wp-fact-card wp-reveal">
+        <p class="wp-fact-value">2.6m</p>
+        <p class="wp-fact-label">sheep shorn in Tasmania in the 2024–25 season</p>
+      </div>
+      <div class="wp-fact-card wp-reveal">
+        <p class="wp-fact-value">9.2m kg</p>
+        <p class="wp-fact-label">greasy wool produced across the state in the same season</p>
+      </div>
+      <div class="wp-fact-card wp-reveal">
+        <p class="wp-fact-value">4.45kg</p>
+        <p class="wp-fact-label">average cut per head, Tasmania, 2024–25</p>
+      </div>
+    </div>
+    <p class="wp-source-note wp-reveal">Sources: "Tasmanian 12.7 micron Merino bale tops market at $330/kg", Sheep Central, 24 October 2025; Australian Wool Production Forecast Report, Australian Wool Innovation, 2025.</p>
+  </div>
+</div>
+
+<!-- ============ WHY TASMANIA: full-bleed photo band, precise Sea Forest framing ============ -->
+<div class="wp-origin-band">
+  <div class="wp-origin-inner">
+    <div class="wp-origin-card wp-reveal">
+      <p class="wp-eyebrow">Why here</p>
+      <h2 class="wp-h2">The company is Tasmanian.<br>The wool result isn't, yet.</h2>
+      <p class="wp-body">Asparagopsis, the red seaweed behind all of this, is grown in Tasmanian waters. Sea Forest, the company that grows and processes it, is Tasmanian, and is already a named partner in this project's beef trial. That part is real, ongoing, and happening here.</p>
+      <div class="wp-precision-box">
+        <p><strong>Worth being precise about:</strong> the 43% methane result and the wool that ended up in a Theory garment came from Congi Farm in New South Wales, using the same Sea Forest product, not from a Tasmanian sheep flock. Tasmania is where the science and the company started. It isn't yet where wool has been proven.</p>
+      </div>
+      <p class="wp-body">The active ingredient works by interrupting methane production partway through digestion, a bromoform compound naturally present in the seaweed blocks the step in a sheep's gut where methane would otherwise form. It's the same mechanism already being measured in this project's cattle trial, just not yet tested on a Tasmanian flock.</p>
+      <p class="wp-body" style="margin-bottom:0;">The delivery system needed to get it into a flock, lick blocks, farmer protocols, on-farm logistics, already exists here too, built and running for the beef trial. Extending it to sheep is a known, working system, not something to invent from nothing.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SECTION: garment economics ============ -->
+<div class="wp-section" style="background:var(--surface-page);">
+  <div class="wp-page">
+    <p class="wp-eyebrow wp-reveal">Where the value could sit</p>
+    <h2 class="wp-h2 wp-narrow wp-reveal">Wool is a small line item in a very valuable garment</h2>
+    <p class="wp-body wp-reveal">A finished wool jumper is priced on design, brand and story as much as raw fibre. Because so little wool sits behind each garment, a modest, story-driven amount at the till can matter more at the farm gate than the same premium ever could inside the bulk commodity market.</p>
+
+    <div class="wp-scale-card wp-reveal">
+      <div class="wp-scale-row">
+        <div class="wp-scale-block">
+          <p class="wp-scale-figure">&lt;1<span class="unit">kg</span></p>
+          <p class="wp-scale-caption">Roughly how much greasy wool goes into one knitted jumper, once scouring and processing losses are accounted for</p>
+        </div>
+        <div class="wp-scale-arrow">→</div>
+        <div class="wp-scale-block">
+          <p class="wp-scale-figure">1<span class="unit"> finished garment</span></p>
+          <p class="wp-scale-caption">Sold at a price shaped by design and brand, not just fibre cost</p>
+        </div>
+      </div>
+      <p class="wp-scale-note">Illustrative, not a specific product's figures. This project's own wool breakeven calculator (in development) works out what premium would actually be needed at the farm gate, this section is about where in the chain that value is easiest to find, not a promise of what it's worth.</p>
+    </div>
+  </div>
+</div>
+
+<div class="wp-stitch" aria-hidden="true">
+  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ============ CHAIN DIAGRAM ============ -->
+<div class="wp-section" style="background:var(--surface-sunken);">
+  <div class="wp-page">
+    <p class="wp-eyebrow wp-reveal">The path from paddock to product</p>
+    <h2 class="wp-h2 wp-narrow wp-reveal">Tasmania already has half of this pathway working</h2>
+    <p class="wp-section-intro wp-reveal">The quality-wool-to-luxury-mill path on the right already runs today, the Ashby bale above is proof. The low-emissions link on the left is what a Tasmanian wool trial would need to add.</p>
+
+    <div class="wp-chain wp-reveal">
+      <div class="wp-chain-step origin">
+        <div class="wp-chain-connector"></div>
+        <div class="wp-chain-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M12 2c2.5 2.5 4 6.5 4 10s-1.5 7.5-4 10c-2.5-2.5-4-6.5-4-10s1.5-7.5 4-10z"></path></svg></div>
+        <p class="wp-chain-label">Tasmanian water</p>
+        <p class="wp-chain-sub">Asparagopsis, grown and processed by Sea Forest</p>
+        <span class="wp-chain-tag">Real, ongoing</span>
+      </div>
+      <div class="wp-chain-step proven">
+        <div class="wp-chain-connector"></div>
+        <div class="wp-chain-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="15" rx="8" ry="5"></ellipse><circle cx="12" cy="7" r="3.5"></circle></svg></div>
+        <p class="wp-chain-label">A Tasmanian flock</p>
+        <p class="wp-chain-sub">SeaFeed delivered via lick block, the same system already used for beef</p>
+        <span class="wp-chain-tag">Not yet trialled</span>
+      </div>
+      <div class="wp-chain-step">
+        <div class="wp-chain-connector"></div>
+        <div class="wp-chain-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21 7.5 13.5 2 9h7z"></path></svg></div>
+        <p class="wp-chain-label">A verified, traceable clip</p>
+        <p class="wp-chain-sub">Single-origin, not commingled, the same discipline the Ashby bale already used</p>
+        <span class="wp-chain-tag">Not yet trialled</span>
+      </div>
+      <div class="wp-chain-step proven">
+        <div class="wp-chain-connector"></div>
+        <div class="wp-chain-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4H4zM6 8v12h12V8"></path><path d="M9 12h6M9 16h6"></path></svg></div>
+        <p class="wp-chain-label">An Italian mill</p>
+        <p class="wp-chain-sub">Tasmanian bales already reach Biella mills today, on quality alone</p>
+        <span class="wp-chain-tag">Already happens</span>
+      </div>
+      <div class="wp-chain-step proven">
+        <div class="wp-chain-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.17L4 3a1 1 0 0 0-1 1l.17 5.59a2 2 0 0 0 .66 1.41l9.59 9.59a2 2 0 0 0 2.83 0l4.34-4.34a2 2 0 0 0 0-2.83z"></path></svg></div>
+        <p class="wp-chain-label">A luxury brand</p>
+        <p class="wp-chain-sub">Loro Piana already buys Tasmanian; Theory already buys low-methane, just not both together yet</p>
+        <span class="wp-chain-tag">Already happens</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DUAL TRACK ============ -->
+<div class="wp-section" style="background:var(--surface-page);">
+  <div class="wp-page">
+    <p class="wp-eyebrow wp-reveal">What this could mean</p>
+    <h2 class="wp-h2 wp-narrow wp-reveal">Two different reasons to pay attention to the same opportunity</h2>
+    <div class="wp-track-grid">
+      <div class="wp-track-card brands wp-reveal">
+        <span class="wp-track-badge">For brands & mills</span>
+        <h3 class="wp-h3">A single-origin, verifiable low-emissions wool supply, ready to be built on existing foundations</h3>
+        <ul class="wp-track-list">
+          <li>Tasmania already produces auction-topping ultrafine wool bought by the same luxury houses, and milled in the same districts, brands and mills already source from.</li>
+          <li>Certified sustainable wool has commanded real, tradeable premiums for years, this adds a new, currently uncontested attribute to a supply base that already meets luxury specification.</li>
+          <li>Theory's own pilot shows a brand doesn't need an entire industry to shift first, a single well-run property and a traceable clip is enough to build a genuine product line on.</li>
+        </ul>
+      </div>
+      <div class="wp-track-card farmers wp-reveal">
+        <span class="wp-track-badge">For Tasmanian wool growers</span>
+        <h3 class="wp-h3">The infrastructure already exists. What's missing is the trial.</h3>
+        <ul class="wp-track-list">
+          <li>SeaFeed lick blocks, farmer protocols and on-farm delivery are already running for this project's beef trial, extending to sheep isn't starting from scratch.</li>
+          <li>Early evidence from outside this project suggests no cost to fleece weight or wool quality, though that hasn't been tested on a Tasmanian flock yet.</li>
+          <li>Nothing about this would change how or where you currently sell your clip, it's a possible attribute to add to wool you already grow, not a new marketing channel you'd have to build yourself.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="wp-faq-panel wp-reveal">
+      <p class="wp-h3" style="margin-bottom:20px;">If you're already selling to a European mill, here's what would and wouldn't change</p>
+      <div class="wp-faq-item">
+        <p class="wp-faq-q">Would this affect my fleece weight or quality?</p>
+        <p class="wp-faq-a">The only evidence available says no, that's from one external pilot, not a Tasmanian trial. It's a reasonable starting assumption, not a guarantee, until it's actually tested here.</p>
+      </div>
+      <div class="wp-faq-item">
+        <p class="wp-faq-q">Would I need to change who I sell to?</p>
+        <p class="wp-faq-a">No. This is about adding a verified, traceable attribute to wool you're already producing, not replacing your existing buyer relationship. Any premium pathway would sit alongside your current sale channel, not instead of it.</p>
+      </div>
+      <div class="wp-faq-item">
+        <p class="wp-faq-q">What would actually be required of me, if a trial happened?</p>
+        <p class="wp-faq-a">Based on how the beef trial runs today: an initial assessment of whether your operation fits the trial design, baseline data collected before any SeaFeed goes out, then ongoing weighing and fleece measurement alongside a control group. No wool trial has been scoped yet, so treat this as illustrative of the shape it would likely take, not a confirmed process.</p>
+      </div>
+      <div class="wp-faq-item">
+        <p class="wp-faq-q">Is there a premium on offer right now?</p>
+        <p class="wp-faq-a">No. No established market premium for low-emissions wool exists yet, anywhere. That's precisely the gap a Tasmanian trial and a genuine brand relationship would need to close.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PHOTO DIVIDER: real Tasmanian paddock, second punctuating moment ============ -->
+<div class="wp-photo-divider">
+  <div class="wp-photo-divider-caption">
+    <p>Tasmanian pasture, the same country this could all be grown on.</p>
+  </div>
+</div>
+
+<!-- ============ CLOSING ============ -->
+<div class="wp-closing">
+  <div class="wp-closing-inner wp-reveal">
+    <p class="wp-closing-quote">The seaweed is grown here. The delivery system already runs here. Tasmanian wool already reaches the same mills and the same brands this story needs. The one link that hasn't been tested yet is whether it all works together, on a Tasmanian flock.</p>
+    <p class="wp-closing-sub">This page is about where the opportunity sits today, not a report on results. As this project's work on wool develops, this is where that story will be told.</p>
+  </div>
+</div>
+
+<script>
+  // --- scroll reveal, restrained: fade + rise, once per element ---
+  (function(){
+    var els = document.querySelectorAll('.wp-reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(function(el){ el.classList.add('is-visible'); }); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function(el){ io.observe(el); });
+  })();
+
+  // --- count-up, applied only to the proof-strip stats, the single showcase moment ---
+  (function(){
+    var nodes = document.querySelectorAll('[data-count-to]');
+    if (!nodes.length) return;
+    function animate(el){
+      var target = parseFloat(el.getAttribute('data-count-to'));
+      var suffix = el.getAttribute('data-count-suffix') || '';
+      var format = el.getAttribute('data-count-format');
+      var isStatic = el.hasAttribute('data-count-static');
+      if (isStatic || isNaN(target) || target === 0) { el.textContent = target + suffix; return; }
+      var duration = 1100, start = null;
+      function fmt(v){
+        v = Math.round(v);
+        if (format === 'comma') return v.toLocaleString();
+        return String(v);
+      }
+      function step(ts){
+        if (start === null) start = ts;
+        var progress = Math.min((ts - start) / duration, 1);
+        var eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = fmt(target * eased) + suffix;
+        if (progress < 1) requestAnimationFrame(step); else el.textContent = fmt(target) + suffix;
+      }
+      requestAnimationFrame(step);
+    }
+    if (!('IntersectionObserver' in window)) { nodes.forEach(animate); return; }
+    var io2 = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) { animate(entry.target); io2.unobserve(entry.target); }
+      });
+    }, { threshold: 0.5 });
+    nodes.forEach(function(el){ io2.observe(el); });
+  })();
+</script>
+
+</body>
+</html>
