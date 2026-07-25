@@ -112,7 +112,8 @@
   .wp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
 
   /* --- hero, real photo, parallax on desktop only --- */
-  .wp-hero { position: relative; min-height: 480px; display: flex; align-items: flex-end; background-image: url('../05. Website/design_handoff_low_emissions_livestock_site/assets/hero-seaweed-farm-aerial.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; }
+  /* REPLACE_WITH_IMAGE_URL_SEAWEED_FARM_AERIAL — swap the url() below for the hosted hero-seaweed-farm-aerial.jpg link once the page is uploaded as a standalone item */
+  .wp-hero { position: relative; min-height: 480px; display: flex; align-items: flex-end; background-image: url('REPLACE_WITH_IMAGE_URL_SEAWEED_FARM_AERIAL'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   @media (min-width: 900px) and (prefers-reduced-motion: no-preference) { .wp-hero { background-attachment: fixed; } }
   .wp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.62) 65%, oklch(from var(--tf-navy-900) l c h / 0.9) 100%); }
   .wp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 76px 28px 52px; width: 100%; box-sizing: border-box; }
@@ -147,7 +148,8 @@
   .wp-source-note { font-size: 12px; color: var(--text-muted); line-height: 1.65; margin-top: 18px; }
 
   /* --- origin: full-bleed photo band with floating card --- */
-  .wp-origin-band { position: relative; min-height: 620px; display: flex; align-items: center; background-image: url('../05. Website/design_handoff_low_emissions_livestock_site/assets/hero-seaweed-harvest.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; }
+  /* REPLACE_WITH_IMAGE_URL_SEAWEED_HARVEST — swap the url() below for the hosted hero-seaweed-harvest.jpg link once the page is uploaded as a standalone item */
+  .wp-origin-band { position: relative; min-height: 620px; display: flex; align-items: center; background-image: url('REPLACE_WITH_IMAGE_URL_SEAWEED_HARVEST'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .wp-origin-band::before { content:""; position:absolute; inset:0; background: linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.78) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.12) 68%); }
   .wp-origin-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 90px 28px; width: 100%; box-sizing: border-box; }
   .wp-origin-card { max-width: 600px; }
@@ -160,7 +162,8 @@
   @media (max-width: 720px) { .wp-origin-band { min-height: auto; } .wp-origin-band::before { background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.55) 0%, oklch(from var(--tf-navy-900) l c h / 0.86) 100%); } .wp-origin-inner { padding: 56px 20px; } }
 
   /* --- photo divider (paddock), a second punctuating full-bleed moment --- */
-  .wp-photo-divider { position: relative; min-height: 260px; background-image: url('../05. Website/design_handoff_low_emissions_livestock_site/assets/hero-paddock.jpg'); background-position: center 65%; background-size: cover; background-repeat: no-repeat; }
+  /* REPLACE_WITH_IMAGE_URL_PADDOCK — swap the url() below for the hosted hero-paddock.jpg link once the page is uploaded as a standalone item */
+  .wp-photo-divider { position: relative; min-height: 260px; background-image: url('REPLACE_WITH_IMAGE_URL_PADDOCK'); background-position: center 65%; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   @media (min-width: 900px) and (prefers-reduced-motion: no-preference) { .wp-photo-divider { background-attachment: fixed; } }
   .wp-photo-divider::before { content:""; position:absolute; inset:0; background: linear-gradient(0deg, var(--tf-navy-900) 0%, oklch(from var(--tf-navy-900) l c h / 0.25) 40%, oklch(from var(--tf-navy-900) l c h / 0.25) 60%, var(--tf-navy-900) 100%); }
   .wp-photo-divider-caption { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; padding: 60px 28px; text-align: center; }
