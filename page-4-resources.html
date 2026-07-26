@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tools, answers and a way to reach the project team.</title>
+<!--
+  Resources page rebuild, same design system as home/farms/partners/data
+  redesigns. All copy carried over verbatim from the live Resources page.
+
+  Hero image uses the REAL hosted URL already live on GitHub Pages
+  (hero-resources.jpg). Partner logos also use real hosted URLs, same as
+  the Partners page rebuild.
+
+  No live ArcGIS fetch logic on this page (Downloads cards, FAQ
+  accordion and contact block are all static copy) - the only JS here is
+  the FAQ accordion toggle and the shared scroll-reveal.
+
+  Single self-contained file for a single Hub Iframe widget.
+-->
+<style>
+  :root{
+    --tf-navy-900:#041221;
+    --tf-navy-800:oklch(from var(--tf-navy-900) calc(l + 0.08) c h);
+    --tf-slate-400:#a9b8c4;
+    --tf-slate-300:oklch(from var(--tf-slate-400) calc(l + 0.08) c h);
+    --tf-slate-200:oklch(from var(--tf-slate-400) calc(l + 0.14) c h);
+    --tf-slate-100:oklch(from var(--tf-slate-400) calc(l + 0.19) c h);
+    --tf-slate-600:oklch(from var(--tf-slate-400) calc(l - 0.18) c h);
+    --tf-mint-500:#5ec9a8;
+    --tf-mint-600:oklch(from var(--tf-mint-500) calc(l - 0.1) c h);
+    --tf-mint-400:oklch(from var(--tf-mint-500) calc(l + 0.08) c h);
+    --tf-white:#ffffff;
+    --tf-warning:#c98a2e;
+    --surface-page:var(--tf-white);
+    --surface-sunken:var(--tf-slate-100);
+    --surface-card:var(--tf-white);
+    --text-heading:var(--tf-navy-900);
+    --text-body:oklch(from var(--tf-navy-900) calc(l + 0.06) calc(c - 0.005) h);
+    --text-muted:var(--tf-slate-600);
+    --border-subtle:var(--tf-slate-200);
+    --border-default:var(--tf-slate-300);
+    --radius-lg:12px; --radius-md:10px; --radius-sm:6px;
+    --shadow-sm:0 1px 2px rgba(4,18,33,0.08);
+    --font-display:Tahoma,Verdana,sans-serif;
+    --font-body:Verdana,Tahoma,sans-serif;
+  }
+  html, body { margin: 0; background: var(--surface-page); }
+  body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
+  .rp-page { max-width: 1180px; margin: 0 auto; }
+  .rp-section { padding: 88px 28px; box-sizing: border-box; }
+  .rp-narrow { max-width: 760px; }
+  @media (max-width: 720px) { .rp-section { padding: 52px 20px; } }
+
+  .rp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; text-align: center; }
+  .rp-eyebrow.on-dark { color: var(--tf-mint-400); text-align: left; }
+  .rp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(30px,4.2vw,46px); line-height: 1.12; letter-spacing: -0.01em; margin: 0 0 18px 0; max-width: 20ch; }
+  .rp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 12px 0; }
+  @media (max-width: 720px) { .rp-h2 { font-size: 22px; } }
+  .rp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 18px; margin: 0 0 8px 0; }
+  .rp-lede { color: var(--tf-slate-300); font-size: 16px; line-height: 1.6; max-width: 58ch; margin: 0; }
+  .rp-section-intro { color: var(--text-muted); font-size: 15.5px; line-height: 1.7; max-width: 66ch; margin: 0 0 32px 0; }
+
+  .rp-reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .rp-reveal.is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .rp-reveal { opacity: 1; transform: none; transition: none; } }
+
+  .rp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
+  .rp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
+
+  /* --- hero --- */
+  .rp-hero { position: relative; min-height: 400px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-resources.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .rp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.55) 60%, oklch(from var(--tf-navy-900) l c h / 0.9) 100%); }
+  .rp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 68px 28px 44px; width: 100%; box-sizing: border-box; }
+
+  /* --- partner strip --- */
+  .rp-partner-strip { text-align: center; }
+  .rp-partner-logos { display: flex; align-items: center; justify-content: center; gap: 48px; flex-wrap: wrap; margin-top: 8px; }
+  .rp-partner-logos img { max-height: 34px; width: auto; object-fit: contain; opacity: 0.85; }
+
+  /* --- downloads --- */
+  .rp-downloads-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+  @media (max-width: 780px) { .rp-downloads-grid { grid-template-columns: 1fr; } }
+  .rp-download-card { border-radius: var(--radius-lg); padding: 28px 30px; display: flex; flex-direction: column; }
+  .rp-download-card.available { background: var(--surface-card); border: 1.5px solid var(--tf-mint-500); box-shadow: var(--shadow-sm); }
+  .rp-download-card.pending { background: var(--surface-sunken); border: 1px solid var(--border-subtle); }
+  .rp-download-tag { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 12px 0; }
+  .rp-download-card p.body { font-size: 14.5px; color: var(--text-muted); line-height: 1.65; margin: 0 0 22px 0; flex-grow: 1; }
+  .rp-download-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: auto; }
+  .rp-download-status { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--tf-mint-600); }
+  .rp-download-status.muted { color: var(--text-muted); }
+  .rp-btn-solid { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; padding: 11px 22px; border-radius: var(--radius-md); text-decoration: none; background: var(--tf-navy-900); color: var(--tf-white); white-space: nowrap; }
+  .rp-btn-solid:hover { background: var(--tf-navy-800); }
+
+  /* --- FAQ accordion --- */
+  .rp-faq-list { margin-top: 10px; }
+  .rp-faq-item { border-bottom: 1px solid var(--border-subtle); }
+  .rp-faq-item:first-child { border-top: 1px solid var(--border-subtle); }
+  .rp-faq-question { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: none; border: none; text-align: left; cursor: pointer; padding: 20px 4px; font-family: var(--font-display); font-size: 15.5px; font-weight: 700; color: var(--text-heading); }
+  .rp-faq-toggle { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--tf-mint-600); white-space: nowrap; }
+  .rp-faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+  .rp-faq-answer.expanded { max-height: 300px; }
+  .rp-faq-answer p { font-size: 14.5px; color: var(--text-muted); line-height: 1.65; margin: 0 4px 20px 4px; max-width: 68ch; }
+
+  /* --- get in touch --- */
+  .rp-contact-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-top: 10px; align-items: start; }
+  @media (max-width: 780px) { .rp-contact-grid { grid-template-columns: 1fr; } }
+  .rp-contact-intro p.body { font-size: 15px; color: var(--text-muted); line-height: 1.7; margin: 0 0 22px 0; max-width: 52ch; }
+  .rp-contact-card { background: var(--tf-navy-900); border-radius: var(--radius-lg); padding: 26px 28px; }
+  .rp-contact-card p { margin: 0; }
+  .rp-contact-card .label { font-size: 11.5px; color: var(--tf-slate-300); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+  .rp-contact-card .name { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: 16px; margin-bottom: 2px; }
+  .rp-contact-card .org { color: var(--tf-slate-300); font-size: 13.5px; margin-bottom: 14px; }
+  .rp-contact-card .detail { color: var(--tf-slate-200); font-size: 13.5px; margin-bottom: 4px; }
+  .rp-contact-card .detail a { color: var(--tf-mint-400); text-decoration: none; }
+  .rp-contact-card .note { color: var(--tf-slate-300); font-size: 12px; line-height: 1.6; margin-top: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="rp-hero">
+  <div class="rp-hero-inner">
+    <p class="rp-eyebrow on-dark">For every Tasmanian producer</p>
+    <h1 class="rp-h1">Tools, answers and a way to reach the project team.</h1>
+    <p class="rp-lede">The grant requires this trial to publish findings the whole sector can use, not just the farms taking part.</p>
+  </div>
+</div>
+
+<!-- ============ PARTNER STRIP ============ -->
+<div class="rp-section rp-partner-strip" style="background:var(--surface-page); padding-top:56px; padding-bottom:56px;">
+  <div class="rp-page">
+    <p class="rp-eyebrow rp-reveal">Delivered in partnership with</p>
+    <div class="rp-partner-logos rp-reveal">
+      <img src="https://jonathanjones-tasfarmers.github.io/lel-website/TasFarmers_Logo_H_C.png.png" alt="TasFarmers">
+      <img src="https://jonathanjones-tasfarmers.github.io/lel-website/seaforest-logo.webp" alt="Sea Forest">
+      <img src="https://jonathanjones-tasfarmers.github.io/lel-website/tia-logo.png" alt="Tasmanian Institute of Agriculture">
+    </div>
+  </div>
+</div>
+
+<div class="rp-stitch" aria-hidden="true">
+  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ============ DOWNLOADS ============ -->
+<div class="rp-section" style="background:var(--surface-sunken);">
+  <div class="rp-page">
+    <h2 class="rp-h2 rp-narrow rp-reveal">Downloads</h2>
+    <p class="rp-section-intro rp-reveal">The two deliverables the grant requires this project to publish for the sector.</p>
+    <div class="rp-downloads-grid">
+      <div class="rp-download-card available rp-reveal">
+        <p class="rp-download-tag">Milestone 6 deliverable</p>
+        <h3 class="rp-h3">Economic feasibility tool</h3>
+        <p class="body">A cost-of-production calculator built from live trial data. Enter your own herd size, growth rate and costs to see what adopting SeaFeed could mean for your cost of production and gross margin.</p>
+        <div class="rp-download-footer">
+          <span class="rp-download-status">Available now</span>
+          <a class="rp-btn-solid" href="/pages/4628b8f4a42a439bad1a05447139e865">Try the calculator</a>
+        </div>
+      </div>
+      <div class="rp-download-card pending rp-reveal">
+        <p class="rp-download-tag">Milestone 6 deliverable</p>
+        <h3 class="rp-h3">Adoption handbook</h3>
+        <p class="body">A practical guide to feeding, storing and managing SeaFeed on-farm, drawn from what's been learned in the trial so far. Formally due at project completion in February 2029, but we're aiming to have this drafted well ahead of that date so producers aren't waiting on the final report to get practical guidance.</p>
+        <div class="rp-download-footer">
+          <span class="rp-download-status muted">In development &ndash; targeting early release</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ COMMON QUESTIONS ============ -->
+<div class="rp-section" style="background:var(--surface-page);">
+  <div class="rp-page">
+    <h2 class="rp-h2 rp-narrow rp-reveal">Common questions</h2>
+    <div class="rp-faq-list rp-reveal">
+      <div class="rp-faq-item">
+        <button type="button" class="rp-faq-question" data-faq-toggle>
+          <span>Is the data on this site real or projected?</span>
+          <span class="rp-faq-toggle">Show &#9662;</span>
+        </button>
+        <div class="rp-faq-answer">
+          <p>Real. Every figure on the Home, Farms, and Data pages comes from trial-to-date measurements, updated as it's recorded, not a modelled projection.</p>
+        </div>
+      </div>
+      <div class="rp-faq-item">
+        <button type="button" class="rp-faq-question" data-faq-toggle>
+          <span>What does it cost to take part?</span>
+          <span class="rp-faq-toggle">Show &#9662;</span>
+        </button>
+        <div class="rp-faq-answer">
+          <p>Free to start: The Tasmanian Government grant covers your SeaFeed supply and data collection. If initial trial data shows a real productivity gain from feeding SeaFeed, you'll then be asked to cover a share of the SeaFeed cost equal to that gain. No measurable gain, no cost.</p>
+        </div>
+      </div>
+      <div class="rp-faq-item">
+        <button type="button" class="rp-faq-question" data-faq-toggle>
+          <span>Does every operation qualify?</span>
+          <span class="rp-faq-toggle">Show &#9662;</span>
+        </button>
+        <div class="rp-faq-answer">
+          <p>The Project team assesses each registration against the current trial design. Register your interest and the team will follow up either way.</p>
+        </div>
+      </div>
+      <div class="rp-faq-item">
+        <button type="button" class="rp-faq-question" data-faq-toggle>
+          <span>Is my farm's data kept private?</span>
+          <span class="rp-faq-toggle">Show &#9662;</span>
+        </button>
+        <div class="rp-faq-answer">
+          <p>Yes. Producer identities and farm-level data stay private, figures published on this site are aggregated across trial sites.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="rp-stitch" aria-hidden="true">
+  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ============ GET IN TOUCH ============ -->
+<div class="rp-section" id="contact" style="background:var(--surface-sunken);">
+  <div class="rp-page">
+    <h2 class="rp-h2 rp-narrow rp-reveal">Get in touch</h2>
+    <div class="rp-contact-grid">
+      <div class="rp-contact-intro rp-reveal">
+        <p class="body">Questions about the trial, the calculator, or registering your farm, the project team reads every email that comes through.</p>
+        <a class="rp-btn-solid" href="mailto:lel@tasfarmers.com.au?subject=Low%20Emissions%20Livestock%20Project%20%E2%80%94%20Enquiry">Email the project team &rarr;</a>
+      </div>
+      <div class="rp-contact-card rp-reveal">
+        <p class="label">Project contact</p>
+        <p class="name">Low Emissions Livestock Project</p>
+        <p class="org">TasFarmers</p>
+        <p class="detail"><a href="mailto:jonathan.jones@tasfarmers.com.au">jonathan.jones@tasfarmers.com.au</a></p>
+        <p class="detail">+61 418 131 629</p>
+        <p class="note">For media enquiries about the trial or its partners, please mention the Low Emissions Livestock Project in your message.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- scroll reveal, restrained: fade + rise, once per element ---
+  (function(){
+    var els = document.querySelectorAll('.rp-reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(function(el){ el.classList.add('is-visible'); }); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function(el){ io.observe(el); });
+  })();
+
+  // --- FAQ accordion ---
+  (function(){
+    var buttons = document.querySelectorAll('[data-faq-toggle]');
+    buttons.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var item = btn.closest('.rp-faq-item');
+        var answer = item.querySelector('.rp-faq-answer');
+        var toggleLabel = btn.querySelector('.rp-faq-toggle');
+        var expanded = answer.classList.toggle('expanded');
+        toggleLabel.innerHTML = expanded ? 'Hide &#9652;' : 'Show &#9662;';
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>
