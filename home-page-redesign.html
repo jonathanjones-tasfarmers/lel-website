@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cutting methane from Tasmanian livestock, keeping farms profitable.</title>
+<!--
+  Home page rebuild, applying the same design principles established on
+  low-emissions-wool-opportunity.html: real full-bleed photography, the
+  Hub design-system colour tokens, Tahoma display headlines with sparing
+  mint accent spans, a stitched dashed-line divider motif, restrained
+  scroll-reveal (no count-up here, this page carries live/interactive
+  data instead), and the data-honesty conventions used across this
+  project (live-data status lines, illustrative-scenario disclosures).
+
+  This is a single self-contained file for a single Hub Iframe widget,
+  replacing ALL native body content on the Home page (Hub's own sticky
+  nav/header and footer stay outside this iframe, as on every other
+  page, this file starts at the hero and ends at the closing CTA band).
+
+  Copy is carried over verbatim from the live Home page and from
+  04. HTML Scripts/05b-why-tasmania-matters.html. The "Tasmania at scale"
+  section's live-data fetch and slider maths are reproduced EXACTLY as
+  in that file, only the visual skin has changed, the calculation logic,
+  fallback values, and data sources are untouched.
+
+  Vanilla CSS/JS only, no build step, no external libraries.
+-->
+<style>
+  :root{
+    --tf-navy-900:#041221;
+    --tf-navy-800:oklch(from var(--tf-navy-900) calc(l + 0.08) c h);
+    --tf-navy-700:oklch(from var(--tf-navy-900) calc(l + 0.16) c h);
+    --tf-slate-400:#a9b8c4;
+    --tf-slate-300:oklch(from var(--tf-slate-400) calc(l + 0.08) c h);
+    --tf-slate-200:oklch(from var(--tf-slate-400) calc(l + 0.14) c h);
+    --tf-slate-100:oklch(from var(--tf-slate-400) calc(l + 0.19) c h);
+    --tf-slate-600:oklch(from var(--tf-slate-400) calc(l - 0.18) c h);
+    --tf-mint-500:#5ec9a8;
+    --tf-mint-600:oklch(from var(--tf-mint-500) calc(l - 0.1) c h);
+    --tf-mint-400:oklch(from var(--tf-mint-500) calc(l + 0.08) c h);
+    --tf-mint-100:oklch(from var(--tf-mint-500) calc(l + 0.32) calc(c - 0.03) h);
+    --tf-white:#ffffff;
+    --tf-warning:#c98a2e;
+    --surface-page:var(--tf-white);
+    --surface-sunken:var(--tf-slate-100);
+    --surface-card:var(--tf-white);
+    --text-heading:var(--tf-navy-900);
+    --text-body:oklch(from var(--tf-navy-900) calc(l + 0.06) calc(c - 0.005) h);
+    --text-muted:var(--tf-slate-600);
+    --border-subtle:var(--tf-slate-200);
+    --border-default:var(--tf-slate-300);
+    --radius-lg:12px; --radius-md:10px; --radius-sm:6px;
+    --shadow-sm:0 1px 2px rgba(4,18,33,0.08);
+    --shadow-md:0 12px 32px rgba(4,18,33,0.16);
+    --font-display:Tahoma,Verdana,sans-serif;
+    --font-body:Verdana,Tahoma,sans-serif;
+  }
+  html, body { margin: 0; background: var(--surface-page); }
+  body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
+  .hp-page { max-width: 1180px; margin: 0 auto; }
+  .hp-section { padding: 88px 28px; box-sizing: border-box; }
+  .hp-narrow { max-width: 760px; }
+  @media (max-width: 720px) { .hp-section { padding: 52px 20px; } }
+
+  .hp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
+  .hp-eyebrow.on-dark { color: var(--tf-mint-400); }
+  .hp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px,4.4vw,50px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px 0; max-width: 20ch; }
+  .hp-h1 .accent { color: var(--tf-mint-400); }
+  .hp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 28px; line-height: 1.2; margin: 0 0 12px 0; }
+  .hp-h2 .accent { color: var(--tf-mint-600); }
+  @media (max-width: 720px) { .hp-h2 { font-size: 23px; } }
+  .hp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 16.5px; margin: 0 0 10px 0; }
+  .hp-lede { color: var(--tf-slate-300); font-size: 17px; line-height: 1.6; max-width: 60ch; margin: 0 0 28px 0; }
+  .hp-section-intro { color: var(--text-muted); font-size: 15.5px; line-height: 1.7; max-width: 70ch; margin: 0 0 30px 0; }
+  .hp-body { color: var(--text-body); font-size: 15.5px; line-height: 1.8; max-width: 68ch; margin: 0 0 18px 0; }
+
+  .hp-reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .hp-reveal.is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .hp-reveal { opacity: 1; transform: none; transition: none; } }
+
+  .hp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
+  .hp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
+
+  .hp-btn { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 15px; padding: 13px 26px; border-radius: var(--radius-md); text-decoration: none; cursor: pointer; border: 1px solid transparent; }
+  .hp-btn.primary { background: var(--tf-mint-500); color: var(--tf-navy-900); }
+  .hp-btn.primary:hover { background: var(--tf-mint-400); }
+  .hp-btn.outline { border-color: var(--tf-slate-400); color: var(--tf-white); background: transparent; }
+  .hp-btn.outline:hover { border-color: var(--tf-white); }
+  .hp-link { font-size: 14px; color: var(--tf-slate-300); text-decoration: none; border-bottom: 1px solid var(--border-default); padding-bottom: 2px; }
+  .hp-link.on-light { color: var(--text-muted); }
+  .hp-link.accent { color: var(--tf-mint-600); border-color: var(--tf-mint-600); }
+
+  /* --- hero --- */
+  .hp-hero { position: relative; min-height: 460px; display: flex; align-items: flex-end; background-image: url('REPLACE_WITH_IMAGE_URL_HOME_HERO'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .hp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.4) 0%, oklch(from var(--tf-navy-900) l c h / 0.6) 60%, oklch(from var(--tf-navy-900) l c h / 0.92) 100%); }
+  .hp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 48px; width: 100%; box-sizing: border-box; }
+  .hp-hero-actions { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; margin-top: 8px; }
+
+  /* --- partner strip --- */
+  .hp-partner-strip { background: var(--surface-sunken); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); padding: 40px 28px; }
+  .hp-partner-label { text-align: center; font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 22px 0; }
+  .hp-partner-row { display: flex; justify-content: center; align-items: center; gap: 44px; flex-wrap: wrap; }
+  .hp-partner-word { font-family: var(--font-display); font-weight: 700; font-size: 17px; color: var(--tf-navy-800); opacity: 0.82; }
+  .hp-partner-sub { text-align: center; font-size: 12.5px; color: var(--text-muted); margin: 22px 0 0 0; }
+
+  /* --- how it works: numbered icon circles --- */
+  .hp-how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 10px; }
+  @media (max-width: 780px) { .hp-how-grid { grid-template-columns: 1fr; } }
+  .hp-how-card { padding: 0; }
+  .hp-how-number { width: 44px; height: 44px; border-radius: 50%; background: var(--tf-navy-900); color: var(--tf-mint-400); font-family: var(--font-display); font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+  .hp-how-card p { font-size: 14.5px; color: var(--text-muted); line-height: 1.7; margin: 0; }
+
+  /* --- why trial exists: 2-col + at-a-glance card --- */
+  .hp-story-grid { display: grid; grid-template-columns: 1.3fr 0.9fr; gap: 56px; margin-top: 10px; }
+  @media (max-width: 860px) { .hp-story-grid { grid-template-columns: 1fr; } }
+  .hp-glance-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 26px 28px; height: fit-content; }
+  .hp-glance-label { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 16px 0; }
+  .hp-glance-row { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; font-size: 13.5px; border-top: 1px solid var(--border-subtle); }
+  .hp-glance-row:first-of-type { border-top: none; padding-top: 0; }
+  .hp-glance-row span:first-child { color: var(--text-muted); }
+  .hp-glance-row span:last-child { color: var(--text-heading); font-weight: 700; }
+
+  /* --- looking ahead: wool --- */
+  .hp-wool-band { background: var(--tf-navy-900); }
+  .hp-wool-band .hp-body { color: var(--tf-slate-200); }
+  .hp-milestone-tag { display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 999px; padding: 8px 18px; margin: 26px 0 28px 0; }
+  .hp-milestone-tag .label { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tf-mint-400); }
+  .hp-milestone-tag .dates { font-size: 12.5px; color: var(--tf-slate-300); }
+  .hp-wool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (max-width: 720px) { .hp-wool-grid { grid-template-columns: 1fr; } }
+  .hp-wool-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); border-radius: var(--radius-lg); padding: 22px 24px; }
+  .hp-wool-card h3 { font-family: var(--font-display); font-size: 14.5px; font-weight: 700; color: var(--tf-white); margin: 0 0 8px 0; }
+  .hp-wool-card p { font-size: 13.5px; color: var(--tf-slate-300); line-height: 1.65; margin: 0; }
+  .hp-wool-links { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 28px; }
+
+  /* --- tasmania at scale (live calculator, logic preserved from 05b-why-tasmania-matters.html) --- */
+  .hp-status { color: var(--text-muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 26px 0; }
+  .hp-chip-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 30px; }
+  .hp-chip { flex: 1; min-width: 240px; background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 20px 22px; }
+  .hp-chip-value { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: var(--text-heading); margin: 0 0 6px 0; }
+  .hp-chip-label { font-size: 12.5px; color: var(--text-muted); line-height: 1.55; margin: 0; }
+  .hp-scenario-box { background: var(--surface-card); border: 1px solid var(--tf-mint-500); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 30px 32px; margin-bottom: 22px; }
+  .hp-scenario-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-heading); margin: 0 0 20px 0; }
+  .hp-slider-row { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
+  .hp-slider-row label { color: var(--text-muted); font-size: 13.5px; white-space: nowrap; }
+  .hp-scenario-box input[type="range"] { flex: 1; accent-color: var(--tf-mint-600); }
+  .hp-slider-val { color: var(--text-heading); font-family: var(--font-display); font-size: 19px; font-weight: 700; min-width: 48px; text-align: right; }
+  .hp-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 720px) { .hp-stats { grid-template-columns: 1fr; } }
+  .hp-stat-card { background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 18px 20px; }
+  .hp-stat-label { font-size: 12.5px; color: var(--text-muted); margin: 0 0 8px 0; }
+  .hp-stat-value { font-family: var(--font-display); color: var(--tf-mint-600); font-size: 25px; font-weight: 700; margin: 0; }
+  .hp-disclosure-box { background: #fff6e8; border: 1px solid var(--tf-warning); border-radius: var(--radius-sm); padding: 15px 20px; margin-top: 20px; }
+  .hp-disclosure-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; user-select: none; }
+  .hp-disclosure-title { font-family: var(--font-display); color: #8a5a12; font-size: 12.5px; font-weight: 700; margin: 0; }
+  .hp-disclosure-toggle { color: #8a5a12; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .hp-disclosure-details { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+  .hp-disclosure-details.expanded { max-height: 400px; }
+  .hp-disclosure-text { color: #6b5327; font-size: 13px; line-height: 1.6; margin: 12px 0 0 0; }
+
+  /* --- closing --- */
+  .hp-closing { background: linear-gradient(160deg, var(--tf-navy-900) 0%, #0d2a2a 100%); padding: 92px 28px; text-align: center; }
+  .hp-closing-inner { max-width: 640px; margin: 0 auto; }
+  .hp-closing h2 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: 30px; margin: 0 0 14px 0; }
+  @media (max-width: 720px) { .hp-closing h2 { font-size: 24px; } }
+  .hp-closing p { color: var(--tf-slate-300); font-size: 15px; margin: 0 0 30px 0; }
+  .hp-closing-actions { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="hp-hero">
+  <div class="hp-hero-inner">
+    <p class="hp-eyebrow on-dark">TasFarmers &middot; Sea Forest &middot; Tasmanian Institute of Agriculture</p>
+    <h1 class="hp-h1">Cutting methane from Tasmanian livestock, keeping farms <span class="accent">profitable</span>.</h1>
+    <p class="hp-lede">A Tasmanian Government&ndash;funded trial testing whether Sea Forest's Asparagopsis seaweed lick blocks cut enteric methane in Tasmanian livestock, with the cost and performance data published as the trial runs, not after it's finished.</p>
+    <div class="hp-hero-actions">
+      <a class="hp-btn primary" href="/pages/fa61ed7b4e0641788bb350c15e41fc50">Explore more</a>
+      <a class="hp-link" href="#story">Read our story &darr;</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PARTNER STRIP ============ -->
+<div class="hp-partner-strip">
+  <p class="hp-partner-label">Delivered in partnership with</p>
+  <div class="hp-partner-row">
+    <span class="hp-partner-word">TasFarmers</span>
+    <span class="hp-partner-word">Sea Forest</span>
+    <span class="hp-partner-word">Tasmanian Institute of Agriculture</span>
+  </div>
+  <p class="hp-partner-sub">Supported by the Tasmanian Government</p>
+</div>
+
+<div class="hp-stitch" aria-hidden="true">
+  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ============ HOW IT WORKS ============ -->
+<div class="hp-section" style="background:var(--surface-page);">
+  <div class="hp-page">
+    <h2 class="hp-h2 hp-narrow hp-reveal">How it works</h2>
+    <div class="hp-how-grid">
+      <div class="hp-how-card hp-reveal">
+        <div class="hp-how-number">1</div>
+        <h3 class="hp-h3">The opportunity</h3>
+        <p>Livestock digestion produces methane, a greenhouse gas many times more potent than CO&#8322; in the short term. It's one of the biggest levers Tasmanian agriculture has for cutting emissions, and one of the hardest to pull without hurting farm output.</p>
+      </div>
+      <div class="hp-how-card hp-reveal">
+        <div class="hp-how-number">2</div>
+        <h3 class="hp-h3">The idea</h3>
+        <p>Sea Forest's <em>Asparagopsis</em> seaweed lick blocks are fed to livestock as part of their normal diet. Research proves the compound can significantly cut the methane cattle produce during digestion.</p>
+      </div>
+      <div class="hp-how-card hp-reveal">
+        <div class="hp-how-number">3</div>
+        <h3 class="hp-h3">The goal</h3>
+        <p>This trial is testing whether that promise holds up on real commercial farms, weighing the emissions cut against the actual cost and impact on herd performance, not just in a lab.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ WHY THIS TRIAL EXISTS ============ -->
+<div class="hp-section" id="story" style="background:var(--surface-sunken);">
+  <div class="hp-page">
+    <div class="hp-story-grid">
+      <div class="hp-reveal">
+        <h2 class="hp-h2">Why this trial exists</h2>
+        <p class="hp-body"><em>Asparagopsis</em> seaweed supplements have shown real promise in reducing methane from livestock in controlled research settings. What hadn't been tested at commercial scale in Tasmania was whether that promise holds up on a working farm, and what it actually costs.</p>
+        <p class="hp-body">That's what this trial is for. Backed by a $4 million grant from the Tasmanian Government, TasFarmers partnered with the Tasmanian Institute of Agriculture for the science and Sea Forest as the supplement's manufacturer to run the trial on the ground and capture the data.</p>
+        <p class="hp-body" style="margin-bottom:0;">The brief is simple to state and hard to deliver: estimate the emissions reduction, weigh it against the real cost and productivity impact, and publish an honest answer, one every Tasmanian livestock producer can use, whether or not they were part of the trial.</p>
+      </div>
+      <div class="hp-glance-card hp-reveal">
+        <p class="hp-glance-label">At a glance</p>
+        <div class="hp-glance-row"><span>Trial start</span><span>19 June 2024</span></div>
+        <div class="hp-glance-row"><span>Completion due</span><span>1 February 2029</span></div>
+        <div class="hp-glance-row"><span>Reporting</span><span>Every 6 months</span></div>
+        <a class="hp-link accent" href="/pages/9dd10f6e27074c748a01a67be3bf5a14#timeline" style="display:inline-block; margin-top:18px;">See the full project timeline &rarr;</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ LOOKING AHEAD: WOOL ============ -->
+<div class="hp-wool-band">
+  <div class="hp-section">
+    <div class="hp-page">
+      <p class="hp-eyebrow on-dark hp-reveal">Looking ahead</p>
+      <h2 class="hp-h2 hp-narrow hp-reveal" style="color:var(--tf-white);">Where <span class="accent">wool</span> could fit in</h2>
+      <p class="hp-body hp-reveal">Beef leads this trial today. Wool is where it's aiming to go next. Milestone 5 of the project's Grant Deed includes scope for a wool-focused sheep cohort, tracking fibre and product quality using a similar on-farm delivery model and monitoring infrastructure to what's already proven on beef. No wool producers are confirmed yet, this is a stated ambition, not a running program, and it's an open door for millers, brands and industry bodies who want to help shape what that looks like.</p>
+
+      <div class="hp-milestone-tag hp-reveal">
+        <span class="label">Milestone 5 &middot; Upcoming</span>
+        <span class="dates">Sep 2026 &ndash; 31 Dec 2028</span>
+      </div>
+
+      <div class="hp-wool-grid hp-reveal">
+        <div class="hp-wool-card">
+          <h3>Wool is in scope for this milestone</h3>
+          <p>Long-term pasture-based beef trials and sheep and wool cohorts run through to completion, with bi-annual Progress and Data Reports tracking productivity, emissions, residues and product quality.</p>
+        </div>
+        <div class="hp-wool-card">
+          <h3>Proven delivery model</h3>
+          <p>The same on-farm feeding protocols and monitoring infrastructure already used for beef, ready to extend to a wool cohort.</p>
+        </div>
+        <div class="hp-wool-card">
+          <h3>Not yet locked in</h3>
+          <p>No wool producers, millers or brands are confirmed. Early conversations can help shape what this looks like.</p>
+        </div>
+        <div class="hp-wool-card">
+          <h3>Published as it happens</h3>
+          <p>If this component proceeds, results follow the same real-time, trial-to-date approach as everything else on this site.</p>
+        </div>
+      </div>
+
+      <div class="hp-wool-links hp-reveal">
+        <a class="hp-link" href="/pages/9dd10f6e27074c748a01a67be3bf5a14">See the full project timeline &rarr;</a>
+        <a class="hp-link" href="/pages/096bc47289824b939739a7e45b7e32b8#contact">Millers or brands interested in shaping this? Get in touch &rarr;</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="hp-stitch" aria-hidden="true">
+  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ============ TASMANIA AT SCALE (live calculator) ============ -->
+<div class="hp-section" style="background:var(--surface-page);">
+  <div class="hp-page">
+    <p class="hp-eyebrow hp-reveal">Tasmania, at scale</p>
+    <h2 class="hp-h2 hp-narrow hp-reveal">What this could mean <span class="accent">beyond the trial</span></h2>
+    <p class="hp-section-intro hp-reveal">This trial runs on a handful of Tasmanian properties, but livestock methane is a statewide question. Here's how the trial's own numbers scale against Tasmania's official emissions figures.</p>
+    <p class="hp-status hp-reveal" id="data-status">Loading live data&hellip;</p>
+
+    <div class="hp-chip-row hp-reveal">
+      <div class="hp-chip">
+        <p class="hp-chip-value">32.7%</p>
+        <p class="hp-chip-label">of Tasmania's emissions (excl. LULUCF) come from agriculture, the state's single largest sector</p>
+      </div>
+      <div class="hp-chip">
+        <p class="hp-chip-value">1.59 Mt CO2&#8209;e / year</p>
+        <p class="hp-chip-label">from cattle enteric fermentation alone, before sheep, dairy or other agricultural sources</p>
+      </div>
+    </div>
+
+    <div class="hp-scenario-box hp-reveal">
+      <p class="hp-scenario-title">If SeaFeed were adopted across the Tasmanian herd</p>
+      <div class="hp-slider-row">
+        <label for="adoption">Herd adoption</label>
+        <input type="range" min="0" max="80" step="10" value="20" id="adoption">
+        <span class="hp-slider-val" id="adoption-out">20%</span>
+      </div>
+      <div class="hp-stats">
+        <div class="hp-stat-card">
+          <p class="hp-stat-label">CO2&#8209;e avoided per year</p>
+          <p class="hp-stat-value" id="co2e-out">&mdash;</p>
+        </div>
+        <div class="hp-stat-card">
+          <p class="hp-stat-label">Share of Tas agriculture emissions</p>
+          <p class="hp-stat-value" id="ag-share-out">&mdash;</p>
+        </div>
+        <div class="hp-stat-card">
+          <p class="hp-stat-label">Cattle covered</p>
+          <p class="hp-stat-value" id="head-out">&mdash;</p>
+        </div>
+      </div>
+
+      <div class="hp-disclosure-box">
+        <div class="hp-disclosure-summary" id="disclosure-toggle-row">
+          <p class="hp-disclosure-title">&#9888; Illustrative scenario, not a forecast, see basis</p>
+          <span class="hp-disclosure-toggle" id="disclosure-toggle-label">Why? &#9662;</span>
+        </div>
+        <div class="hp-disclosure-details" id="disclosure-details">
+          <p class="hp-disclosure-text">
+            Based on Tasmania's cattle enteric fermentation emissions of 1.5874 Mt CO2&#8209;e/year
+            (Tasmanian Greenhouse Gas Emissions Report 2026, ReCFIT, Dept of State Growth) and
+            this trial's current modelled abatement rate of <span id="rate-out">&mdash;</span>%, applied
+            at the selected adoption share. Cattle head estimate based on the MLA Beef Producer
+            Intentions Survey, April 2024 (~1.3M head), a lower-confidence figure than the ReCFIT
+            emissions data above. This is a scaling exercise on the trial's own modelled figures,
+            not a prediction of actual statewide adoption or outcomes.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CLOSING CTA ============ -->
+<div class="hp-closing">
+  <div class="hp-closing-inner hp-reveal">
+    <h2>See what it could mean for your herd</h2>
+    <p>See an illustrative carbon value estimate for your own herd, or get in touch about taking part.</p>
+    <div class="hp-closing-actions">
+      <a class="hp-btn primary" href="/pages/0d8b2d4ff259453aabba9b606427cd12">See the estimate</a>
+      <a class="hp-btn outline" href="https://arcg.is/CiTXn">Talk to us</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- scroll reveal, restrained: fade + rise, once per element ---
+  (function(){
+    var els = document.querySelectorAll('.hp-reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(function(el){ el.classList.add('is-visible'); }); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function(el){ io.observe(el); });
+  })();
+
+  // --- disclosure toggle ---
+  var disclosureToggleRow = document.getElementById('disclosure-toggle-row');
+  var disclosureDetails = document.getElementById('disclosure-details');
+  var disclosureToggleLabel = document.getElementById('disclosure-toggle-label');
+  disclosureToggleRow.addEventListener('click', function () {
+    var isExpanded = disclosureDetails.classList.toggle('expanded');
+    disclosureToggleLabel.textContent = isExpanded ? 'Hide ▴' : 'Why? ▾';
+  });
+
+  // --- Tasmania-at-scale scenario, logic reproduced exactly from
+  //     04. HTML Scripts/05b-why-tasmania-matters.html: same endpoints,
+  //     same fallback values, same maths. Only the CSS classes differ. ---
+  var EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
+  var BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
+  var AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
+
+  var CATTLE_ENTERIC_MT = 1.5874;
+  var AG_TOTAL_MT = 2.6466;
+  var BEEF_HEAD = 1300000;
+  var ABATEMENT_PCT = 30;
+
+  function fetchBenchmarks() {
+    var params = new URLSearchParams({ where: "1=1", outFields: "metric_name,metric_value", f: "json" });
+    return fetch(BENCHMARKS_URL + "?" + params).then(function(res){ return res.json(); }).then(function(data){
+      if (data.error) throw new Error(data.error.message || "Benchmarks query failed");
+      var values = {};
+      data.features.forEach(function(feat){ values[feat.attributes.metric_name] = feat.attributes.metric_value; });
+      if (values.TAS_CATTLE_ENTERIC_FERMENTATION_MT_CO2E != null) CATTLE_ENTERIC_MT = values.TAS_CATTLE_ENTERIC_FERMENTATION_MT_CO2E;
+      if (values.TAS_AGRICULTURE_TOTAL_MT_CO2E != null) AG_TOTAL_MT = values.TAS_AGRICULTURE_TOTAL_MT_CO2E;
+      if (values.TAS_BEEF_CATTLE_HEAD_COUNT_APPROX != null) BEEF_HEAD = values.TAS_BEEF_CATTLE_HEAD_COUNT_APPROX;
+    });
+  }
+
+  function fetchLatestAbatementRate() {
+    var params = new URLSearchParams({
+      where: "treatment='seafeed' AND farm_name='" + AGGREGATE_LABEL + "'", outFields: "abatement_rate,record_date",
+      orderByFields: "record_date DESC", resultRecordCount: "1", f: "json"
+    });
+    return fetch(EMISSIONS_URL + "?" + params).then(function(res){ return res.json(); }).then(function(data){
+      if (data.error) throw new Error(data.error.message || "Emissions query failed");
+      if (data.features && data.features.length > 0 && data.features[0].attributes.abatement_rate != null) {
+        ABATEMENT_PCT = data.features[0].attributes.abatement_rate;
+      }
+    });
+  }
+
+  var slider = document.getElementById('adoption');
+  var adoptionOut = document.getElementById('adoption-out');
+  var co2eOut = document.getElementById('co2e-out');
+  var agShareOut = document.getElementById('ag-share-out');
+  var headOut = document.getElementById('head-out');
+  var rateOut = document.getElementById('rate-out');
+
+  function updateScenario() {
+    var adoption = Number(slider.value);
+    var avoidedMt = CATTLE_ENTERIC_MT * (adoption / 100) * (ABATEMENT_PCT / 100);
+    var avoidedT = Math.round(avoidedMt * 1000000);
+    var agShare = (avoidedMt / AG_TOTAL_MT) * 100;
+    var head = Math.round(BEEF_HEAD * (adoption / 100));
+
+    adoptionOut.textContent = adoption + '%';
+    co2eOut.textContent = avoidedT.toLocaleString() + ' t';
+    agShareOut.textContent = agShare.toFixed(1) + '%';
+    headOut.textContent = head.toLocaleString();
+    rateOut.textContent = ABATEMENT_PCT;
+  }
+  slider.addEventListener('input', updateScenario);
+
+  var statusEl = document.getElementById('data-status');
+
+  function init() {
+    Promise.all([fetchBenchmarks(), fetchLatestAbatementRate()]).then(function(){
+      statusEl.textContent = 'Live data, updated ' + new Date().toLocaleDateString();
+      statusEl.style.color = 'var(--tf-mint-600)';
+    }).catch(function(err){
+      statusEl.textContent = 'Showing last-known figures, live data temporarily unavailable';
+      statusEl.style.color = 'var(--tf-warning)';
+      console.error('Live data fetch failed, using fallback values:', err);
+    }).then(updateScenario);
+  }
+  init();
+</script>
+
+</body>
+</html>
