@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Every trial reading, tracked over time.</title>
+<!--
+  Data page rebuild, same design system as home/farms/partners redesigns.
+
+  Combines TWO existing live-data source files, both reskinned but with
+  ALL fetch logic, endpoints, fallback behaviour and calculations
+  preserved EXACTLY:
+    - 04. HTML Scripts/data-findings.html
+      (Chart.js line charts: methane abatement over time, ADG over time,
+      plus the cost-of-production indicator cards)
+    - 04. HTML Scripts/farms-illustrative-carbon-value.html
+      (illustrative value of abatement to date + "estimate for your own
+      herd" calculator)
+
+  Only external dependency: Chart.js from jsDelivr (same CDN as the
+  source file). Single self-contained file for a single Hub Iframe
+  widget - required for both the chart canvases and the two calculators
+  to actually run.
+-->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --tf-navy-900:#041221;
+    --tf-navy-800:oklch(from var(--tf-navy-900) calc(l + 0.08) c h);
+    --tf-slate-400:#a9b8c4;
+    --tf-slate-300:oklch(from var(--tf-slate-400) calc(l + 0.08) c h);
+    --tf-slate-200:oklch(from var(--tf-slate-400) calc(l + 0.14) c h);
+    --tf-slate-100:oklch(from var(--tf-slate-400) calc(l + 0.19) c h);
+    --tf-slate-600:oklch(from var(--tf-slate-400) calc(l - 0.18) c h);
+    --tf-mint-500:#5ec9a8;
+    --tf-mint-600:oklch(from var(--tf-mint-500) calc(l - 0.1) c h);
+    --tf-mint-400:oklch(from var(--tf-mint-500) calc(l + 0.08) c h);
+    --tf-white:#ffffff;
+    --tf-warning:#c98a2e;
+    --surface-page:var(--tf-white);
+    --surface-sunken:var(--tf-slate-100);
+    --surface-card:var(--tf-white);
+    --text-heading:var(--tf-navy-900);
+    --text-body:oklch(from var(--tf-navy-900) calc(l + 0.06) calc(c - 0.005) h);
+    --text-muted:var(--tf-slate-600);
+    --border-subtle:var(--tf-slate-200);
+    --border-default:var(--tf-slate-300);
+    --radius-lg:12px; --radius-md:10px; --radius-sm:6px;
+    --shadow-sm:0 1px 2px rgba(4,18,33,0.08);
+    --font-display:Tahoma,Verdana,sans-serif;
+    --font-body:Verdana,Tahoma,sans-serif;
+  }
+  html, body { margin: 0; background: var(--surface-page); }
+  body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
+  .dp-page { max-width: 1180px; margin: 0 auto; }
+  .dp-section { padding: 88px 28px; box-sizing: border-box; }
+  .dp-narrow { max-width: 760px; }
+  @media (max-width: 720px) { .dp-section { padding: 52px 20px; } }
+
+  .dp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
+  .dp-eyebrow.on-dark { color: var(--tf-mint-400); }
+  .dp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(30px,4.2vw,46px); line-height: 1.12; letter-spacing: -0.01em; margin: 0 0 18px 0; max-width: 18ch; }
+  .dp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 12px 0; }
+  @media (max-width: 720px) { .dp-h2 { font-size: 22px; } }
+  .dp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 15px; margin: 0 0 4px 0; }
+  .dp-lede { color: var(--tf-slate-300); font-size: 16px; line-height: 1.6; max-width: 58ch; margin: 0; }
+  .dp-section-intro { color: var(--text-muted); font-size: 15.5px; line-height: 1.7; max-width: 66ch; margin: 0 0 24px 0; }
+
+  .dp-reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .dp-reveal.is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .dp-reveal { opacity: 1; transform: none; transition: none; } }
+
+  .dp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
+  .dp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
+
+  .dp-status-row { display: flex; align-items: center; gap: 8px; margin: 0 0 30px 0; }
+  .dp-status { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+
+  /* --- hero --- */
+  .dp-hero { position: relative; min-height: 400px; display: flex; align-items: flex-end; background-image: url('REPLACE_WITH_IMAGE_URL_DATA_HERO'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .dp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.55) 60%, oklch(from var(--tf-navy-900) l c h / 0.9) 100%); }
+  .dp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 68px 28px 44px; width: 100%; box-sizing: border-box; }
+
+  /* --- charts --- */
+  .dp-chart-section { padding: 34px 0; border-bottom: 1px solid var(--border-subtle); }
+  .dp-chart-section:first-of-type { padding-top: 0; }
+  .dp-chart-section:last-of-type { border-bottom: 0; }
+  .dp-chart-caption { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0 0 18px 0; }
+  .dp-chart-box { position: relative; height: 280px; }
+  .dp-chart-box canvas { width: 100% !important; height: 100% !important; }
+  .dp-chart-empty { font-size: 13px; color: var(--text-muted); text-align: center; padding: 40px 0; }
+  .dp-legend { display: flex; gap: 18px; margin-top: 14px; font-size: 12.5px; color: var(--text-muted); }
+  .dp-legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+
+  /* --- cost-of-production indicator cards --- */
+  .dp-indicator-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px; }
+  .dp-indicator-card { flex: 1 1 220px; background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 20px 22px; }
+  .dp-indicator-label { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; margin: 0 0 10px 0; }
+  .dp-indicator-value { font-family: var(--font-display); font-size: 30px; font-weight: 700; color: var(--text-heading); line-height: 1; }
+  .dp-indicator-value .unit { font-size: 13px; font-weight: 400; color: var(--text-muted); margin-left: 4px; }
+  .dp-indicator-meta { font-size: 12px; color: var(--text-muted); margin-top: 10px; line-height: 1.5; }
+  .dp-indicator-meta.stale { color: var(--tf-warning); font-weight: 700; }
+  .dp-indicator-card--delta { background: var(--tf-mint-600); border-color: transparent; }
+  .dp-indicator-card--delta .dp-indicator-label { color: rgba(255,255,255,0.85); }
+  .dp-indicator-card--delta .dp-indicator-value { color: var(--tf-white); font-size: 34px; }
+  .dp-indicator-card--delta .dp-indicator-value .unit { color: rgba(255,255,255,0.75); }
+  .dp-indicator-card--delta .dp-indicator-meta { color: rgba(255,255,255,0.85); }
+
+  @keyframes dp-shimmer{ 0%{ background-position:150% 0; } 100%{ background-position:-50% 0; } }
+  .dp-skel { display: inline-block; border-radius: 6px; background-size: 250% 100%; animation: dp-shimmer 1.4s ease-in-out infinite; vertical-align: middle; background-image: linear-gradient(90deg, rgba(4,18,33,0.08) 25%, rgba(4,18,33,0.16) 37%, rgba(4,18,33,0.08) 63%); }
+  .dp-skel-white { display: inline-block; border-radius: 6px; background-size: 250% 100%; animation: dp-shimmer 1.4s ease-in-out infinite; vertical-align: middle; background-image: linear-gradient(90deg, rgba(255,255,255,0.25) 25%, rgba(255,255,255,0.45) 37%, rgba(255,255,255,0.25) 63%); }
+  .dp-skel-chart { position: absolute; inset: 0; z-index: 2; border-radius: 6px; }
+  @media (prefers-reduced-motion: reduce) { .dp-skel, .dp-skel-white { animation: none !important; } }
+
+  /* --- illustrative value --- */
+  .dp-disclosure-box { background: #fff6e8; border: 1px solid var(--tf-warning); border-radius: var(--radius-md); padding: 14px 20px; margin: 0 0 24px 0; }
+  .dp-disclosure-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; user-select: none; }
+  .dp-disclosure-title { font-family: var(--font-display); color: #8a5a12; font-size: 12.5px; font-weight: 700; margin: 0; }
+  .dp-disclosure-toggle { color: #8a5a12; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .dp-disclosure-details { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+  .dp-disclosure-details.expanded { max-height: 400px; }
+  .dp-disclosure-text { color: #6b5327; font-size: 13px; line-height: 1.6; margin: 12px 0 0 0; }
+
+  .dp-value-box { background: var(--tf-navy-900); border-radius: var(--radius-lg); padding: 28px 30px; margin-bottom: 8px; display: grid; grid-template-columns: 1.1fr 2fr; gap: 28px; align-items: center; }
+  @media (max-width: 780px) { .dp-value-box { grid-template-columns: 1fr; } }
+  .dp-value-label { font-size: 13px; color: var(--tf-slate-200); margin: 0 0 6px 0; }
+  .dp-value-amount { font-family: var(--font-display); color: var(--tf-mint-400); font-size: 36px; font-weight: 700; margin: 0; }
+  .dp-value-sub { font-size: 12px; color: var(--tf-slate-300); margin: 8px 0 0 0; }
+  .dp-detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 480px) { .dp-detail-grid { grid-template-columns: 1fr; } }
+  .dp-detail-card { background: rgba(255,255,255,0.06); border: 1px solid #28394a; border-radius: 8px; padding: 12px 14px; }
+  .dp-detail-label { font-size: 11.5px; color: var(--tf-slate-300); margin: 0 0 4px 0; }
+  .dp-detail-value { font-size: 16px; color: var(--tf-white); font-weight: 700; margin: 0; }
+
+  .dp-more-toggle { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: var(--tf-mint-600); text-decoration: none; border-bottom: 1px solid var(--tf-mint-600); padding-bottom: 1px; cursor: pointer; user-select: none; margin-top: 14px; }
+  .dp-footnote-wrap { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+  .dp-footnote-wrap.expanded { max-height: 400px; margin-top: 14px; }
+  .dp-footnote { color: var(--text-muted); font-size: 12px; line-height: 1.65; margin: 0; max-width: 90ch; }
+  .dp-footnote a { color: var(--tf-mint-600); }
+
+  /* --- your herd calculator --- */
+  .dp-calc-box { background: var(--surface-card); border: 1px solid var(--tf-mint-500); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 28px 30px; margin: 34px 0 8px 0; }
+  .dp-calc-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-heading); margin: 0 0 8px 0; }
+  .dp-calc-intro { color: var(--text-muted); font-size: 13.5px; line-height: 1.6; max-width: 70ch; margin: 0 0 20px 0; }
+  .dp-calc-input-row { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .dp-calc-input-row label { color: var(--text-heading); font-family: var(--font-display); font-size: 13.5px; font-weight: 700; white-space: nowrap; }
+  .dp-calc-input-row input[type="number"] { width: 110px; font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text-heading); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px 12px; }
+  .dp-calc-input-row input[type="number"]:focus { outline: none; border-color: var(--tf-mint-500); }
+  .dp-calc-input-suffix { color: var(--text-muted); font-size: 13.5px; }
+  .dp-calc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+  @media (max-width: 720px) { .dp-calc-stats { grid-template-columns: 1fr; } }
+  .dp-calc-stat-card { background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 18px 20px; }
+  .dp-calc-stat-card.accent { border-color: var(--tf-mint-500); }
+  .dp-calc-stat-label { font-size: 12.5px; color: var(--text-muted); margin: 0 0 8px 0; }
+  .dp-calc-stat-value { font-family: var(--font-display); color: var(--tf-mint-600); font-size: 24px; font-weight: 700; margin: 0; }
+  .dp-calc-stat-sub { font-size: 11.5px; color: var(--text-muted); margin: 6px 0 0 0; }
+  .dp-calc-note { color: var(--text-muted); font-size: 12px; line-height: 1.6; margin: 0; max-width: 90ch; }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="dp-hero">
+  <div class="dp-hero-inner">
+    <p class="dp-eyebrow on-dark">The evidence, in full</p>
+    <h1 class="dp-h1">Every trial reading, tracked over time.</h1>
+    <p class="dp-lede">Not a single headline figure, the full trend, as it's been recorded, so you can judge the evidence for yourself.</p>
+  </div>
+</div>
+
+<!-- ============ CHARTS + COST OF PRODUCTION ============ -->
+<!-- Fetch logic, endpoints, calculations, all preserved exactly from
+     04. HTML Scripts/data-findings.html -->
+<div class="dp-section" style="background:var(--surface-page); padding-bottom:56px;">
+  <div class="dp-page">
+    <h2 class="dp-h2 dp-narrow dp-reveal">The findings, over time</h2>
+    <p class="dp-section-intro dp-reveal">Every one of these charts is built from the same live trial data used across the rest of this site, updated as new readings come in.</p>
+    <div class="dp-status-row dp-reveal">
+      <span class="dp-status" id="tf-status">Loading live data&hellip;</span>
+    </div>
+
+    <div class="dp-chart-section dp-reveal">
+      <h3 class="dp-h3">Methane abatement over time</h3>
+      <p class="dp-chart-caption">Modelled abatement rate, SeaFeed group, every recorded reading, not just the latest figure.</p>
+      <div class="dp-chart-box">
+        <div class="dp-skel dp-skel-chart" id="chart-abatement-skeleton"></div>
+        <canvas id="chart-abatement"></canvas>
+      </div>
+      <p class="dp-chart-empty" id="chart-abatement-empty" style="display:none;">No emissions readings recorded yet.</p>
+    </div>
+
+    <div class="dp-chart-section dp-reveal">
+      <h3 class="dp-h3">Average daily gain over time</h3>
+      <p class="dp-chart-caption">Rolling average daily gain, SeaFeed vs control.</p>
+      <div class="dp-chart-box">
+        <div class="dp-skel dp-skel-chart" id="chart-adg-skeleton"></div>
+        <canvas id="chart-adg"></canvas>
+      </div>
+      <p class="dp-chart-empty" id="chart-adg-empty" style="display:none;">No productivity readings recorded yet.</p>
+      <div class="dp-legend"><span><span class="dp-legend-dot" style="background:var(--tf-mint-500);"></span>SeaFeed</span><span><span class="dp-legend-dot" style="background:var(--tf-slate-400);"></span>Control</span></div>
+    </div>
+
+    <div class="dp-chart-section dp-reveal">
+      <h3 class="dp-h3">Cost of production: SeaFeed vs Control</h3>
+      <p class="dp-chart-caption">Cost per kg of liveweight gain, not raw spend per head: this indexes both treatments to what they actually produced, so the comparison isn't skewed by SeaFeed's higher lick block intake and cost.</p>
+      <div class="dp-indicator-row">
+        <div class="dp-indicator-card">
+          <p class="dp-indicator-label" style="color:var(--tf-mint-600);">SeaFeed: cost of production</p>
+          <div class="dp-indicator-value" id="ind-cop-seafeed"><span class="dp-skel" style="width:96px; height:30px;"></span></div>
+          <p class="dp-indicator-meta" id="ind-cop-seafeed-meta"><span class="dp-skel" style="width:170px; height:12px;"></span></p>
+        </div>
+        <div class="dp-indicator-card">
+          <p class="dp-indicator-label" style="color:var(--text-muted);">Control: cost of production</p>
+          <div class="dp-indicator-value" id="ind-cop-control"><span class="dp-skel" style="width:96px; height:30px;"></span></div>
+          <p class="dp-indicator-meta" id="ind-cop-control-meta"><span class="dp-skel" style="width:170px; height:12px;"></span></p>
+        </div>
+        <div class="dp-indicator-card dp-indicator-card--delta">
+          <p class="dp-indicator-label">SeaFeed vs Control</p>
+          <div class="dp-indicator-value" id="ind-cop-delta"><span class="dp-skel-white" style="width:96px; height:34px;"></span></div>
+          <p class="dp-indicator-meta" id="ind-cop-delta-meta"><span class="dp-skel-white" style="width:170px; height:12px;"></span></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="dp-stitch" aria-hidden="true">
+  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ============ ILLUSTRATIVE VALUE + HERD CALCULATOR ============ -->
+<!-- Fetch logic, endpoints, calculations, all preserved exactly from
+     04. HTML Scripts/farms-illustrative-carbon-value.html -->
+<div class="dp-section" style="background:var(--surface-sunken);">
+  <div class="dp-page">
+    <p class="dp-eyebrow dp-reveal">Illustrative value</p>
+    <h2 class="dp-h2 dp-narrow dp-reveal">What the abatement to date could be worth</h2>
+    <p class="dp-section-intro dp-reveal">A rough sense of scale, not a revenue figure, this trial hasn't generated or sold any carbon credits. Shown here against a current market reference price so the modelled abatement means something beyond a percentage, with a calculator below to see what it could look like for your own herd.</p>
+    <p class="dp-status" id="value-status" style="margin-bottom:20px;">Loading live data&hellip;</p>
+
+    <div class="dp-disclosure-box dp-reveal">
+      <div class="dp-disclosure-summary" id="disclosure-toggle-row">
+        <p class="dp-disclosure-title">&#9888; Not actual carbon credits, none have been issued or sold</p>
+        <span class="dp-disclosure-toggle" id="disclosure-toggle-label">Why? &#9662;</span>
+      </div>
+      <div class="dp-disclosure-details" id="disclosure-details">
+        <p class="dp-disclosure-text">No carbon credits (ACCUs or otherwise) have been issued, held, or sold in connection with this trial. Generating real, tradeable credits requires formal project registration, an approved methodology, and independent third-party verification under a scheme such as Australia's ACCU Scheme, none of which this project has undertaken.</p>
+        <p class="dp-disclosure-text">The figure below is a purely illustrative calculation: this trial's own modelled CO2&#8209;e abatement estimate, multiplied by a current market reference price, to show roughly what scale of value comparable verified abatement might represent if it were ever formally registered. It is not income, revenue, or an asset this project holds.</p>
+      </div>
+    </div>
+
+    <div class="dp-value-box dp-reveal">
+      <div>
+        <p class="dp-value-label">Illustrative value of abatement to date</p>
+        <p class="dp-value-amount" id="value-out">&mdash;</p>
+        <p class="dp-value-sub">Not an actual credit sale or held asset, see disclosure above</p>
+      </div>
+      <div class="dp-detail-grid">
+        <div class="dp-detail-card">
+          <p class="dp-detail-label">CO2&#8209;e avoided so far</p>
+          <p class="dp-detail-value" id="co2e-out">&mdash;</p>
+        </div>
+        <div class="dp-detail-card">
+          <p class="dp-detail-label">Reference price</p>
+          <p class="dp-detail-value" id="price-out">&mdash;</p>
+        </div>
+        <div class="dp-detail-card">
+          <p class="dp-detail-label">Days of data</p>
+          <p class="dp-detail-value" id="days-out">&mdash;</p>
+        </div>
+      </div>
+    </div>
+    <a href="#" class="dp-more-toggle" id="footnote-toggle">More info &#9662;</a>
+    <div class="dp-footnote-wrap" id="footnote-wrap">
+      <p class="dp-footnote">Reference price: AUD $30 to $35 per tonne CO2&#8209;e (midpoint used), the range EY's <em>Australian Carbon Market Outlook 2026</em> projects ACCU prices to hold through at least 2028. Actual market prices fluctuate, secondary-market ACCU trades have been reported as high as A$42/tonne around compliance deadlines. CO2&#8209;e figures use the AR5 100-year GWP factor (28), consistent with <a href="https://www.recfit.tas.gov.au/what_is_recfit/climate_change/greenhouse_gas_emissions/tasmanian-greenhouse-gas-emissions-report-2026" target="_blank" rel="noopener">Tasmania's official greenhouse gas reporting</a>. Whether this trial's methodology would qualify for a registered ACCU method has not been assessed.</p>
+    </div>
+
+    <div class="dp-calc-box dp-reveal">
+      <p class="dp-calc-title">Estimate it for your own herd</p>
+      <p class="dp-calc-intro">Scales the trial's most recent per-head, per-day methane abatement across a herd of your size, as if it were fed SeaFeed at the same intake rate the trial is currently recording. Not a guarantee: your herd's actual result depends on your cattle, feeding conditions and intake.</p>
+      <div class="dp-calc-input-row">
+        <label for="herd-size">Herd size</label>
+        <input type="number" id="herd-size" min="1" max="50000" step="1" value="100">
+        <span class="dp-calc-input-suffix">head</span>
+      </div>
+      <div class="dp-calc-stats">
+        <div class="dp-calc-stat-card">
+          <p class="dp-calc-stat-label">CO2&#8209;e abated per year</p>
+          <p class="dp-calc-stat-value" id="calc-co2e-out">Loading&hellip;</p>
+          <p class="dp-calc-stat-sub" id="calc-rate-sub">&mdash;</p>
+        </div>
+        <div class="dp-calc-stat-card accent">
+          <p class="dp-calc-stat-label">Illustrative value per year</p>
+          <p class="dp-calc-stat-value" id="calc-value-out">Loading&hellip;</p>
+          <p class="dp-calc-stat-sub">At the $32.50/t reference price, not realisable income, see disclosure above</p>
+        </div>
+        <div class="dp-calc-stat-card">
+          <p class="dp-calc-stat-label">Estimated SeaFeed cost per year</p>
+          <p class="dp-calc-stat-value" id="calc-cost-out">Loading&hellip;</p>
+          <p class="dp-calc-stat-sub">Indicative, based on the trial's average cost to date</p>
+        </div>
+      </div>
+      <a href="#" class="dp-more-toggle" id="calc-info-toggle">Information &#9662;</a>
+      <div class="dp-footnote-wrap" id="calc-info-wrap">
+        <p class="dp-calc-note" id="calc-note">Loading live trial data&hellip;</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ================= CHARTS + COST OF PRODUCTION =================
+  // Preserved exactly from 04. HTML Scripts/data-findings.html
+  (function(){
+    const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
+    const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
+    const PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
+    const MINT = '#3aa989', SLATE = '#a9b8c4', WARNING = '#c98a2e';
+    const STALE_AFTER_DAYS = 14;
+    const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
+
+    async function q(url, params){
+      const res = await fetch(url + "?" + new URLSearchParams(params));
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message || "Query failed");
+      return data;
+    }
+    function fmtDate(epochMs){
+      return new Date(epochMs).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'2-digit' });
+    }
+    function daysSinceEpoch(epochMs){
+      return (Date.now() - epochMs) / (1000 * 60 * 60 * 24);
+    }
+    function axisTitle(text){
+      return { display:true, text, font:{ family:'Tahoma,Verdana,sans-serif', size:12, weight:'bold' }, color:'#041221', padding:{ top:8 } };
+    }
+    function baseLineOptions(yAxisLabel, yAxisOverrides){
+      return {
+        responsive:true,
+        maintainAspectRatio:false,
+        interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:{ display:false } },
+        scales:{
+          x:{
+            title: axisTitle('Date'),
+            ticks:{ font:{ family:'Verdana,Tahoma,sans-serif', size:11 }, color:'#73818c', maxRotation:0, autoSkip:true, maxTicksLimit:8 },
+            grid:{ display:false }
+          },
+          y: Object.assign({
+            title: axisTitle(yAxisLabel),
+            ticks:{ font:{ family:'Verdana,Tahoma,sans-serif', size:11 }, color:'#73818c' },
+            grid:{ color:'#e6f6ff' }
+          }, yAxisOverrides || {})
+        }
+      };
+    }
+    function hideChartSkeleton(canvasId){
+      const skeletonEl = document.getElementById(canvasId + '-skeleton');
+      if (skeletonEl) skeletonEl.style.display = 'none';
+    }
+    function showChartUnavailable(canvasId, emptyId){
+      hideChartSkeleton(canvasId);
+      document.getElementById(canvasId).closest('.dp-chart-box').style.display = 'none';
+      const emptyEl = document.getElementById(emptyId);
+      emptyEl.textContent = 'Unable to load this chart right now.';
+      emptyEl.style.display = 'block';
+    }
+    function renderLineChart(canvasId, emptyId, labels, datasets, yAxisLabel, yAxisOverrides){
+      hideChartSkeleton(canvasId);
+      if (!labels.length){
+        document.getElementById(canvasId).closest('.dp-chart-box').style.display = 'none';
+        document.getElementById(emptyId).style.display = 'block';
+        return;
+      }
+      const styledDatasets = datasets.map(d => Object.assign({ spanGaps:true, tension:0.35, cubicInterpolationMode:'monotone' }, d));
+      new Chart(document.getElementById(canvasId), {
+        type:'line',
+        data:{ labels, datasets: styledDatasets },
+        options: baseLineOptions(yAxisLabel, yAxisOverrides)
+      });
+    }
+
+    async function loadAbatement(){
+      try{
+        const data = await q(EMISSIONS_URL, {
+          where:`treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`, outFields:"abatement_rate,record_date",
+          orderByFields:"record_date ASC", resultRecordCount:"2000", f:"json"
+        });
+        const rows = data.features.map(f => f.attributes).filter(a => a.record_date != null && a.abatement_rate != null);
+        renderLineChart('chart-abatement', 'chart-abatement-empty',
+          rows.map(r => fmtDate(r.record_date)),
+          [{ label:'Abatement rate (%)', data: rows.map(r => r.abatement_rate), borderColor: MINT, backgroundColor:'rgba(58,169,137,0.12)', fill:true, tension:0.35, spanGaps:true, pointRadius:2 }],
+          'Abatement rate (%)'
+        );
+      } catch(err){
+        console.error('Abatement chart failed:', err);
+        showChartUnavailable('chart-abatement', 'chart-abatement-empty');
+      }
+    }
+
+    async function loadAdg(){
+      try{
+        const [seafeed, control] = await Promise.all([
+          q(PRODUCTIVITY_URL, { where:`treatment_group='seafeed' AND farm_name='${AGGREGATE_LABEL}'`, outFields:"snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"2000", f:"json" }),
+          q(PRODUCTIVITY_URL, { where:`treatment_group='control' AND farm_name='${AGGREGATE_LABEL}'`, outFields:"snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"2000", f:"json" })
+        ]);
+        const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
+        const ctRows = control.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
+        const sfByDate = new Map(sfRows.map(r => [r.snapshot_date, r.rolling_adg]));
+        const ctByDate = new Map(ctRows.map(r => [r.snapshot_date, r.rolling_adg]));
+        const allDates = Array.from(new Set([...sfByDate.keys(), ...ctByDate.keys()])).sort((a, b) => a - b);
+        renderLineChart('chart-adg', 'chart-adg-empty',
+          allDates.map(d => fmtDate(d)),
+          [
+            { label:'SeaFeed', data: allDates.map(d => sfByDate.has(d) ? sfByDate.get(d) : null), borderColor: MINT, backgroundColor:'transparent', tension:0.35, spanGaps:true, pointRadius:2 },
+            { label:'Control', data: allDates.map(d => ctByDate.has(d) ? ctByDate.get(d) : null), borderColor: SLATE, backgroundColor:'transparent', tension:0.35, spanGaps:true, pointRadius:2 }
+          ],
+          'Average daily gain (g/day)',
+          { suggestedMin:0, suggestedMax:2000 }
+        );
+      } catch(err){
+        console.error('ADG chart failed:', err);
+        showChartUnavailable('chart-adg', 'chart-adg-empty');
+      }
+    }
+
+    async function latestCostOfProduction(treatment){
+      const data = await q(ECON_URL, {
+        where: `treatment='${treatment}' AND cost_per_kg_gain_aud IS NOT NULL AND farm_name='${AGGREGATE_LABEL}'`,
+        outFields: "treatment,cost_per_kg_gain_aud,cost_per_head_aud,weight_gain_kg_per_head,calculation_date",
+        orderByFields: "calculation_date DESC",
+        resultRecordCount: "1",
+        f: "json"
+      });
+      const row = data.features[0]?.attributes;
+      return row ? {
+        date: row.calculation_date,
+        costPerKgGain: row.cost_per_kg_gain_aud,
+        costPerHead: row.cost_per_head_aud,
+        weightGainKg: row.weight_gain_kg_per_head
+      } : null;
+    }
+
+    function renderCopCard(valueId, metaId, reading){
+      const valueEl = document.getElementById(valueId);
+      const metaEl = document.getElementById(metaId);
+      if (!reading){
+        valueEl.innerHTML = '<span style="font-size:13px; color:var(--text-muted);">No data</span>';
+        metaEl.textContent = 'No cost data recorded yet';
+        return;
+      }
+      valueEl.innerHTML = '$' + reading.costPerKgGain.toFixed(2) + '<span class="unit">/kg gain</span>';
+      const stale = daysSinceEpoch(reading.date) > STALE_AFTER_DAYS;
+      const basis = (reading.costPerHead != null && reading.weightGainKg != null)
+        ? `$${reading.costPerHead.toFixed(2)}/head spend over ${reading.weightGainKg.toFixed(1)}kg gain: `
+        : '';
+      metaEl.textContent = basis + 'as at ' + fmtDate(reading.date) + (stale ? ': may be out of date' : '');
+      metaEl.classList.toggle('stale', stale);
+    }
+
+    function renderCopDelta(seafeed, control){
+      const valueEl = document.getElementById('ind-cop-delta');
+      const metaEl = document.getElementById('ind-cop-delta-meta');
+      if (!seafeed || !control){
+        valueEl.innerHTML = '<span style="font-size:13px; color:rgba(255,255,255,0.85);">Not enough data</span>';
+        metaEl.textContent = '';
+        return;
+      }
+      const diff = seafeed.costPerKgGain - control.costPerKgGain;
+      const pct = control.costPerKgGain !== 0 ? (diff / control.costPerKgGain) * 100 : null;
+      const sign = diff >= 0 ? '+' : '';
+      valueEl.innerHTML = `${sign}$${diff.toFixed(2)}<span class="unit">/kg gain</span>`;
+      metaEl.textContent = pct !== null ? `${sign}${pct.toFixed(0)}% vs Control's cost per kg gain` : '';
+      if (seafeed.date !== control.date){
+        metaEl.textContent += ' (readings from different calculation runs)';
+      }
+    }
+
+    async function loadCostOfProduction(){
+      try{
+        const [seafeed, control] = await Promise.all([
+          latestCostOfProduction('seafeed'),
+          latestCostOfProduction('control')
+        ]);
+        renderCopCard('ind-cop-seafeed', 'ind-cop-seafeed-meta', seafeed);
+        renderCopCard('ind-cop-control', 'ind-cop-control-meta', control);
+        renderCopDelta(seafeed, control);
+      } catch(err){
+        console.error('Cost of production cards failed:', err);
+        ['ind-cop-seafeed', 'ind-cop-control', 'ind-cop-delta'].forEach(id => {
+          document.getElementById(id).innerHTML = '<span style="font-size:13px;">Unavailable</span>';
+          document.getElementById(id + '-meta').textContent = '';
+        });
+      }
+    }
+
+    async function loadAll(){
+      const statusEl = document.getElementById('tf-status');
+      try{
+        await Promise.all([ loadAbatement(), loadAdg(), loadCostOfProduction() ]);
+        statusEl.textContent = 'Live data, updated ' + new Date().toLocaleDateString();
+        statusEl.style.color = MINT;
+      } catch(err){
+        statusEl.textContent = 'Live data unavailable right now';
+        statusEl.style.color = WARNING;
+        console.error(err);
+      }
+    }
+    loadAll();
+  })();
+
+  // ================= ILLUSTRATIVE VALUE + HERD CALCULATOR =================
+  // Preserved exactly from 04. HTML Scripts/farms-illustrative-carbon-value.html
+  (function(){
+    const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
+    const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
+    const BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
+    const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
+    const REFERENCE_PRICE_AUD_PER_TONNE = 32.5;
+    let GWP = 28;
+
+    async function fetchGwp() {
+      const params = new URLSearchParams({ where: "metric_name='METHANE_GWP100_AR5'", outFields: "metric_value", f: "json" });
+      const res = await fetch(BENCHMARKS_URL + "?" + params);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message || "Benchmarks query failed");
+      if (data.features && data.features.length > 0) GWP = data.features[0].attributes.metric_value;
+    }
+    async function fetchLatestEconomics() {
+      const params = new URLSearchParams({
+        where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`,
+        outFields: "cumulative_ch4_abated_kg_per_head,representative_head_count,days_of_data,cost_per_head_aud,calculation_date",
+        orderByFields: "calculation_date DESC", resultRecordCount: "1", f: "json"
+      });
+      const res = await fetch(ECON_URL + "?" + params);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message || "Economics query failed");
+      if (!data.features || data.features.length === 0) throw new Error("No economics records found");
+      return data.features[0].attributes;
+    }
+    async function fetchLatestEmissions() {
+      const params = new URLSearchParams({
+        where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`,
+        outFields: "methane_abated_g_per_hd_day,intake_g_per_hd_day,abatement_rate,record_date",
+        orderByFields: "record_date DESC", resultRecordCount: "1", f: "json"
+      });
+      const res = await fetch(EMISSIONS_URL + "?" + params);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message || "Emissions query failed");
+      if (!data.features || data.features.length === 0) throw new Error("No emissions records found");
+      return data.features[0].attributes;
+    }
+
+    const disclosureToggleRow = document.getElementById('disclosure-toggle-row');
+    const disclosureDetails = document.getElementById('disclosure-details');
+    const disclosureToggleLabel = document.getElementById('disclosure-toggle-label');
+    disclosureToggleRow.addEventListener('click', function () {
+      const isExpanded = disclosureDetails.classList.toggle('expanded');
+      disclosureToggleLabel.textContent = isExpanded ? 'Hide ▴' : 'Why? ▾';
+    });
+
+    const footnoteToggle = document.getElementById('footnote-toggle');
+    const footnoteWrap = document.getElementById('footnote-wrap');
+    footnoteToggle.addEventListener('click', function (e) {
+      e.preventDefault();
+      const isExpanded = footnoteWrap.classList.toggle('expanded');
+      footnoteToggle.textContent = isExpanded ? 'Hide ▴' : 'More info ▾';
+    });
+
+    const statusEl = document.getElementById('value-status');
+    const valueOut = document.getElementById('value-out');
+    const co2eOut = document.getElementById('co2e-out');
+    const priceOut = document.getElementById('price-out');
+    const daysOut = document.getElementById('days-out');
+
+    const herdSizeInput = document.getElementById('herd-size');
+    const calcCo2eOut = document.getElementById('calc-co2e-out');
+    const calcRateSub = document.getElementById('calc-rate-sub');
+    const calcValueOut = document.getElementById('calc-value-out');
+    const calcCostOut = document.getElementById('calc-cost-out');
+    const calcNote = document.getElementById('calc-note');
+    const calcInfoToggle = document.getElementById('calc-info-toggle');
+    const calcInfoWrap = document.getElementById('calc-info-wrap');
+    calcInfoToggle.addEventListener('click', function (e) {
+      e.preventDefault();
+      const isExpanded = calcInfoWrap.classList.toggle('expanded');
+      calcInfoToggle.textContent = isExpanded ? 'Hide ▴' : 'Information ▾';
+    });
+
+    let latestEmissions = null;
+    let latestEconomics = null;
+    function updateHerdCalculator() {
+      if (!latestEmissions) {
+        calcNote.textContent = 'Live trial data unavailable right now, try again shortly.';
+        calcNote.style.color = '#c98a2e';
+        return;
+      }
+      let herdSize = Number(herdSizeInput.value);
+      if (!herdSize || herdSize < 1) herdSize = 0;
+      const methaneGPerHdDay = latestEmissions.methane_abated_g_per_hd_day || 0;
+      const abatementRate = latestEmissions.abatement_rate;
+      const intakeGPerHdDay = latestEmissions.intake_g_per_hd_day;
+      const co2eKgPerHeadPerYear = (methaneGPerHdDay * 365 / 1000) * GWP;
+      const herdCo2eTonnesPerYear = (co2eKgPerHeadPerYear * herdSize) / 1000;
+      const herdValuePerYear = herdCo2eTonnesPerYear * REFERENCE_PRICE_AUD_PER_TONNE;
+      calcCo2eOut.textContent = herdCo2eTonnesPerYear >= 1
+        ? herdCo2eTonnesPerYear.toFixed(1) + ' t'
+        : Math.round(herdCo2eTonnesPerYear * 1000).toLocaleString() + ' kg';
+      calcRateSub.textContent = abatementRate != null
+        ? 'At the trial’s current ' + abatementRate.toFixed(1) + '% modelled abatement rate'
+        : '';
+      calcValueOut.textContent = '$' + herdValuePerYear.toLocaleString(undefined, { maximumFractionDigits: 0 });
+      if (latestEconomics && latestEconomics.cost_per_head_aud != null && latestEconomics.days_of_data) {
+        const dailyCostPerHead = latestEconomics.cost_per_head_aud / latestEconomics.days_of_data;
+        const herdCostPerYear = dailyCostPerHead * 365 * herdSize;
+        calcCostOut.textContent = '$' + herdCostPerYear.toLocaleString(undefined, { maximumFractionDigits: 0 });
+      } else {
+        calcCostOut.textContent = '—';
+      }
+      const intakeNote = intakeGPerHdDay != null ? ' (' + intakeGPerHdDay.toFixed(0) + ' g SeaFeed/head/day)' : '';
+      calcNote.textContent = 'Based on the trial’s most recent per-head daily methane abatement' + intakeNote + '. Illustrative only, see disclosure above.';
+      calcNote.style.color = '#6b7c8a';
+    }
+    herdSizeInput.addEventListener('input', updateHerdCalculator);
+
+    async function init() {
+      try { await fetchGwp(); } catch (err) { console.error('GWP fetch failed, using default 28:', err); }
+      try {
+        const [econ, emissions] = await Promise.all([fetchLatestEconomics(), fetchLatestEmissions()]);
+        latestEconomics = econ;
+        latestEmissions = emissions;
+        const abatedPerHead = econ.cumulative_ch4_abated_kg_per_head || 0;
+        const headCount = econ.representative_head_count || 0;
+        const totalKgCh4 = abatedPerHead * headCount;
+        const totalKgCo2e = totalKgCh4 * GWP;
+        const totalTonnesCo2e = totalKgCo2e / 1000;
+        const illustrativeValue = totalTonnesCo2e * REFERENCE_PRICE_AUD_PER_TONNE;
+        valueOut.textContent = '$' + illustrativeValue.toLocaleString(undefined, { maximumFractionDigits: 0 });
+        co2eOut.textContent = totalTonnesCo2e >= 1
+          ? totalTonnesCo2e.toFixed(2) + ' t'
+          : Math.round(totalKgCo2e).toLocaleString() + ' kg';
+        priceOut.textContent = '$' + REFERENCE_PRICE_AUD_PER_TONNE + '/t';
+        daysOut.textContent = (econ.days_of_data != null) ? econ.days_of_data : '—';
+        statusEl.textContent = 'Live data, updated ' + new Date().toLocaleDateString();
+        statusEl.style.color = '#3aa989';
+      } catch (err) {
+        statusEl.textContent = 'Live data unavailable right now';
+        statusEl.style.color = '#c98a2e';
+        console.error('Fetch failed:', err);
+      }
+      updateHerdCalculator();
+    }
+    init();
+  })();
+
+  // --- scroll reveal, restrained: fade + rise, once per element ---
+  (function(){
+    var els = document.querySelectorAll('.dp-reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(function(el){ el.classList.add('is-visible'); }); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+    els.forEach(function(el){ io.observe(el); });
+  })();
+</script>
+
+</body>
+</html>
