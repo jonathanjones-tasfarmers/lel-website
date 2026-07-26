@@ -16,6 +16,17 @@
   No live ArcGIS data on this page (it's all static partner/timeline
   copy), so no fetch logic to preserve. Single self-contained file for a
   single Hub Iframe widget.
+
+  26/7 fix pass (Jono's notes):
+  - Partner grid alignment: the Tasmanian Government card previously
+    used "grid-row: span 2" to stretch across both rows of the 2x2
+    grid. With 4 cards total, that left the 4th card (Sea Forest) with
+    no partner in the same row - it fell onto its own row 3, misaligned
+    under the first column only, with an empty gap beside it. Removed
+    the span so all four cards sit in a clean, evenly-aligned 2x2 grid.
+  - Added id="timeline" to the Project timeline section, since the Home
+    page links to /pages/.../#timeline and that anchor didn't exist
+    anywhere on this page.
 -->
 <style>
   :root{
@@ -73,11 +84,11 @@
   .pp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 68px 28px 44px; width: 100%; box-sizing: border-box; }
 
   /* --- partner grid --- */
-  .pp-partner-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 16px; }
+  .pp-partner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
   @media (max-width: 780px) { .pp-partner-grid { grid-template-columns: 1fr; } }
   .pp-partner-card { border-radius: var(--radius-lg); padding: 28px 30px; display: flex; flex-direction: column; }
   .pp-partner-card.lead { background: var(--surface-card); border: 1.5px solid var(--tf-mint-500); box-shadow: var(--shadow-sm); }
-  .pp-partner-card.dark { background: var(--tf-navy-900); grid-row: span 2; justify-content: center; }
+  .pp-partner-card.dark { background: var(--tf-navy-900); justify-content: center; }
   .pp-partner-card.sunken { background: var(--surface-sunken); border: 1px solid var(--border-subtle); }
   .pp-partner-logo { max-height: 42px; max-width: 220px; width: auto; height: auto; object-fit: contain; margin-bottom: 20px; }
   .pp-partner-card.dark .pp-partner-logo { filter: brightness(0) invert(1); max-height: 34px; }
@@ -163,7 +174,7 @@
 </div>
 
 <!-- ============ PROJECT TIMELINE ============ -->
-<div class="pp-section" style="background:var(--surface-sunken);">
+<div class="pp-section" id="timeline" style="background:var(--surface-sunken);">
   <div class="pp-page">
     <h2 class="pp-h2 pp-narrow pp-reveal">Project timeline</h2>
     <p class="pp-section-intro pp-reveal">A five-year trial structured around six milestones agreed with the Tasmanian Government, each with its own deliverables and reporting.</p>
