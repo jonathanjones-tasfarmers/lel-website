@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get the real numbers before you commit your herd.</title>
+<!--
+  Farms page rebuild, same design principles as home-page-redesign.html
+  and low-emissions-wool-opportunity.html: real full-bleed photography,
+  Hub design-system colour tokens, Tahoma display headlines with sparing
+  mint accent spans, stitched dashed-line dividers, restrained
+  scroll-reveal.
+
+  Single self-contained file for a single Hub Iframe widget, replacing
+  ALL native body content on the Farms page (Hub's own sticky nav and
+  footer stay outside this iframe, as on every other page).
+
+  Copy carried over verbatim from the live Farms page. The live stats
+  banner's fetch logic, endpoints, calculations and loading-skeleton
+  treatment are reproduced EXACTLY from 05. Website/files/farm-stats-
+  banner.html, only the CSS skin has changed.
+
+  The beef SeaFeed cost-of-production calculator lives on its own
+  separate page (linked from Resources > Economic feasibility tool),
+  not embedded here, matching how the live Farms page is actually
+  structured.
+
+  Vanilla CSS/JS only, no build step, no external libraries.
+-->
+<style>
+  :root{
+    --tf-navy-900:#041221;
+    --tf-navy-800:oklch(from var(--tf-navy-900) calc(l + 0.08) c h);
+    --tf-slate-400:#a9b8c4;
+    --tf-slate-300:oklch(from var(--tf-slate-400) calc(l + 0.08) c h);
+    --tf-slate-200:oklch(from var(--tf-slate-400) calc(l + 0.14) c h);
+    --tf-slate-100:oklch(from var(--tf-slate-400) calc(l + 0.19) c h);
+    --tf-slate-600:oklch(from var(--tf-slate-400) calc(l - 0.18) c h);
+    --tf-mint-500:#5ec9a8;
+    --tf-mint-600:oklch(from var(--tf-mint-500) calc(l - 0.1) c h);
+    --tf-mint-400:oklch(from var(--tf-mint-500) calc(l + 0.08) c h);
+    --tf-white:#ffffff;
+    --tf-warning:#c98a2e;
+    --surface-page:var(--tf-white);
+    --surface-sunken:var(--tf-slate-100);
+    --surface-card:var(--tf-white);
+    --text-heading:var(--tf-navy-900);
+    --text-body:oklch(from var(--tf-navy-900) calc(l + 0.06) calc(c - 0.005) h);
+    --text-muted:var(--tf-slate-600);
+    --border-subtle:var(--tf-slate-200);
+    --border-default:var(--tf-slate-300);
+    --radius-lg:12px; --radius-md:10px; --radius-sm:6px;
+    --shadow-sm:0 1px 2px rgba(4,18,33,0.08);
+    --font-display:Tahoma,Verdana,sans-serif;
+    --font-body:Verdana,Tahoma,sans-serif;
+  }
+  html, body { margin: 0; background: var(--surface-page); }
+  body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
+  .fp-page { max-width: 1180px; margin: 0 auto; }
+  .fp-section { padding: 88px 28px; box-sizing: border-box; }
+  .fp-narrow { max-width: 760px; }
+  @media (max-width: 720px) { .fp-section { padding: 52px 20px; } }
+
+  .fp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
+  .fp-eyebrow.on-dark { color: var(--tf-mint-400); }
+  .fp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(30px,4.2vw,46px); line-height: 1.12; letter-spacing: -0.01em; margin: 0 0 18px 0; max-width: 18ch; }
+  .fp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 12px 0; }
+  @media (max-width: 720px) { .fp-h2 { font-size: 22px; } }
+  .fp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 15.5px; margin: 0 0 8px 0; }
+  .fp-lede { color: var(--tf-slate-300); font-size: 16px; line-height: 1.6; max-width: 58ch; margin: 0; }
+  .fp-section-intro { color: var(--text-muted); font-size: 15.5px; line-height: 1.7; max-width: 66ch; margin: 0 0 32px 0; }
+
+  .fp-reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .fp-reveal.is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .fp-reveal { opacity: 1; transform: none; transition: none; } }
+
+  .fp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
+  .fp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
+
+  .fp-link { font-size: 14px; color: var(--tf-mint-600); text-decoration: none; border-bottom: 1px solid var(--tf-mint-600); padding-bottom: 2px; }
+
+  /* --- hero --- */
+  .fp-hero { position: relative; min-height: 420px; display: flex; align-items: flex-end; background-image: url('REPLACE_WITH_IMAGE_URL_FARMS_HERO'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .fp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.4) 0%, oklch(from var(--tf-navy-900) l c h / 0.6) 60%, oklch(from var(--tf-navy-900) l c h / 0.92) 100%); }
+  .fp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 68px 28px 44px; width: 100%; box-sizing: border-box; }
+
+  /* --- live stats banner, logic preserved from farm-stats-banner.html --- */
+  .fp-banner-status { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 18px 0; color: var(--text-muted); }
+  .fp-stats-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 780px) { .fp-stats-grid { grid-template-columns: 1fr; } }
+  .fp-stack { display: flex; flex-direction: column; gap: 16px; }
+  .fp-stat-hero { background: var(--tf-navy-900); border-radius: var(--radius-lg); padding: 26px 28px; display: flex; flex-direction: column; justify-content: center; }
+  .fp-stat-hero p:first-child { font-size: 13px; color: var(--tf-slate-200); margin: 0 0 10px 0; }
+  .fp-stat-hero .fp-stat-value { font-family: var(--font-display); font-weight: 700; color: var(--tf-mint-400); font-size: 40px; line-height: 1; margin: 0; }
+  .fp-stat-hero p:last-child { font-size: 12px; color: var(--tf-slate-200); margin: 10px 0 0 0; }
+  .fp-stat-card { border-radius: var(--radius-lg); padding: 18px 20px; }
+  .fp-stat-card.outline { background: var(--surface-card); border: 1px solid var(--tf-mint-500); box-shadow: var(--shadow-sm); }
+  .fp-stat-card.sunken { background: var(--surface-sunken); border: 1px solid var(--border-subtle); }
+  .fp-stat-card.tall { display: flex; flex-direction: column; justify-content: center; padding: 22px 24px; }
+  .fp-stat-card p:first-child { font-size: 13px; color: var(--text-muted); margin: 0 0 8px 0; }
+  .fp-stat-card .fp-stat-value { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 24px; margin: 0; }
+  .fp-stat-card.outline .fp-stat-value { color: var(--tf-mint-600); }
+  .fp-stat-card.tall .fp-stat-value { font-size: 29px; }
+  .fp-stat-card p:last-child { font-size: 11.5px; color: var(--text-muted); margin: 6px 0 0 0; }
+  .fp-adg-meta.stale { color: var(--tf-warning) !important; font-weight: 700; }
+
+  @keyframes fp-shimmer{ 0%{ background-position:150% 0; } 100%{ background-position:-50% 0; } }
+  .fp-skel, .fp-skel-dark { display: inline-block; border-radius: 6px; background-size: 250% 100%; animation: fp-shimmer 1.4s ease-in-out infinite; vertical-align: middle; }
+  .fp-skel { background-image: linear-gradient(90deg, rgba(4,18,33,0.08) 25%, rgba(4,18,33,0.16) 37%, rgba(4,18,33,0.08) 63%); }
+  .fp-skel-dark { background-image: linear-gradient(90deg, rgba(255,255,255,0.10) 25%, rgba(255,255,255,0.22) 37%, rgba(255,255,255,0.10) 63%); }
+  @media (prefers-reduced-motion: reduce) { .fp-skel, .fp-skel-dark { animation: none !important; } }
+
+  /* --- why producers: numbered cards --- */
+  .fp-why-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 10px; }
+  @media (max-width: 720px) { .fp-why-grid { grid-template-columns: 1fr; } }
+  .fp-why-card { background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 24px 26px; }
+  .fp-why-number { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--tf-mint-600); margin: 0 0 10px 0; }
+  .fp-why-card p.body { font-size: 14.5px; color: var(--text-muted); line-height: 1.65; margin: 0; }
+
+  /* --- what using seafeed involves: icon-style cards --- */
+  .fp-involves-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 10px; }
+  @media (max-width: 720px) { .fp-involves-grid { grid-template-columns: 1fr; } }
+  .fp-involves-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 24px 26px; }
+  .fp-involves-tag { display: inline-block; font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tf-mint-600); background: var(--surface-sunken); border-radius: 999px; padding: 4px 12px; margin-bottom: 14px; }
+  .fp-involves-card p.body { font-size: 14px; color: var(--text-muted); line-height: 1.65; margin: 0; }
+
+  /* --- closing --- */
+  .fp-closing { background: linear-gradient(160deg, var(--tf-navy-900) 0%, #0d2a2a 100%); padding: 84px 28px; text-align: center; }
+  .fp-closing-inner { max-width: 620px; margin: 0 auto; }
+  .fp-closing h2 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: 27px; margin: 0 0 14px 0; }
+  @media (max-width: 720px) { .fp-closing h2 { font-size: 22px; } }
+  .fp-closing p { color: var(--tf-slate-300); font-size: 14.5px; margin: 0 0 26px 0; }
+  .fp-closing a.fp-btn { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 15px; padding: 13px 26px; border-radius: var(--radius-md); text-decoration: none; background: var(--tf-mint-500); color: var(--tf-navy-900); }
+  .fp-closing a.fp-btn:hover { background: var(--tf-mint-400); }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="fp-hero">
+  <div class="fp-hero-inner">
+    <p class="fp-eyebrow on-dark">For Tasmanian producers</p>
+    <h1 class="fp-h1">Get the real numbers before you commit your herd.</h1>
+    <p class="fp-lede">Everything below is trial-to-date data from working Tasmanian livestock, updated as it's recorded, not a projection, and not a sales figure.</p>
+  </div>
+</div>
+
+<!-- ============ LIVE STATS BANNER ============ -->
+<div class="fp-section" style="background:var(--surface-page); padding-top:56px; padding-bottom:64px;">
+  <div class="fp-page">
+    <p class="fp-banner-status fp-reveal" id="banner-status">Loading live data&hellip;</p>
+    <div class="fp-stats-grid fp-reveal">
+      <div class="fp-stat-hero">
+        <p>Modelled abatement rate</p>
+        <p class="fp-stat-value" id="b-abatement"><span class="fp-skel-dark" style="width:110px; height:34px;"></span></p>
+        <p>SeaFeed group, most recent trial reading</p>
+      </div>
+      <div class="fp-stack">
+        <div class="fp-stat-card outline">
+          <p>ADG advantage</p>
+          <p class="fp-stat-value" id="b-adg"><span class="fp-skel" style="width:92px; height:20px;"></span></p>
+          <p class="fp-adg-meta" id="b-adg-meta">SeaFeed vs control</p>
+        </div>
+        <div class="fp-stat-card sunken">
+          <p>Total CO2e abated</p>
+          <p class="fp-stat-value" id="b-co2e"><span class="fp-skel" style="width:76px; height:20px;"></span></p>
+          <p>Cumulative, SeaFeed group</p>
+        </div>
+      </div>
+      <div class="fp-stat-card sunken tall">
+        <p>Days of trial data</p>
+        <p class="fp-stat-value" id="b-days"><span class="fp-skel" style="width:56px; height:24px;"></span></p>
+        <p>Since first recorded liveweight</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fp-stitch" aria-hidden="true">
+  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ============ WHY PRODUCERS ARE GETTING INVOLVED ============ -->
+<div class="fp-section" style="background:var(--surface-page);">
+  <div class="fp-page">
+    <h2 class="fp-h2 fp-narrow fp-reveal">Why producers are getting involved</h2>
+    <p class="fp-section-intro fp-reveal">Reasons Tasmanian livestock operations are putting their hand up, not in any particular order.</p>
+    <div class="fp-why-grid">
+      <div class="fp-why-card fp-reveal">
+        <p class="fp-why-number">01</p>
+        <h3 class="fp-h3">Get ahead of the emissions questions</h3>
+        <p class="body">Processors and export markets are asking more on-farm emissions questions every year. Producers in this trial have real numbers to answer with, well before it's mandatory.</p>
+      </div>
+      <div class="fp-why-card fp-reveal">
+        <p class="fp-why-number">02</p>
+        <h3 class="fp-h3">Real Tasmanian numbers, not trial data</h3>
+        <p class="body">Most published <em>Asparagopsis</em> research comes from feedlot trials. This is Tasmanian pasture, Tasmanian livestock, and Tasmanian costs.</p>
+      </div>
+      <div class="fp-why-card fp-reveal">
+        <p class="fp-why-number">03</p>
+        <h3 class="fp-h3">Independent science, not a sales pitch</h3>
+        <p class="body">Delivered with the Tasmanian Institute of Agriculture and backed by Tasmanian Government funding, the trial reports what it finds, including where SeaFeed doesn't pay off.</p>
+      </div>
+      <div class="fp-why-card fp-reveal">
+        <p class="fp-why-number">04</p>
+        <h3 class="fp-h3">Tools you can use, whether you joined or not</h3>
+        <p class="body">The grant requires this project to publish an economic feasibility tool and an adoption handbook for every Tasmanian producer, both formal Milestone 6 deliverables due at project completion in February 2029. Work on both is already underway. In the meantime, see an illustrative carbon value estimate for your own herd on our Data page.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fp-stitch" aria-hidden="true">
+  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ============ WHAT USING SEAFEED ACTUALLY INVOLVES ============ -->
+<div class="fp-section" style="background:var(--surface-sunken);">
+  <div class="fp-page">
+    <h2 class="fp-h2 fp-narrow fp-reveal">What using SeaFeed actually involves</h2>
+    <p class="fp-section-intro fp-reveal">The practical realities before you weigh it up for your own operation.</p>
+    <div class="fp-involves-grid">
+      <div class="fp-involves-card fp-reveal">
+        <span class="fp-involves-tag">How it's fed</span>
+        <h3 class="fp-h3">Delivered as a lick block</h3>
+        <p class="body">SeaFeed is fed free-choice as a supplementary lick block alongside your existing feeding regime, no change to your base ration or grazing system required.</p>
+      </div>
+      <div class="fp-involves-card fp-reveal">
+        <span class="fp-involves-tag">Storage &amp; handling</span>
+        <h3 class="fp-h3">No special infrastructure needed</h3>
+        <p class="body">Lick blocks store like any other mineral or molasses block on farm, no refrigeration, mixing equipment, or dedicated infrastructure to budget for.</p>
+      </div>
+      <div class="fp-involves-card fp-reveal">
+        <span class="fp-involves-tag">System fit</span>
+        <h3 class="fp-h3">Pasture-based, beef and sheep</h3>
+        <p class="body">The trial runs across paddock-based livestock enterprises, not just intensive feeding systems, the results are relevant whether your animals are grazing or yarded.</p>
+      </div>
+      <div class="fp-involves-card fp-reveal">
+        <span class="fp-involves-tag">Animal health &amp; food safety</span>
+        <h3 class="fp-h3">Tracked as part of the trial</h3>
+        <p class="body">Animal health, intake and any withholding requirements are monitored and reported alongside the productivity numbers, not left out if the news isn't positive.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CLOSING CTA ============ -->
+<div class="fp-closing">
+  <div class="fp-closing-inner fp-reveal">
+    <h2>Want to see what the trial has found so far?</h2>
+    <p>Interim reports, the economic feasibility tool and the adoption handbook are published on the Resources page.</p>
+    <a class="fp-btn" href="/pages/096bc47289824b939739a7e45b7e32b8">See the findings &rarr;</a>
+  </div>
+</div>
+
+<script>
+  // --- scroll reveal, restrained: fade + rise, once per element ---
+  (function(){
+    var els = document.querySelectorAll('.fp-reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(function(el){ el.classList.add('is-visible'); }); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function(el){ io.observe(el); });
+  })();
+
+  // --- live stats banner, logic reproduced exactly from
+  //     05. Website/files/farm-stats-banner.html: same endpoints, same
+  //     fallback behaviour, same calculations. Only the CSS classes and
+  //     skeleton markup differ (adapted to this file's class names). ---
+  var EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
+  var ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
+  var BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
+  var PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
+  var ASSETS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Assets_view/FeatureServer/0/query";
+  var STALE_AFTER_DAYS = 14;
+
+  var GWP = 28;
+  function fetchGwp(){
+    return q(BENCHMARKS_URL, { where: "metric_name='METHANE_GWP100_AR5'", outFields: "metric_value", f: "json" }).then(function(data){
+      if (data.features && data.features.length > 0) GWP = data.features[0].attributes.metric_value;
+    }).catch(function(err){ console.error('GWP lookup failed, using default 28:', err); });
+  }
+
+  function q(url, params){
+    return fetch(url + "?" + new URLSearchParams(params)).then(function(res){ return res.json(); }).then(function(data){
+      if (data.error) throw new Error(data.error.message || "Query failed");
+      return data;
+    });
+  }
+  function fetchLatestSeafeedEmissions(){
+    return q(EMISSIONS_URL, { where: "treatment='seafeed'", outFields: "abatement_rate,record_date", orderByFields: "record_date DESC", resultRecordCount: "1", f: "json" }).then(function(data){
+      return data.features.length ? data.features[0].attributes : null;
+    });
+  }
+  function fetchEconLatest(){
+    return q(ECON_URL, { where: "treatment IN ('seafeed','control')", outFields: "treatment,cumulative_ch4_abated_kg_per_head,representative_head_count,cost_per_kg_ch4_abated_aud,cost_per_head_aud,weight_gain_kg_per_head,cost_per_kg_gain_aud,calculation_date", orderByFields: "calculation_date DESC", resultRecordCount: "50", f: "json" }).then(function(data){
+      var latest = {};
+      data.features.forEach(function(f){ var t = f.attributes.treatment; if (!latest[t]) latest[t] = f.attributes; });
+      return latest;
+    });
+  }
+  function fetchProdHistory(treatment){
+    return q(PRODUCTIVITY_URL, { where: "treatment_group='" + treatment + "'", outFields: "snapshot_date,rolling_adg", orderByFields: "snapshot_date ASC", resultRecordCount: "2000", f: "json" }).then(function(data){
+      return data.features.map(function(f){ return f.attributes; });
+    });
+  }
+
+  function parseDateOnly(dateStr){
+    var parts = dateStr.split('-').map(Number);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+  function daysSince(dateStr){
+    return (Date.now() - parseDateOnly(dateStr).getTime()) / 86400000;
+  }
+  function latestAdgForTreatment(likePatterns){
+    var treatmentClause = likePatterns.map(function(p){ return "UPPER(Treatment_Type) LIKE '%" + p + "%'"; }).join(' OR ');
+    return q(ASSETS_URL, {
+      where: "adg_all IS NOT NULL AND snapshot_date IS NOT NULL AND (" + treatmentClause + ")",
+      outFields: "session_id,session_name,adg_all,snapshot_date,Treatment_Type",
+      orderByFields: "snapshot_date DESC, OBJECTID DESC",
+      resultRecordCount: "1",
+      f: "json"
+    }).then(function(data){
+      var row = data.features[0] && data.features[0].attributes;
+      return row ? { date: row.snapshot_date, value: row.adg_all } : null;
+    });
+  }
+
+  function loadBanner(){
+    var statusEl = document.getElementById('banner-status');
+    Promise.all([
+      fetchGwp(), fetchLatestSeafeedEmissions(), fetchEconLatest(), fetchProdHistory('seafeed'), fetchProdHistory('control'),
+      latestAdgForTreatment(['SEAFEED', 'SEA FEED']), latestAdgForTreatment(['CONTROL'])
+    ]).then(function(results){
+      var emissions = results[1], econ = results[2], seafeedProd = results[3], controlProd = results[4];
+      var seafeedAdgReading = results[5], controlAdgReading = results[6];
+
+      var abatement = (emissions && emissions.abatement_rate != null) ? emissions.abatement_rate.toFixed(1) + '%' : '—';
+
+      var adgMetaEl = document.getElementById('b-adg-meta');
+      var adg = '—';
+      if (seafeedAdgReading != null && controlAdgReading != null) {
+        var diffGramsPerDay = (seafeedAdgReading.value - controlAdgReading.value) * 1000;
+        adg = (diffGramsPerDay >= 0 ? '+' : '') + Math.round(diffGramsPerDay) + ' g/day';
+        var stale = daysSince(seafeedAdgReading.date) > STALE_AFTER_DAYS || daysSince(controlAdgReading.date) > STALE_AFTER_DAYS;
+        var meta = 'SeaFeed vs control';
+        if (stale) meta += ', reading may be out of date';
+        if (seafeedAdgReading.date !== controlAdgReading.date) meta += ' (readings on different dates)';
+        adgMetaEl.textContent = meta;
+        adgMetaEl.classList.toggle('stale', stale);
+      } else {
+        adgMetaEl.textContent = 'SeaFeed vs control';
+        adgMetaEl.classList.remove('stale');
+      }
+
+      var seafeedEcon = econ['seafeed'];
+      var co2e = '—';
+      if (seafeedEcon && seafeedEcon.cumulative_ch4_abated_kg_per_head != null && seafeedEcon.representative_head_count != null) {
+        var totalKgCh4 = seafeedEcon.cumulative_ch4_abated_kg_per_head * seafeedEcon.representative_head_count;
+        var totalTonnesCo2e = (totalKgCh4 * GWP) / 1000;
+        co2e = totalTonnesCo2e >= 1 ? totalTonnesCo2e.toFixed(2) + ' t' : Math.round(totalTonnesCo2e * 1000).toLocaleString() + ' kg';
+      }
+      var allDates = seafeedProd.concat(controlProd).map(function(r){ return r.snapshot_date; }).filter(function(d){ return d != null; });
+      var days = allDates.length ? Math.round((Date.now() - Math.min.apply(null, allDates)) / 86400000).toLocaleString() : '—';
+
+      document.getElementById('b-abatement').textContent = abatement;
+      document.getElementById('b-adg').textContent = adg;
+      document.getElementById('b-co2e').textContent = co2e;
+      document.getElementById('b-days').textContent = days;
+      statusEl.textContent = 'Live data, updated ' + new Date().toLocaleDateString();
+      statusEl.style.color = 'var(--tf-mint-600)';
+    }).catch(function(err){
+      document.getElementById('b-abatement').textContent = '—';
+      document.getElementById('b-adg').textContent = '—';
+      document.getElementById('b-co2e').textContent = '—';
+      document.getElementById('b-days').textContent = '—';
+      statusEl.textContent = 'Live data unavailable right now';
+      statusEl.style.color = 'var(--tf-warning)';
+      console.error(err);
+    });
+  }
+  loadBanner();
+</script>
+
+</body>
+</html>
