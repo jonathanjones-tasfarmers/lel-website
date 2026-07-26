@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One trial, four partners, a single set of published numbers.</title>
+<!--
+  Partners page rebuild, same design system as home-page-redesign.html /
+  farms-page-redesign.html / low-emissions-wool-opportunity.html.
+
+  All copy carried over verbatim from the live Partners page. Partner and
+  hero images use the REAL hosted URLs already live on GitHub Pages
+  (jonathanjones-tasfarmers.github.io/lel-website/) - no placeholder
+  tokens needed here, unlike the Home page's partner strip.
+
+  No live ArcGIS data on this page (it's all static partner/timeline
+  copy), so no fetch logic to preserve. Single self-contained file for a
+  single Hub Iframe widget.
+-->
+<style>
+  :root{
+    --tf-navy-900:#041221;
+    --tf-navy-800:oklch(from var(--tf-navy-900) calc(l + 0.08) c h);
+    --tf-slate-400:#a9b8c4;
+    --tf-slate-300:oklch(from var(--tf-slate-400) calc(l + 0.08) c h);
+    --tf-slate-200:oklch(from var(--tf-slate-400) calc(l + 0.14) c h);
+    --tf-slate-100:oklch(from var(--tf-slate-400) calc(l + 0.19) c h);
+    --tf-slate-600:oklch(from var(--tf-slate-400) calc(l - 0.18) c h);
+    --tf-mint-500:#5ec9a8;
+    --tf-mint-600:oklch(from var(--tf-mint-500) calc(l - 0.1) c h);
+    --tf-mint-400:oklch(from var(--tf-mint-500) calc(l + 0.08) c h);
+    --tf-white:#ffffff;
+    --tf-warning:#c98a2e;
+    --surface-page:var(--tf-white);
+    --surface-sunken:var(--tf-slate-100);
+    --surface-card:var(--tf-white);
+    --text-heading:var(--tf-navy-900);
+    --text-body:oklch(from var(--tf-navy-900) calc(l + 0.06) calc(c - 0.005) h);
+    --text-muted:var(--tf-slate-600);
+    --border-subtle:var(--tf-slate-200);
+    --border-default:var(--tf-slate-300);
+    --radius-lg:12px; --radius-md:10px; --radius-sm:6px;
+    --shadow-sm:0 1px 2px rgba(4,18,33,0.08);
+    --font-display:Tahoma,Verdana,sans-serif;
+    --font-body:Verdana,Tahoma,sans-serif;
+  }
+  html, body { margin: 0; background: var(--surface-page); }
+  body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
+  .pp-page { max-width: 1180px; margin: 0 auto; }
+  .pp-section { padding: 88px 28px; box-sizing: border-box; }
+  .pp-narrow { max-width: 760px; }
+  @media (max-width: 720px) { .pp-section { padding: 52px 20px; } }
+
+  .pp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
+  .pp-eyebrow.on-dark { color: var(--tf-mint-400); }
+  .pp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(30px,4.2vw,46px); line-height: 1.12; letter-spacing: -0.01em; margin: 0 0 18px 0; max-width: 20ch; }
+  .pp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 12px 0; }
+  @media (max-width: 720px) { .pp-h2 { font-size: 22px; } }
+  .pp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 17px; margin: 0 0 8px 0; }
+  .pp-lede { color: var(--tf-slate-300); font-size: 16px; line-height: 1.6; max-width: 60ch; margin: 0; }
+  .pp-section-intro { color: var(--text-muted); font-size: 15.5px; line-height: 1.7; max-width: 66ch; margin: 0 0 32px 0; }
+
+  .pp-reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .pp-reveal.is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .pp-reveal { opacity: 1; transform: none; transition: none; } }
+
+  .pp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
+  .pp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
+
+  /* --- hero --- */
+  .pp-hero { position: relative; min-height: 400px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-partners.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .pp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.55) 60%, oklch(from var(--tf-navy-900) l c h / 0.9) 100%); }
+  .pp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 68px 28px 44px; width: 100%; box-sizing: border-box; }
+
+  /* --- partner grid --- */
+  .pp-partner-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; gap: 16px; }
+  @media (max-width: 780px) { .pp-partner-grid { grid-template-columns: 1fr; } }
+  .pp-partner-card { border-radius: var(--radius-lg); padding: 28px 30px; display: flex; flex-direction: column; }
+  .pp-partner-card.lead { background: var(--surface-card); border: 1.5px solid var(--tf-mint-500); box-shadow: var(--shadow-sm); }
+  .pp-partner-card.dark { background: var(--tf-navy-900); grid-row: span 2; justify-content: center; }
+  .pp-partner-card.sunken { background: var(--surface-sunken); border: 1px solid var(--border-subtle); }
+  .pp-partner-logo { max-height: 42px; max-width: 220px; width: auto; height: auto; object-fit: contain; margin-bottom: 20px; }
+  .pp-partner-card.dark .pp-partner-logo { filter: brightness(0) invert(1); max-height: 34px; }
+  .pp-partner-tag { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 10px 0; }
+  .pp-partner-card.dark .pp-partner-tag { color: var(--tf-mint-400); }
+  .pp-partner-card p.body { font-size: 14.5px; color: var(--text-muted); line-height: 1.65; margin: 0; }
+  .pp-partner-card.dark p.body { color: var(--tf-slate-300); }
+  .pp-partner-card.dark h3 { color: var(--tf-white); }
+
+  /* --- timeline --- */
+  .pp-timeline { position: relative; padding-left: 32px; margin-top: 10px; }
+  .pp-timeline::before { content:""; position:absolute; left:5px; top:6px; bottom:6px; width:2px; background: var(--border-default); }
+  .pp-milestone { position: relative; padding-bottom: 36px; }
+  .pp-milestone:last-child { padding-bottom: 0; }
+  .pp-milestone::before { content:""; position:absolute; left:-32px; top:4px; width:12px; height:12px; border-radius:50%; background: var(--tf-slate-300); border: 2px solid var(--surface-page); }
+  .pp-milestone.done::before { background: var(--tf-mint-500); }
+  .pp-milestone.current::before { background: var(--tf-navy-900); box-shadow: 0 0 0 3px oklch(from var(--tf-mint-500) l c h / 0.3); }
+  .pp-milestone-badge { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin: 0 0 6px 0; }
+  .pp-milestone-badge.done { color: var(--tf-mint-600); }
+  .pp-milestone-badge.current { color: var(--text-heading); }
+  .pp-milestone-badge.upcoming { color: var(--text-muted); }
+  .pp-milestone-dates { font-size: 13px; color: var(--text-muted); margin: 0 0 8px 0; }
+  .pp-milestone p.body { font-size: 14.5px; color: var(--text-muted); line-height: 1.65; margin: 0; }
+
+  .pp-disclosure { margin-top: 14px; }
+  .pp-disclosure-summary { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--tf-mint-600); cursor: pointer; user-select: none; border: none; background: none; padding: 0; }
+  .pp-disclosure-details { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+  .pp-disclosure-details.expanded { max-height: 300px; }
+  .pp-disclosure-text { font-size: 13.5px; color: var(--text-muted); line-height: 1.65; margin: 10px 0 0 0; }
+
+  /* --- closing --- */
+  .pp-closing { background: linear-gradient(160deg, var(--tf-navy-900) 0%, #0d2a2a 100%); padding: 84px 28px; text-align: center; }
+  .pp-closing-inner { max-width: 620px; margin: 0 auto; }
+  .pp-closing h2 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: 27px; margin: 0 0 14px 0; }
+  @media (max-width: 720px) { .pp-closing h2 { font-size: 22px; } }
+  .pp-closing p { color: var(--tf-slate-300); font-size: 14.5px; margin: 0 0 26px 0; }
+  .pp-closing a.pp-btn { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 15px; padding: 13px 26px; border-radius: var(--radius-md); text-decoration: none; background: var(--tf-mint-500); color: var(--tf-navy-900); }
+  .pp-closing a.pp-btn:hover { background: var(--tf-mint-400); }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="pp-hero">
+  <div class="pp-hero-inner">
+    <p class="pp-eyebrow on-dark">Who's behind the trial</p>
+    <h1 class="pp-h1">One trial, four partners, a single set of published numbers.</h1>
+    <p class="pp-lede">No single organisation runs this on its own, funding, science, supply and on-farm delivery each sit with a different partner. Here's who does what.</p>
+  </div>
+</div>
+
+<!-- ============ PARTNER GRID ============ -->
+<div class="pp-section" style="background:var(--surface-page);">
+  <div class="pp-page">
+    <div class="pp-partner-grid">
+      <div class="pp-partner-card lead pp-reveal">
+        <img class="pp-partner-logo" src="https://jonathanjones-tasfarmers.github.io/lel-website/TasFarmers_Logo_H_C.png.png" alt="TasFarmers">
+        <p class="pp-partner-tag">Project lead</p>
+        <p class="body">TasFarmers holds the grant and runs the project, coordinating partners, publishing results, and making sure the findings reach every Tasmanian producer, not just those in the trial.</p>
+      </div>
+      <div class="pp-partner-card dark pp-reveal">
+        <img class="pp-partner-logo" src="https://jonathanjones-tasfarmers.github.io/lel-website/Tas-Gov-logo-Rev-Horiz.png" alt="Tasmanian Government">
+        <h3 class="pp-h3">Tasmanian Government</h3>
+        <p class="pp-partner-tag">Funding partner</p>
+        <p class="body">A $4 million grant funds the trial in full, on the condition that findings, an economic feasibility tool and an adoption handbook are published for the whole sector.</p>
+      </div>
+      <div class="pp-partner-card sunken pp-reveal">
+        <img class="pp-partner-logo" src="https://jonathanjones-tasfarmers.github.io/lel-website/tia-logo.png" alt="Tasmanian Institute of Agriculture">
+        <p class="pp-partner-tag">Research partner</p>
+        <p class="body">The Tasmanian Institute of Agriculture assists in designing the trial protocol, oversees data quality, and independently analyses the results, including where SeaFeed doesn't pay off.</p>
+      </div>
+      <div class="pp-partner-card sunken pp-reveal">
+        <img class="pp-partner-logo" src="https://jonathanjones-tasfarmers.github.io/lel-website/seaforest-logo.webp" alt="Sea Forest">
+        <p class="pp-partner-tag">Supplement manufacturer</p>
+        <p class="body">Sea Forest grows and processes the <em>Asparagopsis</em> seaweed and supplies the SeaFeed lick blocks used across every trial site.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="pp-stitch" aria-hidden="true">
+  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+</div>
+
+<!-- ============ PROJECT TIMELINE ============ -->
+<div class="pp-section" style="background:var(--surface-sunken);">
+  <div class="pp-page">
+    <h2 class="pp-h2 pp-narrow pp-reveal">Project timeline</h2>
+    <p class="pp-section-intro pp-reveal">A five-year trial structured around six milestones agreed with the Tasmanian Government, each with its own deliverables and reporting.</p>
+
+    <div class="pp-timeline">
+      <div class="pp-milestone done pp-reveal">
+        <p class="pp-milestone-badge done">&check; Milestone 1 &middot; Completed</p>
+        <p class="pp-milestone-dates">19 Jun 2024 &ndash; 27 Sep 2024</p>
+        <h3 class="pp-h3">Foundation Activities</h3>
+        <p class="body">Project plan and budget, communications and engagement strategy, data protocols under the National Farmers Federation Farm Data Code, risk management plan, and NRE Tasmania Animal Ethics Committee approval.</p>
+      </div>
+      <div class="pp-milestone done pp-reveal">
+        <p class="pp-milestone-badge done">&check; Milestone 2 &middot; Completed</p>
+        <p class="pp-milestone-dates">Oct 2024 &ndash; 5 May 2025</p>
+        <h3 class="pp-h3">On-Farm Induction Activities</h3>
+        <p class="body">Feed administration protocols established, animals inducted onto SeaFeed, baseline induction weights recorded, and quarterly stakeholder reporting begins.</p>
+      </div>
+      <div class="pp-milestone done pp-reveal">
+        <p class="pp-milestone-badge done">&check; Milestone 3 &middot; Completed</p>
+        <p class="pp-milestone-dates">June 2026</p>
+        <h3 class="pp-h3">On-Farm Activities &amp; Reporting, P1</h3>
+        <p class="body">Execution of a formal Deed variation, and submission and acceptance of an updated Project Plan, Risk Management Plan and Agreed Budget, re-profiling the trial to focus primarily on pasture-based beef through to the end of 2028, and introducing a new, separate framework for future sheep and wool trials.</p>
+        <div class="pp-disclosure">
+          <button type="button" class="pp-disclosure-summary" id="scope-toggle">Why the scope changed <span id="scope-toggle-icon">&#9662;</span></button>
+          <div class="pp-disclosure-details" id="scope-details">
+            <p class="pp-disclosure-text">The dairy and feedlot components did not proceed as originally scoped, following the absence of an established Maximum Residue Limit affecting dairy processor participation, and a conservative commercial decision by the feedlot partner.</p>
+          </div>
+        </div>
+      </div>
+      <div class="pp-milestone current pp-reveal">
+        <p class="pp-milestone-badge current">Milestone 4 &middot; Current phase</p>
+        <p class="pp-milestone-dates">Jul 2026 &ndash; Aug 2026</p>
+        <h3 class="pp-h3">On-Farm Activities &amp; Reporting, P2</h3>
+        <p class="body">Continuous grazing trials for beef, with a formal Progress Report due by 30 September 2026.</p>
+      </div>
+      <div class="pp-milestone pp-reveal">
+        <p class="pp-milestone-badge upcoming">Milestone 5 &middot; Upcoming</p>
+        <p class="pp-milestone-dates">Sep 2026 &ndash; 31 Dec 2028</p>
+        <h3 class="pp-h3">On-Farm Activities &amp; Reporting, P3</h3>
+        <p class="body">Long-term pasture-based beef trials and sheep and wool cohorts run through to completion, with bi-annual Progress and Data Reports tracking productivity, emissions, residues and product quality.</p>
+      </div>
+      <div class="pp-milestone pp-reveal">
+        <p class="pp-milestone-badge upcoming">Milestone 6 &middot; Upcoming</p>
+        <p class="pp-milestone-dates">Jan 2029 &ndash; 1 Feb 2029</p>
+        <h3 class="pp-h3">Final Report and Publication</h3>
+        <p class="body">Final Report analysing all cumulative data, audited Financial Acquittal submitted, and publication of the producer adoption handbook, economic feasibility calculator and operational viability report.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CLOSING CTA ============ -->
+<div class="pp-closing">
+  <div class="pp-closing-inner pp-reveal">
+    <h2>Want to work with the project?</h2>
+    <p>Whether you're a producer, researcher, supplier, or an industry body or brand exploring what low-emission wool or beef could mean for your supply chain, get in touch and we'll point you the right way.</p>
+    <a class="pp-btn" href="/pages/096bc47289824b939739a7e45b7e32b8#contact">Talk to us</a>
+  </div>
+</div>
+
+<script>
+  // --- scroll reveal, restrained: fade + rise, once per element ---
+  (function(){
+    var els = document.querySelectorAll('.pp-reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(function(el){ el.classList.add('is-visible'); }); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function(el){ io.observe(el); });
+  })();
+
+  // --- "Why the scope changed" disclosure toggle ---
+  var scopeToggle = document.getElementById('scope-toggle');
+  var scopeDetails = document.getElementById('scope-details');
+  var scopeIcon = document.getElementById('scope-toggle-icon');
+  scopeToggle.addEventListener('click', function () {
+    var expanded = scopeDetails.classList.toggle('expanded');
+    scopeIcon.textContent = expanded ? '▴' : '▾';
+  });
+</script>
+
+</body>
+</html>
