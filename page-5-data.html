@@ -21,6 +21,28 @@
   source file). Single self-contained file for a single Hub Iframe
   widget - required for both the chart canvases and the two calculators
   to actually run.
+
+  26/7 fix pass (Jono's "Fix data" / "Loading skeletons" notes):
+  - Every query below that filtered LEL_Emissions_Data_view or
+    LEL_Economics_Data by "AND farm_name='All Farms (Trial Aggregate)'"
+    was returning a hard 400 error on every load. Checked both feature
+    services' REST metadata directly: neither has a farm_name field at
+    all (that column only exists on the productivity/OptiWeigh tables,
+    which DO carry per-farm rows plus one aggregate row per farm_name).
+    Emissions and Economics are apparently trial-wide only and never had
+    that column added, so filtering by it was simply wrong on this page
+    (and on the Home page's Tasmania-at-scale calculator, fixed there
+    too). Removed the farm_name filter from all four affected queries:
+    loadAbatement(), latestCostOfProduction(), fetchLatestEconomics(),
+    fetchLatestEmissions().
+  - This is also why the "Estimate it for your own herd" calculator's
+    three stat values were stuck reading the literal word "Loading…"
+    forever: fetchLatestEmissions() always threw, so
+    updateHerdCalculator()'s early-return branch set the note text but
+    never touched the three stat values. Fixed the fetch itself, and
+    added a defensive fallback so if live data ever fails again for a
+    genuine network reason, those three values show an em dash instead
+    of getting stuck mid-sentence.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -169,8 +191,9 @@
 </div>
 
 <!-- ============ CHARTS + COST OF PRODUCTION ============ -->
-<!-- Fetch logic, endpoints, calculations, all preserved exactly from
-     04. HTML Scripts/data-findings.html -->
+<!-- Fetch logic, endpoints, calculations preserved from
+     04. HTML Scripts/data-findings.html, minus the broken farm_name
+     filter - see file header comment. -->
 <div class="dp-section" style="background:var(--surface-page); padding-bottom:56px;">
   <div class="dp-page">
     <h2 class="dp-h2 dp-narrow dp-reveal">The findings, over time</h2>
@@ -229,8 +252,9 @@
 </div>
 
 <!-- ============ ILLUSTRATIVE VALUE + HERD CALCULATOR ============ -->
-<!-- Fetch logic, endpoints, calculations, all preserved exactly from
-     04. HTML Scripts/farms-illustrative-carbon-value.html -->
+<!-- Fetch logic, endpoints, calculations preserved from
+     04. HTML Scripts/farms-illustrative-carbon-value.html, minus the
+     broken farm_name filter - see file header comment. -->
 <div class="dp-section" style="background:var(--surface-sunken);">
   <div class="dp-page">
     <p class="dp-eyebrow dp-reveal">Illustrative value</p>
@@ -310,13 +334,18 @@
 
 <script>
   // ================= CHARTS + COST OF PRODUCTION =================
-  // Preserved exactly from 04. HTML Scripts/data-findings.html
+  // Preserved from 04. HTML Scripts/data-findings.html, minus the
+  // broken farm_name filter (see file header comment).
   (function(){
     const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
     const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
     const PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
     const MINT = '#3aa989', SLATE = '#a9b8c4', WARNING = '#c98a2e';
     const STALE_AFTER_DAYS = 14;
+    // NOTE: this label is still used below for the Productivity/OptiWeigh
+    // query, which DOES carry a farm_name field (per-farm rows plus one
+    // aggregate row). It is deliberately NOT used on the Emissions or
+    // Economics queries any more - see file header comment.
     const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
 
     async function q(url, params){
@@ -383,7 +412,7 @@
     async function loadAbatement(){
       try{
         const data = await q(EMISSIONS_URL, {
-          where:`treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`, outFields:"abatement_rate,record_date",
+          where:`treatment='seafeed'`, outFields:"abatement_rate,record_date",
           orderByFields:"record_date ASC", resultRecordCount:"2000", f:"json"
         });
         const rows = data.features.map(f => f.attributes).filter(a => a.record_date != null && a.abatement_rate != null);
@@ -426,7 +455,7 @@
 
     async function latestCostOfProduction(treatment){
       const data = await q(ECON_URL, {
-        where: `treatment='${treatment}' AND cost_per_kg_gain_aud IS NOT NULL AND farm_name='${AGGREGATE_LABEL}'`,
+        where: `treatment='${treatment}' AND cost_per_kg_gain_aud IS NOT NULL`,
         outFields: "treatment,cost_per_kg_gain_aud,cost_per_head_aud,weight_gain_kg_per_head,calculation_date",
         orderByFields: "calculation_date DESC",
         resultRecordCount: "1",
@@ -510,12 +539,12 @@
   })();
 
   // ================= ILLUSTRATIVE VALUE + HERD CALCULATOR =================
-  // Preserved exactly from 04. HTML Scripts/farms-illustrative-carbon-value.html
+  // Preserved from 04. HTML Scripts/farms-illustrative-carbon-value.html,
+  // minus the broken farm_name filter (see file header comment).
   (function(){
     const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
     const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
     const BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
-    const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
     const REFERENCE_PRICE_AUD_PER_TONNE = 32.5;
     let GWP = 28;
 
@@ -528,7 +557,7 @@
     }
     async function fetchLatestEconomics() {
       const params = new URLSearchParams({
-        where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`,
+        where: `treatment='seafeed'`,
         outFields: "cumulative_ch4_abated_kg_per_head,representative_head_count,days_of_data,cost_per_head_aud,calculation_date",
         orderByFields: "calculation_date DESC", resultRecordCount: "1", f: "json"
       });
@@ -540,7 +569,7 @@
     }
     async function fetchLatestEmissions() {
       const params = new URLSearchParams({
-        where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`,
+        where: `treatment='seafeed'`,
         outFields: "methane_abated_g_per_hd_day,intake_g_per_hd_day,abatement_rate,record_date",
         orderByFields: "record_date DESC", resultRecordCount: "1", f: "json"
       });
@@ -591,6 +620,13 @@
     let latestEconomics = null;
     function updateHerdCalculator() {
       if (!latestEmissions) {
+        // Defensive fallback (26/7 fix): previously these three values
+        // were left reading the literal word "Loading…" forever if this
+        // fetch failed, since only the note text below was updated.
+        calcCo2eOut.textContent = '—';
+        calcRateSub.textContent = '';
+        calcValueOut.textContent = '—';
+        calcCostOut.textContent = '—';
         calcNote.textContent = 'Live trial data unavailable right now, try again shortly.';
         calcNote.style.color = '#c98a2e';
         return;
