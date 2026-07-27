@@ -83,21 +83,21 @@
   .pp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.55) 60%, oklch(from var(--tf-navy-900) l c h / 0.9) 100%); }
   .pp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 48px; width: 100%; box-sizing: border-box; }
 
-  /* --- partner grid: three stacked pills on the left, Tas Gov filling the full height on the right --- */
-  .pp-partner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
+  /* --- partner grid: three stacked pills on the left, Tas Gov as a slim ~20%-width strip on the right --- */
+  .pp-partner-grid { display: grid; grid-template-columns: 4fr 1fr; gap: 12px; align-items: stretch; }
   @media (max-width: 780px) { .pp-partner-grid { grid-template-columns: 1fr; } }
-  .pp-partner-card { border-radius: var(--radius-lg); padding: 28px 30px; display: flex; flex-direction: column; }
+  .pp-partner-card { border-radius: var(--radius-md); padding: 20px 22px; display: flex; flex-direction: column; }
   .pp-partner-card.lead { background: var(--surface-card); border: 1.5px solid var(--tf-mint-500); box-shadow: var(--shadow-sm); }
-  .pp-partner-card.dark { background: var(--tf-navy-900); justify-content: center; grid-column: 2; grid-row: 1 / span 3; }
+  .pp-partner-card.dark { background: var(--tf-navy-900); justify-content: center; grid-column: 2; grid-row: 1 / span 3; padding: 20px 16px; }
   @media (max-width: 780px) { .pp-partner-card.dark { grid-column: 1; grid-row: auto; } }
   .pp-partner-card.sunken { background: var(--surface-sunken); border: 1px solid var(--border-subtle); }
-  .pp-partner-logo { max-height: 42px; max-width: 220px; width: auto; height: auto; object-fit: contain; margin-bottom: 20px; }
-  .pp-partner-card.dark .pp-partner-logo { filter: brightness(0) invert(1); max-height: 34px; }
-  .pp-partner-tag { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 10px 0; }
+  .pp-partner-logo { max-height: 32px; max-width: 160px; width: auto; height: auto; object-fit: contain; margin-bottom: 14px; }
+  .pp-partner-card.dark .pp-partner-logo { filter: brightness(0) invert(1); max-height: 29px; max-width: 100%; }
+  .pp-partner-tag { font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 8px 0; }
   .pp-partner-card.dark .pp-partner-tag { color: var(--tf-mint-400); }
-  .pp-partner-card p.body { font-size: 14.5px; color: var(--text-muted); line-height: 1.65; margin: 0; }
-  .pp-partner-card.dark p.body { color: var(--tf-slate-300); }
-  .pp-partner-card.dark h3 { color: var(--tf-white); }
+  .pp-partner-card p.body { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin: 0; }
+  .pp-partner-card.dark p.body { color: var(--tf-slate-300); font-size: 12px; }
+  .pp-partner-card.dark h3 { color: var(--tf-white); font-size: 15px; margin: 0 0 6px 0; }
 
   /* --- timeline --- */
   .pp-timeline { position: relative; padding-left: 32px; margin-top: 10px; }
