@@ -27,6 +27,32 @@
   - Added id="timeline" to the Project timeline section, since the Home
     page links to /pages/.../#timeline and that anchor didn't exist
     anywhere on this page.
+
+  27/7 design-principles + seamless-transition pass (same brief as
+  page-1-home.html / page-2-farms.html):
+  - Generous white space: section padding 88px -> 124px (68px mobile),
+    partner-grid gap, timeline milestone spacing and contact-card
+    padding all increased.
+  - Confident, sparing accent colour: added .pp-h1/.pp-h2 accent spans
+    (hero H1, the new origin band heading, "Project timeline") -
+    closing CTA left plain, matching the convention on Home/Farms.
+  - Full-bleed photography: added ONE new origin band with a floating
+    white card (same .xx-origin-band pattern as the other two pages)
+    between the partner grid and the project timeline. Placeholder
+    image is hero-farms.jpg (a real hosted photo not already used on
+    THIS page) - swap for a proper "middle-partners.jpg" once Jono has
+    one, same workflow as middle-home.jpg / middle-farms.jpg.
+  - Seamless transitions: removed the one stitched dashed divider that
+    existed on this page and replaced every hard colour change with the
+    colour-matched fade technique used on Home/Farms - hero fades to
+    white (enlarged 460px->540px with more bottom padding so the fade
+    has room), the origin band fades in from white at the top and out
+    to the timeline's sunken tone at the bottom (translucent
+    surface-sunken veil, not navy, to avoid a muddy seam), and the
+    closing CTA's gradient now eases out of the timeline's sunken
+    background instead of cutting straight to navy.
+
+  Vanilla CSS/JS only, no build step, no external libraries.
 -->
 <style>
   :root{
@@ -58,14 +84,16 @@
   html, body { margin: 0; background: var(--surface-page); }
   body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
   .pp-page { max-width: 1180px; margin: 0 auto; }
-  .pp-section { padding: 88px 28px; box-sizing: border-box; }
+  .pp-section { padding: 124px 28px; box-sizing: border-box; }
   .pp-narrow { max-width: 760px; }
-  @media (max-width: 720px) { .pp-section { padding: 52px 20px; } }
+  @media (max-width: 720px) { .pp-section { padding: 68px 20px; } }
 
   .pp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
   .pp-eyebrow.on-dark { color: var(--tf-mint-400); }
   .pp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px,4.4vw,50px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px 0; max-width: 20ch; }
+  .pp-h1 .accent { color: var(--tf-mint-400); }
   .pp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 12px 0; }
+  .pp-h2 .accent { color: var(--tf-mint-600); }
   @media (max-width: 720px) { .pp-h2 { font-size: 22px; } }
   .pp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 17px; margin: 0 0 8px 0; }
   .pp-lede { color: var(--tf-slate-300); font-size: 17px; line-height: 1.6; max-width: 60ch; margin: 0; }
@@ -75,16 +103,14 @@
   .pp-reveal.is-visible { opacity: 1; transform: translateY(0); }
   @media (prefers-reduced-motion: reduce) { .pp-reveal { opacity: 1; transform: none; transition: none; } }
 
-  .pp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
-  .pp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
-
   /* --- hero --- */
-  .pp-hero { position: relative; min-height: 460px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-partners.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  .pp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.55) 60%, oklch(from var(--tf-navy-900) l c h / 0.9) 100%); }
-  .pp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 48px; width: 100%; box-sizing: border-box; }
+  .pp-hero { position: relative; min-height: 540px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-partners.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .pp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.3) 0%, oklch(from var(--tf-navy-900) l c h / 0.48) 42%, oklch(from var(--tf-navy-900) l c h / 0.6) 68%, oklch(from var(--tf-navy-900) l c h / 0.78) 86%, var(--surface-page) 100%); }
+  .pp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 96px; width: 100%; box-sizing: border-box; }
+  @media (max-width: 720px) { .pp-hero { min-height: 460px; } .pp-hero-inner { padding: 56px 20px 64px; } }
 
   /* --- partner grid: three stacked pills on the left, Tas Gov as a slim ~20%-width strip on the right --- */
-  .pp-partner-grid { display: grid; grid-template-columns: 4fr 1fr; gap: 12px; align-items: stretch; }
+  .pp-partner-grid { display: grid; grid-template-columns: 4fr 1fr; gap: 16px; align-items: stretch; }
   @media (max-width: 780px) { .pp-partner-grid { grid-template-columns: 1fr; } }
   .pp-partner-card { border-radius: var(--radius-md); padding: 20px 22px; display: flex; flex-direction: column; }
   .pp-partner-card.lead { background: var(--surface-card); border: 1.5px solid var(--tf-mint-500); box-shadow: var(--shadow-sm); }
@@ -99,10 +125,22 @@
   .pp-partner-card.dark p.body { color: var(--tf-slate-300); font-size: 12px; }
   .pp-partner-card.dark h3 { color: var(--tf-white); font-size: 15px; margin: 0 0 6px 0; }
 
+  /* --- why this partnership works: full-bleed origin band with a floating card --- */
+  .pp-origin-band { position: relative; min-height: 560px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-farms.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .pp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
+    linear-gradient(180deg, var(--surface-page) 0%, transparent 18%),
+    linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.5) 0%, oklch(from var(--tf-navy-900) l c h / 0.22) 46%, oklch(from var(--tf-navy-900) l c h / 0.12) 72%); }
+  .pp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 74%, oklch(from var(--surface-sunken) l c h / 0.45) 86%, oklch(from var(--surface-sunken) l c h / 0.85) 94%, var(--surface-sunken) 100%); }
+  .pp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 100px 28px; width: 100%; box-sizing: border-box; }
+  .pp-origin-card { background: rgba(255,255,255,0.97); border-radius: var(--radius-lg); box-shadow: 0 12px 32px rgba(4,18,33,0.16); padding: 44px 48px; max-width: 540px; }
+  .pp-origin-card p.body { font-size: 15.5px; color: var(--text-body); line-height: 1.8; margin: 0 0 16px 0; }
+  .pp-origin-card p.body:last-child { margin-bottom: 0; }
+  @media (max-width: 720px) { .pp-origin-band { min-height: 0; } .pp-origin-inner { padding: 64px 20px; } .pp-origin-card { padding: 32px 26px; } }
+
   /* --- timeline --- */
   .pp-timeline { position: relative; padding-left: 32px; margin-top: 10px; }
   .pp-timeline::before { content:""; position:absolute; left:5px; top:6px; bottom:6px; width:2px; background: var(--border-default); }
-  .pp-milestone { position: relative; padding-bottom: 36px; }
+  .pp-milestone { position: relative; padding-bottom: 44px; }
   .pp-milestone:last-child { padding-bottom: 0; }
   .pp-milestone::before { content:""; position:absolute; left:-32px; top:4px; width:12px; height:12px; border-radius:50%; background: var(--tf-slate-300); border: 2px solid var(--surface-page); }
   .pp-milestone.done::before { background: var(--tf-mint-500); }
@@ -121,12 +159,12 @@
   .pp-disclosure-text { font-size: 13.5px; color: var(--text-muted); line-height: 1.65; margin: 10px 0 0 0; }
 
   /* --- closing: contact card, same info as the Resources page contact card --- */
-  .pp-closing { background: linear-gradient(160deg, var(--tf-navy-900) 0%, #0d2a2a 100%); padding: 84px 28px; text-align: center; }
+  .pp-closing { background: linear-gradient(160deg, var(--surface-sunken) 0%, var(--tf-navy-900) 24%, #0d2a2a 100%); padding: 104px 28px; text-align: center; }
   .pp-closing-inner { max-width: 460px; margin: 0 auto; }
   .pp-closing h2 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: 27px; margin: 0 0 14px 0; }
   @media (max-width: 720px) { .pp-closing h2 { font-size: 22px; } }
   .pp-closing p.body { color: var(--tf-slate-300); font-size: 14.5px; margin: 0 0 26px 0; }
-  .pp-contact-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16); border-radius: var(--radius-lg); padding: 26px 28px; text-align: left; }
+  .pp-contact-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16); border-radius: var(--radius-lg); padding: 30px 32px; text-align: left; }
   .pp-contact-card p { margin: 0; }
   .pp-contact-card .label { font-size: 11.5px; color: var(--tf-slate-300); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
   .pp-contact-card .name { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: 16px; margin-bottom: 2px; }
@@ -142,7 +180,7 @@
 <div class="pp-hero">
   <div class="pp-hero-inner">
     <p class="pp-eyebrow on-dark">Who's behind the trial</p>
-    <h1 class="pp-h1">One trial, four partners, a single set of published numbers.</h1>
+    <h1 class="pp-h1">One trial, four partners, a single set of <span class="accent">published numbers</span>.</h1>
     <p class="pp-lede">No single organisation runs this on its own, funding, science, supply and on-farm delivery each sit with a different partner. Here's who does what.</p>
   </div>
 </div>
@@ -176,14 +214,22 @@
   </div>
 </div>
 
-<div class="pp-stitch" aria-hidden="true">
-  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+<!-- ============ WHY THIS PARTNERSHIP WORKS (full-bleed origin band) ============ -->
+<div class="pp-origin-band">
+  <div class="pp-origin-inner">
+    <div class="pp-origin-card pp-reveal">
+      <p class="pp-eyebrow">The shared brief</p>
+      <h2 class="pp-h2">Four organisations, <span class="accent">one published number</span></h2>
+      <p class="body">Funding, science, supply and on-farm delivery each sit with a different partner, but the deal each one signed up to is the same: publish the real numbers, good or bad, so every Tasmanian producer can use them.</p>
+      <p class="body">The $4 million Tasmanian Government grant that funds this work comes with that condition attached. An economic feasibility tool and an adoption handbook are contractual deliverables, not optional extras.</p>
+    </div>
+  </div>
 </div>
 
 <!-- ============ PROJECT TIMELINE ============ -->
 <div class="pp-section" id="timeline" style="background:var(--surface-sunken);">
   <div class="pp-page">
-    <h2 class="pp-h2 pp-narrow pp-reveal">Project timeline</h2>
+    <h2 class="pp-h2 pp-narrow pp-reveal">Project <span class="accent">timeline</span></h2>
     <p class="pp-section-intro pp-reveal">A five-year trial structured around six milestones agreed with the Tasmanian Government, each with its own deliverables and reporting.</p>
 
     <div class="pp-timeline">
