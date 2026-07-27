@@ -25,6 +25,11 @@
   not embedded here, matching how the live Farms page is actually
   structured.
 
+  27/7 fix pass: hero band brought up to the same size as the Home page
+  (min-height 460px, hero-inner padding 72/28/48, H1 clamp(32,4.4vw,50),
+  lede 17px) per Jono's request to standardise the large hero look
+  across every page except the economic feasibility calculator.
+
   Vanilla CSS/JS only, no build step, no external libraries.
 -->
 <style>
@@ -63,11 +68,11 @@
 
   .fp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
   .fp-eyebrow.on-dark { color: var(--tf-mint-400); }
-  .fp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(30px,4.2vw,46px); line-height: 1.12; letter-spacing: -0.01em; margin: 0 0 18px 0; max-width: 18ch; }
+  .fp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px,4.4vw,50px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px 0; max-width: 18ch; }
   .fp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 12px 0; }
   @media (max-width: 720px) { .fp-h2 { font-size: 22px; } }
   .fp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 15.5px; margin: 0 0 8px 0; }
-  .fp-lede { color: var(--tf-slate-300); font-size: 16px; line-height: 1.6; max-width: 58ch; margin: 0; }
+  .fp-lede { color: var(--tf-slate-300); font-size: 17px; line-height: 1.6; max-width: 58ch; margin: 0; }
   .fp-section-intro { color: var(--text-muted); font-size: 15.5px; line-height: 1.7; max-width: 66ch; margin: 0 0 32px 0; }
 
   .fp-reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
@@ -80,9 +85,9 @@
   .fp-link { font-size: 14px; color: var(--tf-mint-600); text-decoration: none; border-bottom: 1px solid var(--tf-mint-600); padding-bottom: 2px; }
 
   /* --- hero --- */
-  .fp-hero { position: relative; min-height: 420px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-farms.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .fp-hero { position: relative; min-height: 460px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-farms.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .fp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.4) 0%, oklch(from var(--tf-navy-900) l c h / 0.6) 60%, oklch(from var(--tf-navy-900) l c h / 0.92) 100%); }
-  .fp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 68px 28px 44px; width: 100%; box-sizing: border-box; }
+  .fp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 48px; width: 100%; box-sizing: border-box; }
 
   /* --- live stats banner, logic preserved from farm-stats-banner.html --- */
   .fp-banner-status { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 18px 0; color: var(--text-muted); }
