@@ -30,6 +30,49 @@
   lede 17px) per Jono's request to standardise the large hero look
   across every page except the economic feasibility calculator.
 
+  27/7 design-principles refinement pass (same brief as page-1-home.html):
+  - Generous white space: section, grid and card padding increased
+    throughout.
+  - Confident, sparing accent colour in headline typography: added
+    .fp-h1/.fp-h2 accent spans (previously flat navy everywhere).
+  - Full-bleed photography as the dominant device: added ONE new
+    full-bleed origin band with a floating white card (same reusable
+    pattern as page-1-home.html's .hp-origin-band, renamed .fp-origin-
+    band here) between the live stats banner and "Why producers are
+    getting involved", so the page gets a second photo beat alongside
+    the hero without touching the two practical info grids (they work
+    well as clean card grids and don't need to become photography).
+    Placeholder image is hero-partners.jpg (same placeholder used on
+    Home before Jono supplied middle-home.jpg) - swap the background-
+    image URL in .fp-origin-band once a proper photo is chosen.
+  - Stitched dashed divider repositioned to sit after the new origin
+    band (marking the return to a light section), matching the
+    divider-placement convention established on Home.
+
+  27/7 seamless-transition pass (same brief as page-1-home.html, after
+  Jono asked for the same treatment here):
+  - Hero enlarged (460px -> 540px, 460px kept on mobile) and hero-inner
+    bottom padding increased (48px -> 96px) so the fade has room to
+    breathe below the lede text, then spread across five gradual stops
+    ending in var(--surface-page) (matching the live stats banner
+    directly below, not a flat cut to translucent navy).
+  - fp-origin-band now fades in from white at the top (matching the
+    live stats banner above it) and fades back to white at the bottom
+    (matching "Why producers are getting involved" below it) using a
+    soft translucent-white veil rather than jumping through navy tones,
+    avoiding a muddy navy-to-white seam.
+  - Removed both remaining stitched dashed-line dividers (after the
+    origin band, and between "Why producers" and "What using SeaFeed
+    involves") and replaced them with the same colour-matched fade
+    technique used on Home: each section's background is solid for
+    most of its height and blends into the next section's exact colour
+    only in a fixed final ~110px (pixel-based, so it stays inside the
+    existing 124px section padding regardless of content length).
+  - Widened the closing CTA's gradient so it eases out of the sunken
+    "What using SeaFeed involves" section instead of cutting straight
+    to navy. The .fp-stitch CSS is removed as it's no longer
+    referenced anywhere on this page.
+
   Vanilla CSS/JS only, no build step, no external libraries.
 -->
 <style>
@@ -62,14 +105,16 @@
   html, body { margin: 0; background: var(--surface-page); }
   body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
   .fp-page { max-width: 1180px; margin: 0 auto; }
-  .fp-section { padding: 88px 28px; box-sizing: border-box; }
+  .fp-section { padding: 124px 28px; box-sizing: border-box; }
   .fp-narrow { max-width: 760px; }
-  @media (max-width: 720px) { .fp-section { padding: 52px 20px; } }
+  @media (max-width: 720px) { .fp-section { padding: 68px 20px; } }
 
   .fp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
   .fp-eyebrow.on-dark { color: var(--tf-mint-400); }
   .fp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px,4.4vw,50px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px 0; max-width: 18ch; }
+  .fp-h1 .accent { color: var(--tf-mint-400); }
   .fp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 12px 0; }
+  .fp-h2 .accent { color: var(--tf-mint-600); }
   @media (max-width: 720px) { .fp-h2 { font-size: 22px; } }
   .fp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 15.5px; margin: 0 0 8px 0; }
   .fp-lede { color: var(--tf-slate-300); font-size: 17px; line-height: 1.6; max-width: 58ch; margin: 0; }
@@ -79,21 +124,19 @@
   .fp-reveal.is-visible { opacity: 1; transform: translateY(0); }
   @media (prefers-reduced-motion: reduce) { .fp-reveal { opacity: 1; transform: none; transition: none; } }
 
-  .fp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
-  .fp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
-
   .fp-link { font-size: 14px; color: var(--tf-mint-600); text-decoration: none; border-bottom: 1px solid var(--tf-mint-600); padding-bottom: 2px; }
 
   /* --- hero --- */
-  .fp-hero { position: relative; min-height: 460px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-farms.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  .fp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.4) 0%, oklch(from var(--tf-navy-900) l c h / 0.6) 60%, oklch(from var(--tf-navy-900) l c h / 0.92) 100%); }
-  .fp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 48px; width: 100%; box-sizing: border-box; }
+  .fp-hero { position: relative; min-height: 540px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-farms.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .fp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.3) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.62) 68%, oklch(from var(--tf-navy-900) l c h / 0.8) 86%, var(--surface-page) 100%); }
+  .fp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 96px; width: 100%; box-sizing: border-box; }
+  @media (max-width: 720px) { .fp-hero { min-height: 460px; } .fp-hero-inner { padding: 56px 20px 64px; } }
 
   /* --- live stats banner, logic preserved from farm-stats-banner.html --- */
   .fp-banner-status { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin: 0 0 18px 0; color: var(--text-muted); }
-  .fp-stats-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 16px; }
+  .fp-stats-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 22px; }
   @media (max-width: 780px) { .fp-stats-grid { grid-template-columns: 1fr; } }
-  .fp-stack { display: flex; flex-direction: column; gap: 16px; }
+  .fp-stack { display: flex; flex-direction: column; gap: 22px; }
   .fp-stat-hero { background: var(--tf-navy-900); border-radius: var(--radius-lg); padding: 26px 28px; display: flex; flex-direction: column; justify-content: center; }
   .fp-stat-hero p:first-child { font-size: 13px; color: var(--tf-slate-200); margin: 0 0 10px 0; }
   .fp-stat-hero .fp-stat-value { font-family: var(--font-display); font-weight: 700; color: var(--tf-mint-400); font-size: 40px; line-height: 1; margin: 0; }
@@ -116,21 +159,33 @@
   @media (prefers-reduced-motion: reduce) { .fp-skel, .fp-skel-dark { animation: none !important; } }
 
   /* --- why producers: numbered cards --- */
-  .fp-why-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 10px; }
+  .fp-why-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 14px; }
   @media (max-width: 720px) { .fp-why-grid { grid-template-columns: 1fr; } }
-  .fp-why-card { background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 24px 26px; }
+  .fp-why-card { background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 28px 30px; }
   .fp-why-number { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--tf-mint-600); margin: 0 0 10px 0; }
   .fp-why-card p.body { font-size: 14.5px; color: var(--text-muted); line-height: 1.65; margin: 0; }
 
+  /* --- why this trial fits your farm: full-bleed origin band with a floating card --- */
+  .fp-origin-band { position: relative; min-height: 560px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/middle-farms.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .fp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
+    linear-gradient(180deg, var(--surface-page) 0%, transparent 18%),
+    linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.5) 0%, oklch(from var(--tf-navy-900) l c h / 0.22) 46%, oklch(from var(--tf-navy-900) l c h / 0.12) 72%); }
+  .fp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 44%, oklch(from var(--surface-page) l c h / 0.35) 66%, oklch(from var(--surface-page) l c h / 0.75) 85%, var(--surface-page) 100%); }
+  .fp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 100px 28px; width: 100%; box-sizing: border-box; }
+  .fp-origin-card { background: rgba(255,255,255,0.97); border-radius: var(--radius-lg); box-shadow: 0 12px 32px rgba(4,18,33,0.16); padding: 44px 48px; max-width: 540px; }
+  .fp-origin-card p.body { font-size: 15.5px; color: var(--text-body); line-height: 1.8; margin: 0 0 16px 0; }
+  .fp-origin-card p.body:last-child { margin-bottom: 0; }
+  @media (max-width: 720px) { .fp-origin-band { min-height: 0; } .fp-origin-inner { padding: 64px 20px; } .fp-origin-card { padding: 32px 26px; } }
+
   /* --- what using seafeed involves: icon-style cards --- */
-  .fp-involves-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 10px; }
+  .fp-involves-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 14px; }
   @media (max-width: 720px) { .fp-involves-grid { grid-template-columns: 1fr; } }
-  .fp-involves-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 24px 26px; }
+  .fp-involves-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 28px 30px; }
   .fp-involves-tag { display: inline-block; font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tf-mint-600); background: var(--surface-sunken); border-radius: 999px; padding: 4px 12px; margin-bottom: 14px; }
   .fp-involves-card p.body { font-size: 14px; color: var(--text-muted); line-height: 1.65; margin: 0; }
 
   /* --- closing --- */
-  .fp-closing { background: linear-gradient(160deg, var(--tf-navy-900) 0%, #0d2a2a 100%); padding: 84px 28px; text-align: center; }
+  .fp-closing { background: linear-gradient(160deg, var(--surface-sunken) 0%, var(--tf-navy-900) 24%, #0d2a2a 100%); padding: 104px 28px; text-align: center; }
   .fp-closing-inner { max-width: 620px; margin: 0 auto; }
   .fp-closing h2 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: 27px; margin: 0 0 14px 0; }
   @media (max-width: 720px) { .fp-closing h2 { font-size: 22px; } }
@@ -145,7 +200,7 @@
 <div class="fp-hero">
   <div class="fp-hero-inner">
     <p class="fp-eyebrow on-dark">For Tasmanian producers</p>
-    <h1 class="fp-h1">Get the real numbers before you commit your herd.</h1>
+    <h1 class="fp-h1">Get the <span class="accent">real numbers</span> before you commit your herd.</h1>
     <p class="fp-lede">Everything below is trial-to-date data from working Tasmanian livestock, updated as it's recorded, not a projection, and not a sales figure.</p>
   </div>
 </div>
@@ -181,14 +236,22 @@
   </div>
 </div>
 
-<div class="fp-stitch" aria-hidden="true">
-  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+<!-- ============ WHY THIS FITS YOUR FARM (full-bleed origin band) ============ -->
+<div class="fp-origin-band">
+  <div class="fp-origin-inner">
+    <div class="fp-origin-card fp-reveal">
+      <p class="fp-eyebrow">Before you weigh it up</p>
+      <h2 class="fp-h2">Not a lab result, a <span class="accent">working farm</span> result</h2>
+      <p class="body">This isn't a feedlot study extrapolated to your paddock. It's ordinary Tasmanian pasture-based cattle and sheep, fed SeaFeed as part of their normal ration, on working commercial properties.</p>
+      <p class="body">Every number, the ones that flatter SeaFeed and the ones that don't, is published as the trial runs. If you're weighing this up for your own operation, it's the same data your neighbours would be looking at.</p>
+    </div>
+  </div>
 </div>
 
 <!-- ============ WHY PRODUCERS ARE GETTING INVOLVED ============ -->
-<div class="fp-section" style="background:var(--surface-page);">
+<div class="fp-section" style="background: linear-gradient(180deg, var(--surface-page) 0%, var(--surface-page) calc(100% - 110px), var(--surface-sunken) 100%);">
   <div class="fp-page">
-    <h2 class="fp-h2 fp-narrow fp-reveal">Why producers are getting involved</h2>
+    <h2 class="fp-h2 fp-narrow fp-reveal">Why <span class="accent">producers</span> are getting involved</h2>
     <p class="fp-section-intro fp-reveal">Reasons Tasmanian livestock operations are putting their hand up, not in any particular order.</p>
     <div class="fp-why-grid">
       <div class="fp-why-card fp-reveal">
@@ -215,14 +278,10 @@
   </div>
 </div>
 
-<div class="fp-stitch" aria-hidden="true">
-  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
-</div>
-
 <!-- ============ WHAT USING SEAFEED ACTUALLY INVOLVES ============ -->
 <div class="fp-section" style="background:var(--surface-sunken);">
   <div class="fp-page">
-    <h2 class="fp-h2 fp-narrow fp-reveal">What using SeaFeed actually involves</h2>
+    <h2 class="fp-h2 fp-narrow fp-reveal">What using <span class="accent">SeaFeed</span> actually involves</h2>
     <p class="fp-section-intro fp-reveal">The practical realities before you weigh it up for your own operation.</p>
     <div class="fp-involves-grid">
       <div class="fp-involves-card fp-reveal">
