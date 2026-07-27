@@ -182,6 +182,11 @@
   .wp-scale-arrow { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--tf-mint-500); flex-shrink: 0; }
   @media (max-width: 640px) { .wp-scale-arrow { transform: rotate(90deg); margin: 0 auto; } }
   .wp-scale-note { font-size: 12.5px; color: var(--text-muted); line-height: 1.6; margin: 20px 0 0 0; border-top: 1px solid var(--border-subtle); padding-top: 18px; }
+  .wp-scale-disclosure { margin-top: 20px; border-top: 1px solid var(--border-subtle); padding-top: 18px; }
+  .wp-disclosure-summary { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: var(--text-muted); cursor: pointer; user-select: none; border: none; background: none; padding: 0; }
+  .wp-disclosure-details { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+  .wp-disclosure-details.expanded { max-height: 300px; }
+  .wp-disclosure-text { font-size: 12.5px; color: var(--text-muted); line-height: 1.6; margin: 10px 0 0 0; }
 
   /* --- chain diagram, stitched connector --- */
   .wp-chain { display: flex; align-items: stretch; gap: 0; margin-top: 34px; flex-wrap: wrap; }
@@ -242,7 +247,6 @@
     <p class="wp-eyebrow on-dark">Beyond the herd</p>
     <h1 class="wp-h1">Could Tasmania grow the world's first proven <span class="accent">low-emissions wool</span>?</h1>
     <p class="wp-lede">The seaweed behind this idea is grown a short drive from here. A global fashion brand has already built a product on it, just not with Tasmanian wool yet. Here's the opportunity in front of us.</p>
-    <p class="wp-hero-caption">Sea Forest's Asparagopsis cultivation site, Tasmania.</p>
   </div>
 </div>
 
@@ -267,7 +271,7 @@
     </div>
     <div class="wp-proof-card wp-reveal">
       <p class="wp-proof-value" data-count-to="1" data-count-static="1">0</p>
-      <p class="wp-proof-label">global apparel brand, Theory, already selling garments built around that result</p>
+      <p class="wp-proof-label">global apparel brand already selling garments built around that result</p>
     </div>
   </div>
   <p class="wp-proof-source wp-reveal">Source: Sea Forest / Congi Farm methane-reduction pilot, reported by Beef Central, 22 April 2026.</p>
@@ -286,8 +290,8 @@
 
     <div class="wp-fact-grid">
       <div class="wp-fact-card headline wp-reveal">
-        <p class="wp-fact-value">$330 / kg</p>
-        <p class="wp-fact-label">paid for a 12.7-micron bale from 'Ashby', Ross, Tasmania, at Melbourne auction in October 2025, bought by Italian luxury house Loro Piana and milled at Verrone, Biella, the same district Botto Giuseppe calls home.</p>
+        <p class="wp-fact-value">$97m</p>
+        <p class="wp-fact-label">gross value of Tasmania's wool at the farm gate, 2023&ndash;24</p>
       </div>
       <div class="wp-fact-card wp-reveal">
         <p class="wp-fact-value">2.6m</p>
@@ -302,7 +306,7 @@
         <p class="wp-fact-label">average cut per head, Tasmania, 2024–25</p>
       </div>
     </div>
-    <p class="wp-source-note wp-reveal">Sources: "Tasmanian 12.7 micron Merino bale tops market at $330/kg", Sheep Central, 24 October 2025; Australian Wool Production Forecast Report, Australian Wool Innovation, 2025.</p>
+    <p class="wp-source-note wp-reveal">Source: AgriGrowth Scorecard 2023&ndash;24, gross value of primary production at the farm gate.</p>
   </div>
 </div>
 
@@ -312,9 +316,9 @@
     <div class="wp-origin-card wp-reveal">
       <p class="wp-eyebrow">Why here</p>
       <h2 class="wp-h2">The company is Tasmanian.<br>The wool result isn't, yet.</h2>
-      <p class="wp-body">Asparagopsis, the red seaweed behind all of this, is grown in Tasmanian waters. Sea Forest, the company that grows and processes it, is Tasmanian, and is already a named partner in this project's beef trial. That part is real, ongoing, and happening here.</p>
+      <p class="wp-body"><em>Asparagopsis</em>, the red seaweed behind all of this, is grown in Tasmanian waters. Sea Forest, the company that grows and processes it, is Tasmanian, and is already a named partner in this project's beef trial. That part is real, ongoing, and happening here.</p>
       <div class="wp-precision-box">
-        <p><strong>Worth being precise about:</strong> the 43% methane result and the wool that ended up in a Theory garment came from Congi Farm in New South Wales, using the same Sea Forest product, not from a Tasmanian sheep flock. Tasmania is where the science and the company started. It isn't yet where wool has been proven.</p>
+        <p><strong>Worth being precise about:</strong> the 43% methane result and the wool that ended up in a finished garment came from Congi Farm in New South Wales, using the same Sea Forest product, not from a Tasmanian sheep flock. Tasmania is where the science and the company started. It isn't yet where wool has been proven.</p>
       </div>
       <p class="wp-body">The active ingredient works by interrupting methane production partway through digestion, a bromoform compound naturally present in the seaweed blocks the step in a sheep's gut where methane would otherwise form. It's the same mechanism already being measured in this project's cattle trial, just not yet tested on a Tasmanian flock.</p>
       <p class="wp-body" style="margin-bottom:0;">The delivery system needed to get it into a flock, lick blocks, farmer protocols, on-farm logistics, already exists here too, built and running for the beef trial. Extending it to sheep is a known, working system, not something to invent from nothing.</p>
@@ -341,7 +345,12 @@
           <p class="wp-scale-caption">Sold at a price shaped by design and brand, not just fibre cost</p>
         </div>
       </div>
-      <p class="wp-scale-note">Illustrative, not a specific product's figures. This project's own wool breakeven calculator (in development) works out what premium would actually be needed at the farm gate, this section is about where in the chain that value is easiest to find, not a promise of what it's worth.</p>
+      <div class="wp-scale-disclosure">
+        <button type="button" class="wp-disclosure-summary" id="scale-toggle">Illustrative, not a specific product's figures <span id="scale-toggle-icon">&#9662;</span></button>
+        <div class="wp-disclosure-details" id="scale-details">
+          <p class="wp-disclosure-text">This project's own wool breakeven calculator (in development) works out what premium would actually be needed at the farm gate, this section is about where in the chain that value is easiest to find, not a promise of what it's worth.</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -355,14 +364,14 @@
   <div class="wp-page">
     <p class="wp-eyebrow wp-reveal">The path from paddock to product</p>
     <h2 class="wp-h2 wp-narrow wp-reveal">Tasmania already has half of this pathway working</h2>
-    <p class="wp-section-intro wp-reveal">The quality-wool-to-luxury-mill path on the right already runs today, the Ashby bale above is proof. The low-emissions link on the left is what a Tasmanian wool trial would need to add.</p>
+    <p class="wp-section-intro wp-reveal">The quality-wool-to-luxury-mill path on the right already runs today, Tasmania's wool clip is proof. The low-emissions link on the left is what a Tasmanian wool trial would need to add.</p>
 
     <div class="wp-chain wp-reveal">
       <div class="wp-chain-step origin">
         <div class="wp-chain-connector"></div>
         <div class="wp-chain-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M12 2c2.5 2.5 4 6.5 4 10s-1.5 7.5-4 10c-2.5-2.5-4-6.5-4-10s1.5-7.5 4-10z"></path></svg></div>
         <p class="wp-chain-label">Tasmanian water</p>
-        <p class="wp-chain-sub">Asparagopsis, grown and processed by Sea Forest</p>
+        <p class="wp-chain-sub"><em>Asparagopsis</em>, grown and processed by Sea Forest</p>
         <span class="wp-chain-tag">Real, ongoing</span>
       </div>
       <div class="wp-chain-step proven">
@@ -376,20 +385,20 @@
         <div class="wp-chain-connector"></div>
         <div class="wp-chain-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21 7.5 13.5 2 9h7z"></path></svg></div>
         <p class="wp-chain-label">A verified, traceable clip</p>
-        <p class="wp-chain-sub">Single-origin, not commingled, the same discipline the Ashby bale already used</p>
+        <p class="wp-chain-sub">Single-origin, not commingled, the same discipline Tasmania's best bales already use</p>
         <span class="wp-chain-tag">Not yet trialled</span>
       </div>
       <div class="wp-chain-step proven">
         <div class="wp-chain-connector"></div>
         <div class="wp-chain-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v4H4zM6 8v12h12V8"></path><path d="M9 12h6M9 16h6"></path></svg></div>
-        <p class="wp-chain-label">An Italian mill</p>
-        <p class="wp-chain-sub">Tasmanian bales already reach Biella mills today, on quality alone</p>
+        <p class="wp-chain-label">A premium mill</p>
+        <p class="wp-chain-sub">Tasmanian bales already reach top-tier mills today, on quality alone</p>
         <span class="wp-chain-tag">Already happens</span>
       </div>
       <div class="wp-chain-step proven">
         <div class="wp-chain-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41L11 3.83A2 2 0 0 0 9.59 3.17L4 3a1 1 0 0 0-1 1l.17 5.59a2 2 0 0 0 .66 1.41l9.59 9.59a2 2 0 0 0 2.83 0l4.34-4.34a2 2 0 0 0 0-2.83z"></path></svg></div>
         <p class="wp-chain-label">A luxury brand</p>
-        <p class="wp-chain-sub">Loro Piana already buys Tasmanian; Theory already buys low-methane, just not both together yet</p>
+        <p class="wp-chain-sub">Luxury buyers already buy Tasmanian; other brands already buy low-methane, just not both together yet</p>
         <span class="wp-chain-tag">Already happens</span>
       </div>
     </div>
@@ -408,7 +417,7 @@
         <ul class="wp-track-list">
           <li>Tasmania already produces auction-topping ultrafine wool bought by the same luxury houses, and milled in the same districts, brands and mills already source from.</li>
           <li>Certified sustainable wool has commanded real, tradeable premiums for years, this adds a new, currently uncontested attribute to a supply base that already meets luxury specification.</li>
-          <li>Theory's own pilot shows a brand doesn't need an entire industry to shift first, a single well-run property and a traceable clip is enough to build a genuine product line on.</li>
+          <li>That pilot shows a brand doesn't need an entire industry to shift first, a single well-run property and a traceable clip is enough to build a genuine product line on.</li>
         </ul>
       </div>
       <div class="wp-track-card farmers wp-reveal">
@@ -423,7 +432,7 @@
     </div>
 
     <div class="wp-faq-panel wp-reveal">
-      <p class="wp-h3" style="margin-bottom:20px;">If you're already selling to a European mill, here's what would and wouldn't change</p>
+      <p class="wp-h3" style="margin-bottom:20px;">If you're already selling to an overseas mill, here's what would and wouldn't change</p>
       <div class="wp-faq-item">
         <p class="wp-faq-q">Would this affect my fleece weight or quality?</p>
         <p class="wp-faq-a">The only evidence available says no, that's from one external pilot, not a Tasmanian trial. It's a reasonable starting assumption, not a guarantee, until it's actually tested here.</p>
@@ -455,7 +464,6 @@
 <div class="wp-closing">
   <div class="wp-closing-inner wp-reveal">
     <p class="wp-closing-quote">The seaweed is grown here. The delivery system already runs here. Tasmanian wool already reaches the same mills and the same brands this story needs. The one link that hasn't been tested yet is whether it all works together, on a Tasmanian flock.</p>
-    <p class="wp-closing-sub">This page is about where the opportunity sits today, not a report on results. As this project's work on wool develops, this is where that story will be told.</p>
   </div>
 </div>
 
@@ -474,6 +482,15 @@
     }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
     els.forEach(function(el){ io.observe(el); });
   })();
+
+  // --- "Illustrative, not a specific product's figures" disclosure toggle ---
+  var scaleToggle = document.getElementById('scale-toggle');
+  var scaleDetails = document.getElementById('scale-details');
+  var scaleToggleIcon = document.getElementById('scale-toggle-icon');
+  scaleToggle.addEventListener('click', function () {
+    var expanded = scaleDetails.classList.toggle('expanded');
+    scaleToggleIcon.innerHTML = expanded ? '&#9652;' : '&#9662;';
+  });
 
   // --- count-up, applied only to the proof-strip stats, the single showcase moment ---
   (function(){
