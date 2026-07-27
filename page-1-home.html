@@ -39,6 +39,87 @@
     stuck on a fallback 30% instead of the real ~24%). Same fix applied
     on the Farms/Data pages.
 
+  27/7 design-principles refinement pass (Jono's notes):
+  - Full-bleed photography as the dominant device: "Why this trial
+    exists" was a boxed 2-column text+card grid, now a full-bleed photo
+    band (originally hero-partners.jpg, swapped 27/7 for Jono's own
+    middle-home.jpg) with a floating white card carrying the narrative
+    and the "at a glance" facts.
+    Added a NEW photo-divider section before the closing CTA using
+    hero-paddock.jpg, the licensed-but-unused paddock image called out
+    in the design notes.
+    NOTE: hero-paddock.jpg is NOT yet hosted on the GitHub Pages asset
+    CDN (jonathanjones-tasfarmers.github.io/lel-website/) - it currently
+    only exists locally under
+    05. Website/design_handoff_low_emissions_livestock_site/assets/.
+    Jono needs to upload it to that repo/CDN before this divider will
+    render a photo (it will show the navy fallback background until then).
+  - Generous white space: increased section, grid and card padding
+    throughout rather than packing content edge-to-edge.
+  - Kept exactly three "hero-grade" full-bleed photo beats in the
+    intended sense (hero, origin band, closing divider) per Jono's
+    explicit call to keep wool-hero.jpg on the wool preview band as-is,
+    even though that makes four photo moments total on this page.
+  - Structural motif and motion (stitched dashed dividers, restrained
+    scroll-reveal) were already present from the prior pass and are
+    extended to the new sections, not reinvented.
+
+  27/7 pass 2 (Jono's notes, after seeing the first pass):
+  - Wool band reverted to a flat navy panel (background photo and its
+    gradient overlay removed) - back to exactly three full-bleed photo
+    beats: hero, origin band, and (for now) none before the close.
+  - Hero: removed the "Read our story" anchor and the "Use the menu
+    above..." helper line, the id="story" anchor target stays on the
+    origin band in case anything else links to #story.
+  - Removed the photo-divider section and its hero-paddock.jpg
+    reference entirely (was never confirmed hosted anyway).
+  - Added a "Our mission" statement section in its place: drafted from
+    the trial's known facts (grant amount, partners, on-farm/no-lab
+    approach, publish-as-you-go ethos) since no formal mission
+    statement exists anywhere in the project files. Treat this copy as
+    a draft for Jono to edit or approve, not final wording.
+
+  27/7 pass 3 (Jono's notes - seamless section transitions):
+  - hp-origin-band already faded to solid navy at its bottom edge to
+    match the (now flat navy) wool band below it - Jono liked this and
+    asked for the same treatment everywhere a section's background
+    colour changes.
+  - Applied the same "fade to the next/previous section's exact colour"
+    technique to every UNDIVIDED hard colour change on the page:
+    hero (photo) -> partner strip: hero's overlay gradient now ends in
+    a solid var(--surface-sunken) stop instead of translucent navy, so
+    it blends straight into the partner strip's background (removed
+    the now-redundant border-top on .hp-partner-strip).
+    how it works (white) -> origin band (photo): added a second
+    gradient layer on .hp-origin-band::before that fades solid
+    var(--surface-page) into transparent over the top ~13% of the
+    band, so the photo emerges out of the white section instead of
+    starting on a hard edge.
+    mission (sunken) -> closing CTA (dark gradient): closing's gradient
+    now starts at var(--surface-sunken) and reaches navy by 14%, so it
+    blends out of the mission section instead of cutting straight to navy.
+  27/7 pass 4 (Jono's notes, after seeing pass 3):
+  - Hero fade was too concentrated (read as a hard flat-colour band
+    right under the lede text). Enlarged the hero (460px -> 540px,
+    460px kept on mobile) and increased hero-inner's bottom padding
+    (48px -> 96px) so there's real breathing room between the text and
+    the solid-colour landing zone, then spread the overlay across five
+    gradual stops instead of jumping straight from ~88% opacity to
+    fully opaque in the last 16%.
+  - Same "too abrupt" fix applied to the origin band's top/bottom
+    fades and the mission->closing blend: more intermediate stops,
+    wider transition zones, no more hard jumps to a flat colour.
+  - Removed all three remaining stitched dashed-line dividers (partner
+    strip -> how it works, wool band -> Tasmania, Tasmania -> mission)
+    per Jono's follow-up request and replaced them with the same
+    colour-matched fade technique: each section's own background is
+    now a gradient that's solid for most of its height and blends into
+    the next section's exact colour only in a fixed final ~44-110px
+    (pixel-based, not percentage, so the blend zone stays inside each
+    section's existing padding buffer regardless of content length and
+    never reaches into visible text). The .hp-stitch CSS is removed
+    entirely as it's no longer referenced anywhere on this page.
+
   Vanilla CSS/JS only, no build step, no external libraries.
 -->
 <style>
@@ -74,9 +155,9 @@
   html, body { margin: 0; background: var(--surface-page); }
   body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
   .hp-page { max-width: 1180px; margin: 0 auto; }
-  .hp-section { padding: 88px 28px; box-sizing: border-box; }
+  .hp-section { padding: 124px 28px; box-sizing: border-box; }
   .hp-narrow { max-width: 760px; }
-  @media (max-width: 720px) { .hp-section { padding: 52px 20px; } }
+  @media (max-width: 720px) { .hp-section { padding: 68px 20px; } }
 
   .hp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
   .hp-eyebrow.on-dark { color: var(--tf-mint-400); }
@@ -94,42 +175,42 @@
   .hp-reveal.is-visible { opacity: 1; transform: translateY(0); }
   @media (prefers-reduced-motion: reduce) { .hp-reveal { opacity: 1; transform: none; transition: none; } }
 
-  .hp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
-  .hp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
-
   .hp-btn { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 15px; padding: 13px 26px; border-radius: var(--radius-md); text-decoration: none; cursor: pointer; border: 1px solid transparent; }
   .hp-btn.primary { background: var(--tf-mint-500); color: var(--tf-navy-900); }
   .hp-btn.primary:hover { background: var(--tf-mint-400); }
   .hp-btn.outline { border-color: var(--tf-slate-400); color: var(--tf-white); background: transparent; }
   .hp-btn.outline:hover { border-color: var(--tf-white); }
-  .hp-link { font-size: 14px; color: var(--tf-slate-300); text-decoration: none; border-bottom: 1px solid var(--border-default); padding-bottom: 2px; }
-  .hp-link.on-light { color: var(--text-muted); }
-  .hp-link.accent { color: var(--tf-mint-600); border-color: var(--tf-mint-600); }
 
   /* --- hero --- */
-  .hp-hero { position: relative; min-height: 460px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  .hp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.4) 0%, oklch(from var(--tf-navy-900) l c h / 0.6) 60%, oklch(from var(--tf-navy-900) l c h / 0.92) 100%); }
-  .hp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 48px; width: 100%; box-sizing: border-box; }
-  .hp-hero-actions { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; margin-top: 8px; }
+  .hp-hero { position: relative; min-height: 540px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .hp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.3) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.62) 68%, oklch(from var(--tf-navy-900) l c h / 0.8) 86%, var(--surface-sunken) 100%); }
+  .hp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 96px; width: 100%; box-sizing: border-box; }
+  @media (max-width: 720px) { .hp-hero { min-height: 460px; } .hp-hero-inner { padding: 56px 20px 64px; } }
 
   /* --- partner strip --- */
-  .hp-partner-strip { background: var(--surface-sunken); border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); padding: 40px 28px; }
-  .hp-partner-label { text-align: center; font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 22px 0; }
-  .hp-partner-row { display: flex; justify-content: center; align-items: center; gap: 44px; flex-wrap: wrap; }
+  .hp-partner-strip { background: linear-gradient(180deg, var(--surface-sunken) 0%, var(--surface-sunken) calc(100% - 44px), var(--surface-page) 100%); padding: 52px 28px; }
+  .hp-partner-label { text-align: center; font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 26px 0; }
+  .hp-partner-row { display: flex; justify-content: center; align-items: center; gap: 56px; flex-wrap: wrap; }
   .hp-partner-row img { max-height: 32px; width: auto; object-fit: contain; opacity: 0.85; }
   .hp-partner-sub { text-align: center; font-size: 12.5px; color: var(--text-muted); margin: 22px 0 0 0; }
 
   /* --- how it works: numbered icon circles --- */
-  .hp-how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 10px; }
+  .hp-how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin-top: 14px; }
   @media (max-width: 780px) { .hp-how-grid { grid-template-columns: 1fr; } }
   .hp-how-card { padding: 0; }
-  .hp-how-number { width: 44px; height: 44px; border-radius: 50%; background: var(--tf-navy-900); color: var(--tf-mint-400); font-family: var(--font-display); font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+  .hp-how-number { width: 44px; height: 44px; border-radius: 50%; background: var(--tf-navy-900); color: var(--tf-mint-400); font-family: var(--font-display); font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
   .hp-how-card p { font-size: 14.5px; color: var(--text-muted); line-height: 1.7; margin: 0; }
 
-  /* --- why trial exists: 2-col + at-a-glance card --- */
-  .hp-story-grid { display: grid; grid-template-columns: 1.3fr 0.9fr; gap: 56px; margin-top: 10px; }
-  @media (max-width: 860px) { .hp-story-grid { grid-template-columns: 1fr; } }
-  .hp-glance-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 26px 28px; height: fit-content; }
+  /* --- why this trial exists: full-bleed origin band with a floating card --- */
+  .hp-origin-band { position: relative; min-height: 640px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/middle-home.jpg'); background-position: center bottom; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .hp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
+    linear-gradient(180deg, var(--surface-page) 0%, transparent 18%),
+    linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.5) 0%, oklch(from var(--tf-navy-900) l c h / 0.22) 46%, oklch(from var(--tf-navy-900) l c h / 0.12) 72%); }
+  .hp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 42%, oklch(from var(--tf-navy-900) l c h / 0.35) 64%, oklch(from var(--tf-navy-900) l c h / 0.7) 84%, var(--tf-navy-900) 100%); }
+  .hp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 108px 28px; width: 100%; box-sizing: border-box; }
+  .hp-origin-card { background: rgba(255,255,255,0.97); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 48px 52px; max-width: 560px; }
+  .hp-origin-glance { margin-top: 8px; padding-top: 26px; border-top: 1px solid var(--border-subtle); }
+  @media (max-width: 720px) { .hp-origin-band { min-height: 0; } .hp-origin-inner { padding: 64px 20px; } .hp-origin-card { padding: 32px 26px; } }
   .hp-glance-label { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 16px 0; }
   .hp-glance-row { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; font-size: 13.5px; border-top: 1px solid var(--border-subtle); }
   .hp-glance-row:first-of-type { border-top: none; padding-top: 0; }
@@ -137,14 +218,12 @@
   .hp-glance-row span:last-child { color: var(--text-heading); font-weight: 700; }
 
   /* --- looking ahead: wool --- */
-  .hp-wool-band { position: relative; background: var(--tf-navy-900) url('https://jonathanjones-tasfarmers.github.io/lel-website/wool-hero.jpg') center / cover no-repeat; }
-  .hp-wool-band::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.6) 0%, oklch(from var(--tf-navy-900) l c h / 0.85) 45%, oklch(from var(--tf-navy-900) l c h / 0.95) 100%); }
-  .hp-wool-band .hp-section { position: relative; z-index: 1; }
+  .hp-wool-band { background: linear-gradient(180deg, var(--tf-navy-900) 0%, var(--tf-navy-900) calc(100% - 110px), var(--surface-page) 100%); }
   .hp-wool-band .hp-body { color: var(--tf-slate-200); }
   .hp-milestone-tag { display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 999px; padding: 8px 18px; margin: 26px 0 28px 0; }
   .hp-milestone-tag .label { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tf-mint-400); }
   .hp-milestone-tag .dates { font-size: 12.5px; color: var(--tf-slate-300); }
-  .hp-wool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .hp-wool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
   @media (max-width: 720px) { .hp-wool-grid { grid-template-columns: 1fr; } }
   .hp-wool-card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); border-radius: var(--radius-lg); padding: 22px 24px; }
   .hp-wool-card h3 { font-family: var(--font-display); font-size: 14.5px; font-weight: 700; color: var(--tf-white); margin: 0 0 8px 0; }
@@ -163,7 +242,7 @@
   .hp-slider-row label { color: var(--text-muted); font-size: 13.5px; white-space: nowrap; }
   .hp-scenario-box input[type="range"] { flex: 1; accent-color: var(--tf-mint-600); }
   .hp-slider-val { color: var(--text-heading); font-family: var(--font-display); font-size: 19px; font-weight: 700; min-width: 48px; text-align: right; }
-  .hp-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .hp-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
   @media (max-width: 720px) { .hp-stats { grid-template-columns: 1fr; } }
   .hp-stat-card { background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 18px 20px; }
   .hp-stat-label { font-size: 12.5px; color: var(--text-muted); margin: 0 0 8px 0; }
@@ -176,8 +255,13 @@
   .hp-disclosure-details.expanded { max-height: 400px; }
   .hp-disclosure-text { color: #6b5327; font-size: 13px; line-height: 1.6; margin: 12px 0 0 0; }
 
+  /* --- mission statement --- */
+  .hp-mission-inner { max-width: 720px; margin: 0 auto; text-align: center; }
+  .hp-mission-inner .hp-h2 { margin-left: auto; margin-right: auto; }
+  .hp-mission-inner .hp-body { margin-left: auto; margin-right: auto; }
+
   /* --- closing --- */
-  .hp-closing { background: linear-gradient(160deg, var(--tf-navy-900) 0%, #0d2a2a 100%); padding: 92px 28px; text-align: center; }
+  .hp-closing { background: linear-gradient(160deg, var(--surface-sunken) 0%, var(--tf-navy-900) 24%, #0d2a2a 100%); padding: 108px 28px; text-align: center; }
   .hp-closing-inner { max-width: 640px; margin: 0 auto; }
   .hp-closing h2 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: 30px; margin: 0 0 14px 0; }
   @media (max-width: 720px) { .hp-closing h2 { font-size: 24px; } }
@@ -192,11 +276,7 @@
   <div class="hp-hero-inner">
     <p class="hp-eyebrow on-dark">TasFarmers &middot; Sea Forest &middot; Tasmanian Institute of Agriculture</p>
     <h1 class="hp-h1">Cutting methane from Tasmanian livestock, keeping farms <span class="accent">profitable</span>.</h1>
-    <p class="hp-lede">A Tasmanian Government&ndash;funded trial testing whether Sea Forest's <em>Asparagopsis</em> seaweed lick blocks cut enteric methane in Tasmanian livestock, with the cost and performance data published as the trial runs, not after it's finished.</p>
-    <div class="hp-hero-actions">
-      <a class="hp-link" href="#story">Read our story &darr;</a>
-    </div>
-    <p style="color:var(--tf-slate-300); font-size:13px; margin:18px 0 0 0;">Use the menu above to explore Farms, Partners, Resources, Data and Wool.</p>
+    <p class="hp-lede" style="margin-bottom:0;">A Tasmanian Government&ndash;funded trial testing whether Sea Forest's <em>Asparagopsis</em> seaweed lick blocks cut enteric methane in Tasmanian livestock, with the cost and performance data published as the trial runs, not after it's finished.</p>
   </div>
 </div>
 
@@ -209,10 +289,6 @@
     <a href="https://www.utas.edu.au/tia" target="_blank" rel="noopener"><img src="https://jonathanjones-tasfarmers.github.io/lel-website/tia-logo.png" alt="Tasmanian Institute of Agriculture"></a>
   </div>
   <p class="hp-partner-sub">Supported by the Tasmanian Government</p>
-</div>
-
-<div class="hp-stitch" aria-hidden="true">
-  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
 </div>
 
 <!-- ============ HOW IT WORKS ============ -->
@@ -239,17 +315,16 @@
   </div>
 </div>
 
-<!-- ============ WHY THIS TRIAL EXISTS ============ -->
-<div class="hp-section" id="story" style="background:var(--surface-sunken);">
-  <div class="hp-page">
-    <div class="hp-story-grid">
-      <div class="hp-reveal">
-        <h2 class="hp-h2">Why this trial exists</h2>
-        <p class="hp-body"><em>Asparagopsis</em> seaweed supplements have shown real promise in reducing methane from livestock in controlled research settings. What hadn't been tested at commercial scale in Tasmania was whether that promise holds up on a working farm, and what it actually costs.</p>
-        <p class="hp-body">That's what this trial is for. Backed by a $4 million grant from the Tasmanian Government, TasFarmers partnered with the Tasmanian Institute of Agriculture for the science and Sea Forest as the supplement's manufacturer to run the trial on the ground and capture the data.</p>
-        <p class="hp-body" style="margin-bottom:0;">The brief is simple to state and hard to deliver: estimate the emissions reduction, weigh it against the real cost and productivity impact, and publish an honest answer, one every Tasmanian livestock producer can use, whether or not they were part of the trial.</p>
-      </div>
-      <div class="hp-glance-card hp-reveal">
+<!-- ============ WHY THIS TRIAL EXISTS (full-bleed origin band) ============ -->
+<div class="hp-origin-band" id="story">
+  <div class="hp-origin-inner">
+    <div class="hp-origin-card hp-reveal">
+      <p class="hp-eyebrow">Why this trial exists</p>
+      <h2 class="hp-h2">Real promise, tested on a <span class="accent">working farm</span></h2>
+      <p class="hp-body"><em>Asparagopsis</em> seaweed supplements have shown real promise in reducing methane from livestock in controlled research settings. What hadn't been tested at commercial scale in Tasmania was whether that promise holds up on a working farm, and what it actually costs.</p>
+      <p class="hp-body">That's what this trial is for. Backed by a $4 million grant from the Tasmanian Government, TasFarmers partnered with the Tasmanian Institute of Agriculture for the science and Sea Forest as the supplement's manufacturer to run the trial on the ground and capture the data.</p>
+      <p class="hp-body" style="margin-bottom:28px;">The brief is simple to state and hard to deliver: estimate the emissions reduction, weigh it against the real cost and productivity impact, and publish an honest answer, one every Tasmanian livestock producer can use, whether or not they were part of the trial.</p>
+      <div class="hp-origin-glance">
         <p class="hp-glance-label">At a glance</p>
         <div class="hp-glance-row"><span>Trial start</span><span>19 June 2024</span></div>
         <div class="hp-glance-row"><span>Completion due</span><span>1 February 2029</span></div>
@@ -297,12 +372,8 @@
   </div>
 </div>
 
-<div class="hp-stitch" aria-hidden="true">
-  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
-</div>
-
 <!-- ============ TASMANIA AT SCALE (live calculator) ============ -->
-<div class="hp-section" style="background:var(--surface-page);">
+<div class="hp-section" style="background: linear-gradient(180deg, var(--surface-page) 0%, var(--surface-page) calc(100% - 110px), var(--surface-sunken) 100%);">
   <div class="hp-page">
     <p class="hp-eyebrow hp-reveal">Tasmania, at scale</p>
     <h2 class="hp-h2 hp-narrow hp-reveal">What this could mean <span class="accent">beyond the trial</span></h2>
@@ -359,6 +430,17 @@
           </p>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MISSION STATEMENT ============ -->
+<div class="hp-section" style="background:var(--surface-sunken);">
+  <div class="hp-page">
+    <div class="hp-mission-inner hp-reveal">
+      <p class="hp-eyebrow">Our mission</p>
+      <h2 class="hp-h2">Proving emissions and profitability aren't a <span class="accent">trade-off</span></h2>
+      <p class="hp-body">Prove, on working Tasmanian farms and in the open, whether cutting livestock methane can go hand in hand with a profitable herd. Backed by a $4 million Tasmanian Government grant, TasFarmers, the Tasmanian Institute of Agriculture and Sea Forest are testing Sea Forest's <em>Asparagopsis</em> seaweed supplement on commercial properties, not in a lab, publishing the real cost and performance data as the trial runs. The goal: an honest answer every Tasmanian producer can use, whether or not they took part.</p>
     </div>
   </div>
 </div>
