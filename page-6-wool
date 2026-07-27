@@ -49,6 +49,13 @@
   altered here, per the brief to keep the colour scheme in line with the
   rest of the Low Emissions Livestock site.
 
+  27/7 fix pass: hero band brought in line with the Home page's spec
+  (min-height 460px, hero-inner padding 72/28/48, H1 clamp(32,4.4vw,50),
+  lede 17px), down slightly from this page's previous 480px/76-28-52/
+  48px-cap/18px, per Jono's request to standardise the large hero look
+  across every page except the economic feasibility calculator. Photo
+  content, copy and every other section are unchanged.
+
   Vanilla CSS/JS only, no build step, no external libraries, matching the
   self-contained pattern used across every other file in this project
   (see seafeed-cost-of-production-calculator.html's own header comment).
@@ -92,13 +99,13 @@
 
   .wp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
   .wp-eyebrow.on-dark { color: var(--tf-mint-400); }
-  .wp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px,4.4vw,48px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px 0; max-width: 20ch; }
+  .wp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px,4.4vw,50px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px 0; max-width: 20ch; }
   .wp-h1 .accent { color: var(--tf-mint-400); }
   .wp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 28px; line-height: 1.2; margin: 0 0 12px 0; }
   .wp-h2 .accent { color: var(--tf-mint-600); }
   @media (max-width: 720px) { .wp-h2 { font-size: 23px; } }
   .wp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 17px; margin: 0 0 10px 0; }
-  .wp-lede { color: var(--tf-slate-300); font-size: 18px; line-height: 1.6; max-width: 58ch; margin: 0; }
+  .wp-lede { color: var(--tf-slate-300); font-size: 17px; line-height: 1.6; max-width: 58ch; margin: 0; }
   .wp-section-intro { color: var(--text-muted); font-size: 15.5px; max-width: 66ch; margin: 0 0 34px 0; }
   .wp-body { color: var(--text-body); font-size: 15.5px; line-height: 1.8; max-width: 68ch; margin: 0 0 20px 0; }
 
@@ -112,10 +119,9 @@
   .wp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
 
   /* --- hero, real photo. background-attachment:fixed was removed here, it was silently failing to paint the image inside the Hub iframe and causing the render thread to hang on scroll. --- */
-  /* REPLACE_WITH_IMAGE_URL_SEAWEED_FARM_AERIAL — swap the url() below for the hosted hero-seaweed-farm-aerial.jpg link once the page is uploaded as a standalone item */
-  .wp-hero { position: relative; min-height: 480px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/wool-hero.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .wp-hero { position: relative; min-height: 460px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/wool-hero.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .wp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.62) 65%, oklch(from var(--tf-navy-900) l c h / 0.9) 100%); }
-  .wp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 76px 28px 52px; width: 100%; box-sizing: border-box; }
+  .wp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 48px; width: 100%; box-sizing: border-box; }
   .wp-scope-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.22); border-radius: 999px; padding: 7px 16px; margin-bottom: 24px; }
   .wp-scope-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tf-mint-400); flex-shrink: 0; }
   .wp-scope-text { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tf-slate-200); }
@@ -147,7 +153,6 @@
   .wp-source-note { font-size: 12px; color: var(--text-muted); line-height: 1.65; margin-top: 18px; }
 
   /* --- origin: full-bleed photo band with floating card --- */
-  /* REPLACE_WITH_IMAGE_URL_SEAWEED_HARVEST — swap the url() below for the hosted hero-seaweed-harvest.jpg link once the page is uploaded as a standalone item */
   .wp-origin-band { position: relative; min-height: 620px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-partners.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .wp-origin-band::before { content:""; position:absolute; inset:0; background: linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.78) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.12) 68%); }
   .wp-origin-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 90px 28px; width: 100%; box-sizing: border-box; }
@@ -161,7 +166,6 @@
   @media (max-width: 720px) { .wp-origin-band { min-height: auto; } .wp-origin-band::before { background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.55) 0%, oklch(from var(--tf-navy-900) l c h / 0.86) 100%); } .wp-origin-inner { padding: 56px 20px; } }
 
   /* --- photo divider (paddock), a second punctuating full-bleed moment. background-attachment:fixed removed for the same reason as the hero. --- */
-  /* REPLACE_WITH_IMAGE_URL_PADDOCK — swap the url() below for the hosted hero-paddock.jpg link once the page is uploaded as a standalone item */
   .wp-photo-divider { position: relative; min-height: 260px; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.jpg'); background-position: center 65%; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .wp-photo-divider::before { content:""; position:absolute; inset:0; background: linear-gradient(0deg, var(--tf-navy-900) 0%, oklch(from var(--tf-navy-900) l c h / 0.25) 40%, oklch(from var(--tf-navy-900) l c h / 0.25) 60%, var(--tf-navy-900) 100%); }
   .wp-photo-divider-caption { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; padding: 60px 28px; text-align: center; }
