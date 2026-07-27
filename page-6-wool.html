@@ -56,6 +56,33 @@
   across every page except the economic feasibility calculator. Photo
   content, copy and every other section are unchanged.
 
+  27/7 seamless-transition + whitespace-parity pass (same brief as
+  page-1-home.html / page-2-farms.html / page-3-partners.html /
+  page-4-resources.html / page-5-data.html, applied here last since this
+  page already had the origin-band + photo-divider pattern the others
+  were modelled on):
+  - Section padding bumped from 92px to 124px (68px mobile) to match
+    every other page exactly.
+  - Hero enlarged (460px->540px, 460px kept on mobile) with more bottom
+    padding (48px->96px) so the fade has room, spread across five
+    gradual stops ending in var(--tf-navy-900) - a simple blend here
+    since the proof-strip directly below is already solid navy, same
+    hue throughout, no colour-mismatch risk like the other pages had.
+  - Removed all three stitched dashed dividers and replaced every hard
+    colour change with the colour-matched fade technique used
+    elsewhere: proof-strip now fades navy->white into "Tasmania
+    already grows..."; the origin band gained a top white-in fade
+    (previously started dark immediately against the white section
+    above it) and a new bottom fade out to white (previously had none
+    at all, cutting hard into "garment economics"); garment-economics
+    now fades white->sunken into the chain diagram; the chain diagram
+    now fades sunken->white into the dual-track section; dual-track
+    now fades white->navy at its very end so it lands exactly on the
+    photo divider's already-solid-navy top edge (the photo divider's
+    own top/bottom navy bookends and its transition into the closing
+    band were already seamless and are untouched).
+  - No content, copy, count-up, or precision-box logic touched.
+
   Vanilla CSS/JS only, no build step, no external libraries, matching the
   self-contained pattern used across every other file in this project
   (see seafeed-cost-of-production-calculator.html's own header comment).
@@ -93,9 +120,9 @@
   html, body { margin: 0; background: var(--surface-page); }
   body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
   .wp-page { max-width: 1180px; margin: 0 auto; }
-  .wp-section { padding: 92px 28px; box-sizing: border-box; }
+  .wp-section { padding: 124px 28px; box-sizing: border-box; }
   .wp-narrow { max-width: 760px; }
-  @media (max-width: 720px) { .wp-section { padding: 56px 20px; } }
+  @media (max-width: 720px) { .wp-section { padding: 68px 20px; } }
 
   .wp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
   .wp-eyebrow.on-dark { color: var(--tf-mint-400); }
@@ -114,21 +141,18 @@
   .wp-reveal.is-visible { opacity: 1; transform: translateY(0); }
   @media (prefers-reduced-motion: reduce) { .wp-reveal { opacity: 1; transform: none; transition: none; } }
 
-  /* --- stitched-line divider, a subtle nod to wool/thread --- */
-  .wp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
-  .wp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
-
   /* --- hero, real photo. background-attachment:fixed was removed here, it was silently failing to paint the image inside the Hub iframe and causing the render thread to hang on scroll. --- */
-  .wp-hero { position: relative; min-height: 460px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/wool-hero.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  .wp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.62) 65%, oklch(from var(--tf-navy-900) l c h / 0.9) 100%); }
-  .wp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 48px; width: 100%; box-sizing: border-box; }
+  .wp-hero { position: relative; min-height: 540px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/wool-hero.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .wp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.3) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.65) 68%, oklch(from var(--tf-navy-900) l c h / 0.85) 86%, var(--tf-navy-900) 100%); }
+  .wp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 96px; width: 100%; box-sizing: border-box; }
+  @media (max-width: 720px) { .wp-hero { min-height: 460px; } .wp-hero-inner { padding: 56px 20px 64px; } }
   .wp-scope-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.22); border-radius: 999px; padding: 7px 16px; margin-bottom: 24px; }
   .wp-scope-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tf-mint-400); flex-shrink: 0; }
   .wp-scope-text { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tf-slate-200); }
   .wp-hero-caption { font-size: 11.5px; color: var(--tf-slate-300); margin: 18px 0 0 0; }
 
   /* --- proof strip --- */
-  .wp-proof-strip { background: var(--tf-navy-900); padding: 64px 28px 76px; }
+  .wp-proof-strip { background: linear-gradient(180deg, var(--tf-navy-900) 0%, var(--tf-navy-900) calc(100% - 100px), var(--surface-page) 100%); padding: 64px 28px 76px; }
   .wp-proof-header { max-width: 1180px; margin: 0 auto 28px; }
   .wp-proof-header p { color: var(--tf-slate-300); font-size: 14.5px; line-height: 1.65; max-width: 66ch; margin: 0; }
   .wp-proof-grid { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
@@ -154,8 +178,11 @@
 
   /* --- origin: full-bleed photo band with floating card --- */
   .wp-origin-band { position: relative; min-height: 620px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-partners.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  .wp-origin-band::before { content:""; position:absolute; inset:0; background: linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.78) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.12) 68%); }
-  .wp-origin-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 90px 28px; width: 100%; box-sizing: border-box; }
+  .wp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
+    linear-gradient(180deg, var(--surface-page) 0%, transparent 16%),
+    linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.78) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.12) 68%); }
+  .wp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 44%, oklch(from var(--surface-page) l c h / 0.35) 66%, oklch(from var(--surface-page) l c h / 0.75) 85%, var(--surface-page) 100%); }
+  .wp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 100px 28px; width: 100%; box-sizing: border-box; }
   .wp-origin-card { max-width: 600px; }
   .wp-origin-card .wp-h2, .wp-origin-card .wp-eyebrow { color: var(--tf-white); }
   .wp-origin-card .wp-eyebrow { color: var(--tf-mint-400); }
@@ -277,10 +304,6 @@
   <p class="wp-proof-source wp-reveal">Source: Sea Forest / Congi Farm methane-reduction pilot, reported by Beef Central, 22 April 2026.</p>
 </div>
 
-<div class="wp-stitch" aria-hidden="true">
-  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
-</div>
-
 <!-- ============ TASMANIA TODAY: real industry facts, mill-facing ============ -->
 <div class="wp-section" style="background:var(--surface-page);">
   <div class="wp-page">
@@ -327,7 +350,7 @@
 </div>
 
 <!-- ============ SECTION: garment economics ============ -->
-<div class="wp-section" style="background:var(--surface-page);">
+<div class="wp-section" style="background: linear-gradient(180deg, var(--surface-page) 0%, var(--surface-page) calc(100% - 110px), var(--surface-sunken) 100%);">
   <div class="wp-page">
     <p class="wp-eyebrow wp-reveal">Where the value could sit</p>
     <h2 class="wp-h2 wp-narrow wp-reveal">Wool is a small line item in a very valuable garment</h2>
@@ -355,12 +378,8 @@
   </div>
 </div>
 
-<div class="wp-stitch" aria-hidden="true">
-  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
-</div>
-
 <!-- ============ CHAIN DIAGRAM ============ -->
-<div class="wp-section" style="background:var(--surface-sunken);">
+<div class="wp-section" style="background: linear-gradient(180deg, var(--surface-sunken) 0%, var(--surface-sunken) calc(100% - 110px), var(--surface-page) 100%);">
   <div class="wp-page">
     <p class="wp-eyebrow wp-reveal">The path from paddock to product</p>
     <h2 class="wp-h2 wp-narrow wp-reveal">Tasmania already has half of this pathway working</h2>
@@ -406,7 +425,7 @@
 </div>
 
 <!-- ============ DUAL TRACK ============ -->
-<div class="wp-section" style="background:var(--surface-page);">
+<div class="wp-section" style="background: linear-gradient(180deg, var(--surface-page) 0%, var(--surface-page) calc(100% - 120px), var(--tf-navy-900) 100%);">
   <div class="wp-page">
     <p class="wp-eyebrow wp-reveal">What this could mean</p>
     <h2 class="wp-h2 wp-narrow wp-reveal">Two different reasons to pay attention to the same opportunity</h2>

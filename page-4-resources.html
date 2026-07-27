@@ -17,6 +17,25 @@
   the FAQ accordion toggle and the shared scroll-reveal.
 
   Single self-contained file for a single Hub Iframe widget.
+
+  27/7 design-principles + seamless-transition pass (same brief as
+  page-1-home.html / page-2-farms.html / page-3-partners.html):
+  - Generous white space: section padding 88px -> 124px (68px mobile),
+    downloads/FAQ/contact spacing increased.
+  - Confident, sparing accent colour: added .rp-h1/.rp-h2 accent spans.
+  - Full-bleed photography: added ONE new origin band with a floating
+    white card between Downloads and Common questions, grounded in the
+    fact (already stated in the Downloads copy) that the calculator and
+    handbook are built from the live trial data, not a separate model.
+    Placeholder image is AGP_3851.jpg (the Data page's hero photo, not
+    already used on THIS page) - swap for a proper "middle-resources.jpg"
+    once Jono has one, same workflow as the other pages.
+  - Seamless transitions: removed both stitched dashed dividers and
+    replaced every hard colour change with the colour-matched fade
+    technique used elsewhere - hero enlarged (460px->540px) and fades to
+    white instead of a hard cut, the origin band fades in/out to match
+    the sections either side of it, and each flat-colour section now
+    blends into the next via a fixed final ~90-110px pixel-based gradient.
 -->
 <style>
   :root{
@@ -48,14 +67,16 @@
   html, body { margin: 0; background: var(--surface-page); }
   body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
   .rp-page { max-width: 1180px; margin: 0 auto; }
-  .rp-section { padding: 88px 28px; box-sizing: border-box; }
+  .rp-section { padding: 124px 28px; box-sizing: border-box; }
   .rp-narrow { max-width: 760px; }
-  @media (max-width: 720px) { .rp-section { padding: 52px 20px; } }
+  @media (max-width: 720px) { .rp-section { padding: 68px 20px; } }
 
   .rp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; text-align: center; }
   .rp-eyebrow.on-dark { color: var(--tf-mint-400); text-align: left; }
   .rp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px,4.4vw,50px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px 0; max-width: 20ch; }
+  .rp-h1 .accent { color: var(--tf-mint-400); }
   .rp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 12px 0; }
+  .rp-h2 .accent { color: var(--tf-mint-600); }
   @media (max-width: 720px) { .rp-h2 { font-size: 22px; } }
   .rp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 18px; margin: 0 0 8px 0; }
   .rp-lede { color: var(--tf-slate-300); font-size: 17px; line-height: 1.6; max-width: 58ch; margin: 0; }
@@ -65,13 +86,11 @@
   .rp-reveal.is-visible { opacity: 1; transform: translateY(0); }
   @media (prefers-reduced-motion: reduce) { .rp-reveal { opacity: 1; transform: none; transition: none; } }
 
-  .rp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
-  .rp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
-
   /* --- hero --- */
-  .rp-hero { position: relative; min-height: 460px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-resources.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  .rp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.55) 60%, oklch(from var(--tf-navy-900) l c h / 0.9) 100%); }
-  .rp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 48px; width: 100%; box-sizing: border-box; }
+  .rp-hero { position: relative; min-height: 540px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-resources.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .rp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.3) 0%, oklch(from var(--tf-navy-900) l c h / 0.48) 42%, oklch(from var(--tf-navy-900) l c h / 0.6) 68%, oklch(from var(--tf-navy-900) l c h / 0.78) 86%, var(--surface-page) 100%); }
+  .rp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 96px; width: 100%; box-sizing: border-box; }
+  @media (max-width: 720px) { .rp-hero { min-height: 460px; } .rp-hero-inner { padding: 56px 20px 64px; } }
 
   /* --- partner strip --- */
   .rp-partner-strip { text-align: center; }
@@ -79,7 +98,7 @@
   .rp-partner-logos img { max-height: 34px; width: auto; object-fit: contain; opacity: 0.85; }
 
   /* --- downloads --- */
-  .rp-downloads-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; }
+  .rp-downloads-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 14px; }
   @media (max-width: 780px) { .rp-downloads-grid { grid-template-columns: 1fr; } }
   .rp-download-card { border-radius: var(--radius-lg); padding: 28px 30px; display: flex; flex-direction: column; }
   .rp-download-card.available { background: var(--surface-card); border: 1.5px solid var(--tf-mint-500); box-shadow: var(--shadow-sm); }
@@ -92,6 +111,19 @@
   .rp-btn-solid { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; padding: 11px 22px; border-radius: var(--radius-md); text-decoration: none; background: var(--tf-navy-900); color: var(--tf-white); white-space: nowrap; }
   .rp-btn-solid:hover { background: var(--tf-navy-800); }
 
+  /* --- where these come from: full-bleed origin band with a floating card --- */
+  .rp-origin-band { position: relative; min-height: 560px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/AGP_3851.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .rp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
+    linear-gradient(180deg, var(--surface-sunken) 0%, transparent 18%),
+    linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.5) 0%, oklch(from var(--tf-navy-900) l c h / 0.22) 46%, oklch(from var(--tf-navy-900) l c h / 0.12) 72%); }
+  .rp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 44%, oklch(from var(--surface-page) l c h / 0.35) 66%, oklch(from var(--surface-page) l c h / 0.75) 85%, var(--surface-page) 100%); }
+  .rp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 100px 28px; width: 100%; box-sizing: border-box; }
+  .rp-origin-card { background: rgba(255,255,255,0.97); border-radius: var(--radius-lg); box-shadow: 0 12px 32px rgba(4,18,33,0.16); padding: 44px 48px; max-width: 540px; }
+  .rp-origin-card .rp-eyebrow { text-align: left; }
+  .rp-origin-card p.body { font-size: 15.5px; color: var(--text-body); line-height: 1.8; margin: 0 0 16px 0; }
+  .rp-origin-card p.body:last-child { margin-bottom: 0; }
+  @media (max-width: 720px) { .rp-origin-band { min-height: 0; } .rp-origin-inner { padding: 64px 20px; } .rp-origin-card { padding: 32px 26px; } }
+
   /* --- FAQ accordion --- */
   .rp-faq-list { margin-top: 10px; }
   .rp-faq-item { border-bottom: 1px solid var(--border-subtle); }
@@ -103,10 +135,10 @@
   .rp-faq-answer p { font-size: 14.5px; color: var(--text-muted); line-height: 1.65; margin: 0 4px 20px 4px; max-width: 68ch; }
 
   /* --- get in touch --- */
-  .rp-contact-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; margin-top: 10px; align-items: start; }
+  .rp-contact-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 22px; margin-top: 14px; align-items: start; }
   @media (max-width: 780px) { .rp-contact-grid { grid-template-columns: 1fr; } }
   .rp-contact-intro p.body { font-size: 15px; color: var(--text-muted); line-height: 1.7; margin: 0 0 22px 0; max-width: 52ch; }
-  .rp-contact-card { background: var(--tf-navy-900); border-radius: var(--radius-lg); padding: 26px 28px; }
+  .rp-contact-card { background: var(--tf-navy-900); border-radius: var(--radius-lg); padding: 30px 32px; }
   .rp-contact-card p { margin: 0; }
   .rp-contact-card .label { font-size: 11.5px; color: var(--tf-slate-300); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
   .rp-contact-card .name { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: 16px; margin-bottom: 2px; }
@@ -122,13 +154,13 @@
 <div class="rp-hero">
   <div class="rp-hero-inner">
     <p class="rp-eyebrow on-dark">For every Tasmanian producer</p>
-    <h1 class="rp-h1">Tools, answers and a way to reach the project team.</h1>
+    <h1 class="rp-h1">Tools, answers and a way to reach the <span class="accent">project team</span>.</h1>
     <p class="rp-lede">The grant requires this trial to publish findings the whole sector can use, not just the farms taking part.</p>
   </div>
 </div>
 
 <!-- ============ PARTNER STRIP ============ -->
-<div class="rp-section rp-partner-strip" style="background:var(--surface-page); padding-top:56px; padding-bottom:56px;">
+<div class="rp-section rp-partner-strip" style="background: linear-gradient(180deg, var(--surface-page) 0%, var(--surface-page) calc(100% - 40px), var(--surface-sunken) 100%); padding-top:56px; padding-bottom:56px;">
   <div class="rp-page">
     <p class="rp-eyebrow rp-reveal">Delivered in partnership with</p>
     <div class="rp-partner-logos rp-reveal">
@@ -137,10 +169,6 @@
       <a href="https://www.utas.edu.au/tia" target="_blank" rel="noopener"><img src="https://jonathanjones-tasfarmers.github.io/lel-website/tia-logo.png" alt="Tasmanian Institute of Agriculture" style="max-height:44px;"></a>
     </div>
   </div>
-</div>
-
-<div class="rp-stitch" aria-hidden="true">
-  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
 </div>
 
 <!-- ============ DOWNLOADS ============ -->
@@ -170,8 +198,20 @@
   </div>
 </div>
 
+<!-- ============ WHERE THESE COME FROM (full-bleed origin band) ============ -->
+<div class="rp-origin-band">
+  <div class="rp-origin-inner">
+    <div class="rp-origin-card rp-reveal">
+      <p class="rp-eyebrow">Where these come from</p>
+      <h2 class="rp-h2">Built from the trial, <span class="accent">not around it</span></h2>
+      <p class="body">The calculator behind the economic feasibility tool runs on the same live ArcGIS feature services published across this site, not a separate spreadsheet model. Every default it uses today reflects the trial's most recent recorded readings.</p>
+      <p class="body">The adoption handbook is being drafted the same way, from what's actually been learned on these Tasmanian properties, not written in advance of the results.</p>
+    </div>
+  </div>
+</div>
+
 <!-- ============ COMMON QUESTIONS ============ -->
-<div class="rp-section" style="background:var(--surface-page);">
+<div class="rp-section" style="background: linear-gradient(180deg, var(--surface-page) 0%, var(--surface-page) calc(100% - 110px), var(--surface-sunken) 100%);">
   <div class="rp-page">
     <h2 class="rp-h2 rp-narrow rp-reveal">Common questions</h2>
     <div class="rp-faq-list rp-reveal">
@@ -213,10 +253,6 @@
       </div>
     </div>
   </div>
-</div>
-
-<div class="rp-stitch" aria-hidden="true">
-  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
 </div>
 
 <!-- ============ GET IN TOUCH ============ -->

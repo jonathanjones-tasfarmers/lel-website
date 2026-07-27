@@ -43,6 +43,28 @@
     added a defensive fallback so if live data ever fails again for a
     genuine network reason, those three values show an em dash instead
     of getting stuck mid-sentence.
+
+  27/7 design-principles + seamless-transition pass (same brief as
+  page-1-home.html / page-2-farms.html / page-3-partners.html /
+  page-4-resources.html):
+  - Generous white space: section padding 88px -> 124px (68px mobile).
+  - Confident, sparing accent colour: added .dp-h1/.dp-h2 accent spans.
+  - Full-bleed photography: added ONE new origin band with a floating
+    white card between the charts section and the illustrative-value/
+    herd calculator section, about how the data is actually collected
+    (grounded in facts already stated on this page: live feature-service
+    fetches, no farm-level identities exposed). Placeholder image is
+    hero-cattle.jpg (used elsewhere as the Home hero and Wool's photo
+    divider, but not previously as an origin band) - swap for a proper
+    "middle-data.jpg" once Jono has one.
+  - Seamless transitions: removed the one stitched dashed divider that
+    existed on this page and replaced every hard colour change with the
+    colour-matched fade technique used elsewhere - hero enlarged
+    (460px->540px) and fades to white instead of a hard cut, the origin
+    band fades in from white and out to the sunken tone of the
+    illustrative-value section below it. This page has no separate
+    closing CTA band (the illustrative-value section is the last thing
+    on the page), so no further blend was needed at the bottom.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -75,14 +97,16 @@
   html, body { margin: 0; background: var(--surface-page); }
   body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
   .dp-page { max-width: 1180px; margin: 0 auto; }
-  .dp-section { padding: 88px 28px; box-sizing: border-box; }
+  .dp-section { padding: 124px 28px; box-sizing: border-box; }
   .dp-narrow { max-width: 760px; }
-  @media (max-width: 720px) { .dp-section { padding: 52px 20px; } }
+  @media (max-width: 720px) { .dp-section { padding: 68px 20px; } }
 
   .dp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; }
   .dp-eyebrow.on-dark { color: var(--tf-mint-400); }
   .dp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px,4.4vw,50px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px 0; max-width: 18ch; }
+  .dp-h1 .accent { color: var(--tf-mint-400); }
   .dp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 12px 0; }
+  .dp-h2 .accent { color: var(--tf-mint-600); }
   @media (max-width: 720px) { .dp-h2 { font-size: 22px; } }
   .dp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 15px; margin: 0 0 4px 0; }
   .dp-lede { color: var(--tf-slate-300); font-size: 17px; line-height: 1.6; max-width: 58ch; margin: 0; }
@@ -92,16 +116,14 @@
   .dp-reveal.is-visible { opacity: 1; transform: translateY(0); }
   @media (prefers-reduced-motion: reduce) { .dp-reveal { opacity: 1; transform: none; transition: none; } }
 
-  .dp-stitch { display: flex; align-items: center; justify-content: center; padding: 0; }
-  .dp-stitch svg { display: block; width: 100%; max-width: 1180px; height: 20px; }
-
   .dp-status-row { display: flex; align-items: center; gap: 8px; margin: 0 0 30px 0; }
   .dp-status { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
 
   /* --- hero --- */
-  .dp-hero { position: relative; min-height: 460px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/AGP_3851.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  .dp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.55) 60%, oklch(from var(--tf-navy-900) l c h / 0.9) 100%); }
-  .dp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 48px; width: 100%; box-sizing: border-box; }
+  .dp-hero { position: relative; min-height: 540px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/AGP_3851.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .dp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.3) 0%, oklch(from var(--tf-navy-900) l c h / 0.48) 42%, oklch(from var(--tf-navy-900) l c h / 0.6) 68%, oklch(from var(--tf-navy-900) l c h / 0.78) 86%, var(--surface-page) 100%); }
+  .dp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 96px; width: 100%; box-sizing: border-box; }
+  @media (max-width: 720px) { .dp-hero { min-height: 460px; } .dp-hero-inner { padding: 56px 20px 64px; } }
 
   /* --- charts --- */
   .dp-chart-section { padding: 34px 0; border-bottom: 1px solid var(--border-subtle); }
@@ -133,6 +155,18 @@
   .dp-skel-white { display: inline-block; border-radius: 6px; background-size: 250% 100%; animation: dp-shimmer 1.4s ease-in-out infinite; vertical-align: middle; background-image: linear-gradient(90deg, rgba(255,255,255,0.25) 25%, rgba(255,255,255,0.45) 37%, rgba(255,255,255,0.25) 63%); }
   .dp-skel-chart { position: absolute; inset: 0; z-index: 2; border-radius: 6px; }
   @media (prefers-reduced-motion: reduce) { .dp-skel, .dp-skel-white { animation: none !important; } }
+
+  /* --- how this data is collected: full-bleed origin band with a floating card --- */
+  .dp-origin-band { position: relative; min-height: 560px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .dp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
+    linear-gradient(180deg, var(--surface-page) 0%, transparent 18%),
+    linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.5) 0%, oklch(from var(--tf-navy-900) l c h / 0.22) 46%, oklch(from var(--tf-navy-900) l c h / 0.12) 72%); }
+  .dp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 44%, oklch(from var(--surface-sunken) l c h / 0.4) 66%, oklch(from var(--surface-sunken) l c h / 0.8) 85%, var(--surface-sunken) 100%); }
+  .dp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 100px 28px; width: 100%; box-sizing: border-box; }
+  .dp-origin-card { background: rgba(255,255,255,0.97); border-radius: var(--radius-lg); box-shadow: 0 12px 32px rgba(4,18,33,0.16); padding: 44px 48px; max-width: 540px; }
+  .dp-origin-card p.body { font-size: 15.5px; color: var(--text-body); line-height: 1.8; margin: 0 0 16px 0; }
+  .dp-origin-card p.body:last-child { margin-bottom: 0; }
+  @media (max-width: 720px) { .dp-origin-band { min-height: 0; } .dp-origin-inner { padding: 64px 20px; } .dp-origin-card { padding: 32px 26px; } }
 
   /* --- illustrative value --- */
   .dp-disclosure-box { background: #fff6e8; border: 1px solid var(--tf-warning); border-radius: var(--radius-md); padding: 14px 20px; margin: 0 0 24px 0; }
@@ -185,7 +219,7 @@
 <div class="dp-hero">
   <div class="dp-hero-inner">
     <p class="dp-eyebrow on-dark">The evidence, in full</p>
-    <h1 class="dp-h1">Every trial reading, tracked over time.</h1>
+    <h1 class="dp-h1">Every trial reading, <span class="accent">tracked over time</span>.</h1>
     <p class="dp-lede">Not a single headline figure, the full trend, as it's been recorded, so you can judge the evidence for yourself.</p>
   </div>
 </div>
@@ -196,7 +230,7 @@
      filter - see file header comment. -->
 <div class="dp-section" style="background:var(--surface-page); padding-bottom:56px;">
   <div class="dp-page">
-    <h2 class="dp-h2 dp-narrow dp-reveal">The findings, over time</h2>
+    <h2 class="dp-h2 dp-narrow dp-reveal">The findings, <span class="accent">over time</span></h2>
     <p class="dp-section-intro dp-reveal">Every one of these charts is built from the same live trial data used across the rest of this site, updated as new readings come in.</p>
     <div class="dp-status-row dp-reveal">
       <span class="dp-status" id="tf-status">Loading live data&hellip;</span>
@@ -247,8 +281,16 @@
   </div>
 </div>
 
-<div class="dp-stitch" aria-hidden="true">
-  <svg viewBox="0 0 1180 20" preserveAspectRatio="none"><line x1="0" y1="10" x2="1180" y2="10" stroke="var(--border-default)" stroke-width="1.5" stroke-dasharray="2 10" stroke-linecap="round"/></svg>
+<!-- ============ HOW THIS DATA IS COLLECTED (full-bleed origin band) ============ -->
+<div class="dp-origin-band">
+  <div class="dp-origin-inner">
+    <div class="dp-origin-card dp-reveal">
+      <p class="dp-eyebrow">How this data is collected</p>
+      <h2 class="dp-h2">Every reading traced back to a <span class="accent">real paddock, not a model</span></h2>
+      <p class="body">These charts update from the same ArcGIS feature services the field team enters readings into after each weigh day, methane test and cost calculation. There's no smoothing step in between, what's recorded is what's shown.</p>
+      <p class="body">Producer identities and individual farm results stay private. What you see here is aggregated across trial sites, consistent with the same data-sharing protocol used across every page on this site.</p>
+    </div>
+  </div>
 </div>
 
 <!-- ============ ILLUSTRATIVE VALUE + HERD CALCULATOR ============ -->
@@ -258,7 +300,7 @@
 <div class="dp-section" style="background:var(--surface-sunken);">
   <div class="dp-page">
     <p class="dp-eyebrow dp-reveal">Illustrative value</p>
-    <h2 class="dp-h2 dp-narrow dp-reveal">What the abatement to date could be worth</h2>
+    <h2 class="dp-h2 dp-narrow dp-reveal">What the abatement to date <span class="accent">could be worth</span></h2>
     <p class="dp-section-intro dp-reveal">A rough sense of scale, not a revenue figure, this trial hasn't generated or sold any carbon credits. Shown here against a current market reference price so the modelled abatement means something beyond a percentage, with a calculator below to see what it could look like for your own herd.</p>
     <p class="dp-status" id="value-status" style="margin-bottom:20px;">Loading live data&hellip;</p>
 
