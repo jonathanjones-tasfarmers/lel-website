@@ -73,6 +73,12 @@
     to navy. The .fp-stitch CSS is removed as it's no longer
     referenced anywhere on this page.
 
+  28/7 pass (Jono's notes): the origin band's top/bottom fades were
+  shrunk to match the smaller, tighter proportions settled on for the
+  Wool page (top fade 0-10%, was 0-18%; bottom fade now only the last
+  ~16% of the band, was the last ~56%). Same bidirectional (top AND
+  bottom) approach as before, just consuming much less of the photo.
+
   Vanilla CSS/JS only, no build step, no external libraries.
 -->
 <style>
@@ -168,9 +174,9 @@
   /* --- why this trial fits your farm: full-bleed origin band with a floating card --- */
   .fp-origin-band { position: relative; min-height: 560px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/middle-farms.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .fp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
-    linear-gradient(180deg, var(--surface-page) 0%, transparent 18%),
+    linear-gradient(180deg, var(--surface-page) 0%, transparent 10%),
     linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.5) 0%, oklch(from var(--tf-navy-900) l c h / 0.22) 46%, oklch(from var(--tf-navy-900) l c h / 0.12) 72%); }
-  .fp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 44%, oklch(from var(--surface-page) l c h / 0.35) 66%, oklch(from var(--surface-page) l c h / 0.75) 85%, var(--surface-page) 100%); }
+  .fp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 84%, oklch(from var(--surface-page) l c h / 0.4) 91%, oklch(from var(--surface-page) l c h / 0.8) 96%, var(--surface-page) 100%); }
   .fp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 100px 28px; width: 100%; box-sizing: border-box; }
   .fp-origin-card { background: rgba(255,255,255,0.97); border-radius: var(--radius-lg); box-shadow: 0 12px 32px rgba(4,18,33,0.16); padding: 44px 48px; max-width: 540px; }
   .fp-origin-card p.body { font-size: 15.5px; color: var(--text-body); line-height: 1.8; margin: 0 0 16px 0; }

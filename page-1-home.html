@@ -120,6 +120,14 @@
     never reaches into visible text). The .hp-stitch CSS is removed
     entirely as it's no longer referenced anywhere on this page.
 
+  28/7 pass (Jono's notes): the origin band's top/bottom fades were
+  shrunk to match the smaller, tighter proportions settled on for the
+  Wool page (top fade 0-10%, was 0-18%; bottom fade now only the last
+  ~16% of the band, was the last ~58%). Same bidirectional (top AND
+  bottom) approach as before, just consuming much less of the photo.
+  Only the .hp-origin-band::before/::after percentage stops changed,
+  the horizontal darkening layer and every other section untouched.
+
   Vanilla CSS/JS only, no build step, no external libraries.
 -->
 <style>
@@ -204,9 +212,9 @@
   /* --- why this trial exists: full-bleed origin band with a floating card --- */
   .hp-origin-band { position: relative; min-height: 640px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/middle-home.jpg'); background-position: center bottom; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .hp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
-    linear-gradient(180deg, var(--surface-page) 0%, transparent 18%),
+    linear-gradient(180deg, var(--surface-page) 0%, transparent 10%),
     linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.5) 0%, oklch(from var(--tf-navy-900) l c h / 0.22) 46%, oklch(from var(--tf-navy-900) l c h / 0.12) 72%); }
-  .hp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 42%, oklch(from var(--tf-navy-900) l c h / 0.35) 64%, oklch(from var(--tf-navy-900) l c h / 0.7) 84%, var(--tf-navy-900) 100%); }
+  .hp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 84%, oklch(from var(--tf-navy-900) l c h / 0.4) 91%, oklch(from var(--tf-navy-900) l c h / 0.8) 96%, var(--tf-navy-900) 100%); }
   .hp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 108px 28px; width: 100%; box-sizing: border-box; }
   .hp-origin-card { background: rgba(255,255,255,0.97); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); padding: 48px 52px; max-width: 560px; }
   .hp-origin-glance { margin-top: 8px; padding-top: 26px; border-top: 1px solid var(--border-subtle); }

@@ -36,6 +36,12 @@
     white instead of a hard cut, the origin band fades in/out to match
     the sections either side of it, and each flat-colour section now
     blends into the next via a fixed final ~90-110px pixel-based gradient.
+
+  28/7 pass (Jono's notes): the origin band's top/bottom fades were
+  shrunk to match the smaller, tighter proportions settled on for the
+  Wool page (top fade 0-10%, was 0-18%; bottom fade now only the last
+  ~16% of the band, was the last ~56%). Same bidirectional (top AND
+  bottom) approach as before, just consuming much less of the photo.
 -->
 <style>
   :root{
@@ -114,9 +120,9 @@
   /* --- where these come from: full-bleed origin band with a floating card --- */
   .rp-origin-band { position: relative; min-height: 560px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/AGP_3851.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .rp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
-    linear-gradient(180deg, var(--surface-sunken) 0%, transparent 18%),
+    linear-gradient(180deg, var(--surface-sunken) 0%, transparent 10%),
     linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.5) 0%, oklch(from var(--tf-navy-900) l c h / 0.22) 46%, oklch(from var(--tf-navy-900) l c h / 0.12) 72%); }
-  .rp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 44%, oklch(from var(--surface-page) l c h / 0.35) 66%, oklch(from var(--surface-page) l c h / 0.75) 85%, var(--surface-page) 100%); }
+  .rp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 84%, oklch(from var(--surface-page) l c h / 0.4) 91%, oklch(from var(--surface-page) l c h / 0.8) 96%, var(--surface-page) 100%); }
   .rp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 100px 28px; width: 100%; box-sizing: border-box; }
   .rp-origin-card { background: rgba(255,255,255,0.97); border-radius: var(--radius-lg); box-shadow: 0 12px 32px rgba(4,18,33,0.16); padding: 44px 48px; max-width: 540px; }
   .rp-origin-card .rp-eyebrow { text-align: left; }
