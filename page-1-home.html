@@ -190,34 +190,10 @@
   .hp-btn.outline:hover { border-color: var(--tf-white); }
 
   /* --- hero --- */
-  /* Hero now runs hero-home.mp4 (looping clip, hosted alongside the images below
-     on GitHub Pages). The clip has its own burned-in caption ("What we do in the
-     next few years...") that sits in the upper-middle band of the frame for most
-     of its 9s runtime, so: (1) the video is top-anchored via object-position so
-     that band stays pinned near the top of a taller box (620px, up from 540px)
-     instead of drifting toward the vertical centre, and (2) the gradient below
-     goes fully solid on var(--tf-navy-900) (opaque, not translucent) by 64%
-     down the box, turning the bottom ~28% into a hard, predictable dark shelf
-     for our own headline/lede - not just a fade - so there's a clean boundary
-     between "video's text" and "our text" regardless of exactly where the
-     caption lands. Only the final ~8% blends to var(--surface-sunken), as a
-     seam into the partner strip below (matches the original image-hero's
-     approach) - that variable is a light slate tone, not dark, so it must stay
-     confined to that thin seam and never be the "solid" colour behind text.
-     hero-cattle.jpg stays as the background-image fallback (shows before the
-     video loads / if it fails). */
-  .hp-hero { position: relative; min-height: 620px; display: flex; align-items: flex-end; overflow: hidden; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  .hp-hero-video { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; pointer-events: none; }
-  .hp-hero::before { content:""; position:absolute; inset:0; z-index:1; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.22) 0%, oklch(from var(--tf-navy-900) l c h / 0.32) 22%, oklch(from var(--tf-navy-900) l c h / 0.55) 38%, oklch(from var(--tf-navy-900) l c h / 0.85) 50%, var(--tf-navy-900) 64%, var(--tf-navy-900) 92%, var(--surface-sunken) 100%); }
-  .hp-hero-inner { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; padding: 72px 28px 68px; width: 100%; box-sizing: border-box; }
-  @media (max-width: 720px) {
-    .hp-hero { min-height: 560px; }
-    .hp-hero-inner { padding: 56px 20px 52px; }
-    /* Mobile crops the video by width, not height, so unlike desktop the full
-       vertical frame (and the full caption) is visible - there's no extra crop
-       margin doing separation work for us. Go solid earlier to compensate. */
-    .hp-hero::before { background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.24) 0%, oklch(from var(--tf-navy-900) l c h / 0.36) 18%, oklch(from var(--tf-navy-900) l c h / 0.62) 30%, oklch(from var(--tf-navy-900) l c h / 0.9) 40%, var(--tf-navy-900) 50%, var(--tf-navy-900) 90%, var(--surface-sunken) 100%); }
-  }
+  .hp-hero { position: relative; min-height: 540px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .hp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.3) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.62) 68%, oklch(from var(--tf-navy-900) l c h / 0.8) 86%, var(--surface-sunken) 100%); }
+  .hp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 96px; width: 100%; box-sizing: border-box; }
+  @media (max-width: 720px) { .hp-hero { min-height: 460px; } .hp-hero-inner { padding: 56px 20px 64px; } }
 
   /* --- partner strip --- */
   .hp-partner-strip { background: linear-gradient(180deg, var(--surface-sunken) 0%, var(--surface-sunken) calc(100% - 44px), var(--surface-page) 100%); padding: 52px 28px; }
@@ -305,9 +281,6 @@
 
 <!-- ============ HERO ============ -->
 <div class="hp-hero">
-  <video class="hp-hero-video" autoplay muted loop playsinline preload="auto" poster="https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.jpg">
-    <source src="https://jonathanjones-tasfarmers.github.io/lel-website/hero-home.mp4" type="video/mp4">
-  </video>
   <div class="hp-hero-inner">
     <p class="hp-eyebrow on-dark">TasFarmers &middot; Sea Forest &middot; Tasmanian Institute of Agriculture</p>
     <h1 class="hp-h1">Cutting methane from Tasmanian livestock, keeping farms <span class="accent">profitable</span>.</h1>
