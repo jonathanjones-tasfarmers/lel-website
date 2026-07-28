@@ -83,6 +83,14 @@
     band were already seamless and are untouched).
   - No content, copy, count-up, or precision-box logic touched.
 
+  28/7 pass (Jono's notes): the origin band's top fade (photo emerging
+  out of a white veil) was removed per Jono's request, the band's
+  background photo now sits solid right from the top edge and only
+  fades toward the bottom, matching a mockup he approved. Only the
+  .wp-origin-band::before rule changed (the redundant white-fade
+  gradient layer was dropped, the horizontal darkening layer is
+  unchanged), the ::after bottom fade is untouched.
+
   Vanilla CSS/JS only, no build step, no external libraries, matching the
   self-contained pattern used across every other file in this project
   (see seafeed-cost-of-production-calculator.html's own header comment).
@@ -179,7 +187,6 @@
   /* --- origin: full-bleed photo band with floating card --- */
   .wp-origin-band { position: relative; min-height: 620px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-partners.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .wp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
-    linear-gradient(180deg, var(--surface-page) 0%, transparent 16%),
     linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.78) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.12) 68%); }
   .wp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 44%, oklch(from var(--surface-page) l c h / 0.35) 66%, oklch(from var(--surface-page) l c h / 0.75) 85%, var(--surface-page) 100%); }
   .wp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 100px 28px; width: 100%; box-sizing: border-box; }
