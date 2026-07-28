@@ -135,6 +135,7 @@
   </div>
 
   <div class="tf-warn-box" id="no-gain-block" style="display:none;"></div>
+  <div class="tf-warn-box" id="weight-validation-block" style="display:none;"></div>
 
   <div class="tf-panel" id="input-panel">
     <p class="tf-panel-title">Your mob</p>
@@ -184,6 +185,7 @@
         <input id="copValue" type="number" step="0.01" value="3.50" min="0">
       </div>
     </div>
+    <p class="tf-field-note" id="copConversionNote" style="display:none;"></p>
   </div>
 
   <div class="tf-panel tf-panel-accent" id="price-panel">
@@ -257,6 +259,7 @@
     <p class="tf-footnote" id="confidence-note">
       This estimate uses your own mob numbers plus the SeaFeed-vs-control difference measured in the trial so far, not a market forecast. It does not account for seasonal price variation, transport, or other on-farm costs. Not financial advice, for a full assessment of your operation, speak with your accountant or farm business advisor alongside using this tool.
     </p>
+    <p class="tf-footnote" id="sampleSizeNote"></p>
   </div>
 
 </div>
@@ -296,6 +299,7 @@
   let incrementalCostPerHeadDay = null;
   let adgUpliftKgPerDay = null;
   let daysOfData = null;
+  let daysOfDataDiffer = false;
 
   let view = "weight";
   let adgMode = "direct";
@@ -307,7 +311,7 @@
   async function fetchAggregateByTreatment() {
     const params = new URLSearchParams({
       where: `farm_name='${AGGREGATE_LABEL}' AND treatment IN ('seafeed','control')`,
-      outFields: "treatment,cost_per_head_aud,weight_gain_kg_per_head,days_of_data,calculation_date",
+      outFields: "treatment,cost_per_head_aud,weight_gain_kg_per_head,days_of_data,calculation_date,representative_head_count",
       orderByFields: "calculation_date DESC",
       resultRecordCount: "10",
       f: "json"
@@ -322,6 +326,19 @@
     }
     return latest;
   }
+
+  // Audit finding 3: a true, farm-name-free COUNT(DISTINCT farm_name) is not
+  // reliably available from this layer, the ArcGIS REST "distinct" flag on
+  // outStatistics was tested against the live service and silently ignored
+  // (it returns a plain row count, not a distinct farm count), and the only
+  // way to derive a real distinct count client-side would be to fetch the
+  // actual farm_name values into the browser first, which reintroduces the
+  // exact farm-level exposure the main query's filter is designed to avoid.
+  // Participating farm count is therefore intentionally NOT auto-disclosed
+  // here. The right fix is for the Economics Pipeline to write a
+  // participating_farm_count field onto the "All Farms (Trial Aggregate)"
+  // row itself, the same way every other aggregate figure already reaches
+  // this calculator, see the implementation note passed back to Jono.
 
   function setToggle(activeBtn, inactiveBtn) {
     activeBtn.classList.add("active");
@@ -372,16 +389,32 @@
     calc();
   });
 
+  // Audit finding 4: the $/kg mode converts to a daily figure by
+  // multiplying by the growth rate entered above (copDayBau = copValue *
+  // adgBau, see calc()), an assumption that isn't obvious from the field
+  // alone. Disclosed here, next to the field, only when that mode is in use.
+  function updateCopConversionNote() {
+    const note = el("copConversionNote");
+    if (copMode === "perKg") {
+      note.textContent = "Converted to a daily figure by multiplying by your growth rate above, so a faster-growing mob is modelled as costing proportionally more per day to run.";
+      note.style.display = "";
+    } else {
+      note.style.display = "none";
+    }
+  }
+
   el("copPerDay").addEventListener("click", () => {
     copMode = "perDay";
     setToggle(el("copPerDay"), el("copPerKg"));
     el("copLabel").textContent = "Current cost of production ($/head/day)";
+    updateCopConversionNote();
     calc();
   });
   el("copPerKg").addEventListener("click", () => {
     copMode = "perKg";
     setToggle(el("copPerKg"), el("copPerDay"));
     el("copLabel").textContent = "Current cost of production ($/kg liveweight)";
+    updateCopConversionNote();
     calc();
   });
 
@@ -420,6 +453,16 @@
 
     const herd = num("herdSize");
     const cw = num("currentWeight");
+
+    // Audit finding 5: warn rather than silently floor to a nominal 1kg gap
+    // when the target weight isn't actually above the current weight, so a
+    // typo in either field doesn't produce a technically-meaningless result
+    // with no explanation.
+    const targetBelowCurrent = view === "weight" && num("targetWeight") <= cw;
+    el("weight-validation-block").style.display = targetBelowCurrent ? "block" : "none";
+    if (targetBelowCurrent) {
+      el("weight-validation-block").textContent = "Your target sale weight is at or below your current weight, check these two figures. The result below isn't meaningful until the target weight is higher than the current weight.";
+    }
 
     let adgBau = adgMode === "direct" ? num("adgValue") : (num("targetWeight") - cw) / (num("adgTypicalDays") || 1);
     if (adgBau <= 0) adgBau = 0.01;
@@ -521,6 +564,10 @@
   }
 
   const fmtDate = iso => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  // calculation_date comes back from the Economics layer as an epoch-ms
+  // timestamp (esriFieldTypeDate), not the plain "YYYY-MM-DD" string the
+  // MLA price date uses, hence the separate formatter (audit finding 1).
+  const fmtDateFromEpoch = ms => new Date(ms).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 
   function setStatus(text, dotClass) {
     const isPrelim = !!(dotClass && dotClass.includes("preliminary"));
@@ -560,9 +607,37 @@
         return;
       }
 
-      daysOfData = seafeed.days_of_data;
+      // Audit finding 2 fix: the two treatment groups' elapsed days of data
+      // can genuinely differ (e.g. after a monitoring gap in one group's
+      // emissions readings). Dividing by SeaFeed's day count alone in that
+      // case would understate or overstate the daily uplift figures against
+      // a mismatched time window. Using the shorter (more conservative) of
+      // the two day counts avoids overstating either the cost or growth
+      // differential relative to the data actually available for both arms.
+      daysOfData = Math.min(seafeed.days_of_data, control.days_of_data);
+      daysOfDataDiffer = seafeed.days_of_data !== control.days_of_data;
       incrementalCostPerHeadDay = (seafeed.cost_per_head_aud - control.cost_per_head_aud) / daysOfData;
       adgUpliftKgPerDay = (seafeed.weight_gain_kg_per_head - control.weight_gain_kg_per_head) / daysOfData;
+
+      // Audit finding 3: surface how much head of livestock sits behind the
+      // current aggregate, in the "About this estimate" panel, so this
+      // isn't just a black-box number. (Participating farm count is not
+      // included, see the note above fetchAggregateByTreatment for why.)
+      // Combined with the finding 2 day-count note so both land in one
+      // place together.
+      {
+        const headBits = [];
+        if (seafeed.representative_head_count) headBits.push(`${seafeed.representative_head_count} head (SeaFeed group)`);
+        if (control.representative_head_count) headBits.push(`${control.representative_head_count} head (control group)`);
+        let note = "";
+        if (headBits.length) {
+          note = `This estimate currently draws on ${headBits.join(" and ")}. As more farms and head come online, these figures, and the estimate above, will update automatically.`;
+        }
+        if (daysOfDataDiffer) {
+          note += ` Note: the SeaFeed and control groups currently have slightly different elapsed monitoring days; the shorter of the two, ${daysOfData} days, is used throughout this estimate.`;
+        }
+        if (note) el("sampleSizeNote").textContent = note;
+      }
 
       if (adgUpliftKgPerDay <= 0) {
         el("no-gain-block").style.display = "block";
@@ -573,7 +648,18 @@
       // separate banner, the amber pulse dot + tooltip carry the same
       // "early data, use with care" meaning without the visual weight of
       // a full notice box.
-      setStatus(`Early trial data, ${daysOfData} days, trial-wide · updated ${new Date().toLocaleDateString()}`, "pulse preliminary");
+      //
+      // Audit finding 1 fix: show the trial data's OWN calculation date,
+      // not the date the visitor happens to be viewing the page. Uses the
+      // earlier (more conservative) of the two treatments' calculation
+      // dates, so a stalled pipeline for one treatment can't hide behind
+      // the other treatment's more recent run.
+      const calcDateMs = Math.min(
+        new Date(seafeed.calculation_date).getTime(),
+        new Date(control.calculation_date).getTime()
+      );
+      const dataUpdatedText = fmtDateFromEpoch(calcDateMs);
+      setStatus(`Early trial data, ${daysOfData} days, trial-wide · data as at ${dataUpdatedText}`, "pulse preliminary");
 
       calc();
     } catch (err) {
