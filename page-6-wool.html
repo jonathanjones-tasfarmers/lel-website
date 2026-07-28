@@ -90,6 +90,16 @@
   .wp-origin-band::before rule changed (the redundant white-fade
   gradient layer was dropped, the horizontal darkening layer is
   unchanged), the ::after bottom fade is untouched.
+  Same "downward only" principle then applied to the one other
+  two-sided fade left on the page, the paddock photo-divider before
+  the closing band: it previously darkened from BOTH edges toward a
+  visible strip in the middle (solid navy -> photo -> solid navy).
+  Replaced with a single monotonic gradient: a constant, legible
+  navy wash across the photo (needed so the centred caption text
+  stays readable) that only deepens to fully solid navy in the last
+  ~15% of the band, blending into the closing section below. No
+  other gradient band on this page had a two-directional fade, every
+  section-to-section transition was already a single downward fade.
 
   Vanilla CSS/JS only, no build step, no external libraries, matching the
   self-contained pattern used across every other file in this project
@@ -201,7 +211,7 @@
 
   /* --- photo divider (paddock), a second punctuating full-bleed moment. background-attachment:fixed removed for the same reason as the hero. --- */
   .wp-photo-divider { position: relative; min-height: 260px; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.jpg'); background-position: center 65%; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  .wp-photo-divider::before { content:""; position:absolute; inset:0; background: linear-gradient(0deg, var(--tf-navy-900) 0%, oklch(from var(--tf-navy-900) l c h / 0.25) 40%, oklch(from var(--tf-navy-900) l c h / 0.25) 60%, var(--tf-navy-900) 100%); }
+  .wp-photo-divider::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.35) 55%, oklch(from var(--tf-navy-900) l c h / 0.75) 85%, var(--tf-navy-900) 100%); }
   .wp-photo-divider-caption { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; padding: 60px 28px; text-align: center; }
   .wp-photo-divider-caption p { font-family: var(--font-display); color: var(--tf-white); font-size: 15px; font-weight: 700; letter-spacing: 0.02em; max-width: 44ch; margin: 0; }
 
