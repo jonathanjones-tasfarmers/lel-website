@@ -101,6 +101,21 @@
   other gradient band on this page had a two-directional fade, every
   section-to-section transition was already a single downward fade.
 
+  28/7 pass 2 (Jono's notes): reverted the above, on reflection the
+  original two-sided (top AND bottom) fade on both photo bands read
+  better than the downward-only version. Restored bidirectional
+  fades on .wp-origin-band (top white-in fade back on ::before,
+  bottom white-out fade back on ::after) and .wp-photo-divider
+  (dark at both edges again), but shrunk every fade zone well below
+  its original size per Jono's request that the fades "fill a small
+  amount of space" rather than eating a large chunk of each photo:
+  origin band's top fade is now 0-10% (was 0-16%), its bottom fade
+  is now the last ~16% (was the last ~56%), and the photo divider's
+  dark edges are now the first/last 15% each (was 0-40% and 60-100%,
+  i.e. roughly half the band each side). All three edits are
+  contained to the ::before/::after rules for these two elements,
+  nothing else on the page changed.
+
   Vanilla CSS/JS only, no build step, no external libraries, matching the
   self-contained pattern used across every other file in this project
   (see seafeed-cost-of-production-calculator.html's own header comment).
@@ -197,8 +212,9 @@
   /* --- origin: full-bleed photo band with floating card --- */
   .wp-origin-band { position: relative; min-height: 620px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-partners.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .wp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
+    linear-gradient(180deg, var(--surface-page) 0%, transparent 10%),
     linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.78) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.12) 68%); }
-  .wp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 44%, oklch(from var(--surface-page) l c h / 0.35) 66%, oklch(from var(--surface-page) l c h / 0.75) 85%, var(--surface-page) 100%); }
+  .wp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 84%, oklch(from var(--surface-page) l c h / 0.4) 91%, oklch(from var(--surface-page) l c h / 0.8) 96%, var(--surface-page) 100%); }
   .wp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 100px 28px; width: 100%; box-sizing: border-box; }
   .wp-origin-card { max-width: 600px; }
   .wp-origin-card .wp-h2, .wp-origin-card .wp-eyebrow { color: var(--tf-white); }
@@ -211,7 +227,7 @@
 
   /* --- photo divider (paddock), a second punctuating full-bleed moment. background-attachment:fixed removed for the same reason as the hero. --- */
   .wp-photo-divider { position: relative; min-height: 260px; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.jpg'); background-position: center 65%; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  .wp-photo-divider::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.35) 0%, oklch(from var(--tf-navy-900) l c h / 0.35) 55%, oklch(from var(--tf-navy-900) l c h / 0.75) 85%, var(--tf-navy-900) 100%); }
+  .wp-photo-divider::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, var(--tf-navy-900) 0%, oklch(from var(--tf-navy-900) l c h / 0.25) 15%, oklch(from var(--tf-navy-900) l c h / 0.25) 85%, var(--tf-navy-900) 100%); }
   .wp-photo-divider-caption { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; padding: 60px 28px; text-align: center; }
   .wp-photo-divider-caption p { font-family: var(--font-display); color: var(--tf-white); font-size: 15px; font-weight: 700; letter-spacing: 0.02em; max-width: 44ch; margin: 0; }
 
