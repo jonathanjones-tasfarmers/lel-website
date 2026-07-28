@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Work out what SeaFeed means for your bottom line.</title>
+<!--
+  Economic Calculator page rebuild, same design system as home/farms/
+  partners/resources/data/wool redesigns. All copy carried over verbatim
+  from the live native-Hub-block version of this page.
+
+  The calculator tool itself (seafeed-cost-of-production-calculator.html)
+  is NOT touched by this rebuild - it's still embedded exactly as it was,
+  same src, same frameborder/scrolling/allow attributes, same fixed
+  990px height. Only the page shell around it (hero, intro copy, "how
+  this works" box) has been rebuilt to match the rest of the site. This
+  keeps the calculator's own function completely untouched.
+
+  Hero image uses the REAL hosted URL already live on GitHub Pages
+  (hero-calc.jpg) - this was already being used by the native Hub page,
+  just re-pointed at from this rebuild.
+
+  No separate closing CTA band (matches the Data/Resources-style ending
+  - straight from the last section into the shared site footer).
+
+  Single self-contained file for a single Hub Iframe widget, same
+  pattern as page-1 through page-6.
+-->
+<style>
+  :root{
+    --tf-navy-900:#041221;
+    --tf-navy-800:oklch(from var(--tf-navy-900) calc(l + 0.08) c h);
+    --tf-slate-400:#a9b8c4;
+    --tf-slate-300:oklch(from var(--tf-slate-400) calc(l + 0.08) c h);
+    --tf-slate-200:oklch(from var(--tf-slate-400) calc(l + 0.14) c h);
+    --tf-slate-100:oklch(from var(--tf-slate-400) calc(l + 0.19) c h);
+    --tf-slate-600:oklch(from var(--tf-slate-400) calc(l - 0.18) c h);
+    --tf-mint-500:#5ec9a8;
+    --tf-mint-600:oklch(from var(--tf-mint-500) calc(l - 0.1) c h);
+    --tf-mint-400:oklch(from var(--tf-mint-500) calc(l + 0.08) c h);
+    --tf-white:#ffffff;
+    --tf-warning:#c98a2e;
+    --surface-page:var(--tf-white);
+    --surface-sunken:var(--tf-slate-100);
+    --surface-card:var(--tf-white);
+    --text-heading:var(--tf-navy-900);
+    --text-body:oklch(from var(--tf-navy-900) calc(l + 0.06) calc(c - 0.005) h);
+    --text-muted:var(--tf-slate-600);
+    --border-subtle:var(--tf-slate-200);
+    --border-default:var(--tf-slate-300);
+    --radius-lg:12px; --radius-md:10px; --radius-sm:6px;
+    --shadow-sm:0 1px 2px rgba(4,18,33,0.08);
+    --font-display:Tahoma,Verdana,sans-serif;
+    --font-body:Verdana,Tahoma,sans-serif;
+  }
+  html, body { margin: 0; background: var(--surface-page); }
+  body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
+  .cp-page { max-width: 1180px; margin: 0 auto; }
+  .cp-section { padding: 124px 28px; box-sizing: border-box; }
+  .cp-narrow { max-width: 760px; }
+  @media (max-width: 720px) { .cp-section { padding: 68px 20px; } }
+
+  .cp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; text-align: center; }
+  .cp-eyebrow.on-dark { color: var(--tf-mint-400); text-align: left; }
+  .cp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px,4.4vw,50px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px 0; max-width: 20ch; }
+  .cp-h1 .accent { color: var(--tf-mint-400); }
+  .cp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 20px 0; }
+  .cp-h2 .accent { color: var(--tf-mint-600); }
+  @media (max-width: 720px) { .cp-h2 { font-size: 22px; } }
+  .cp-lede { color: var(--tf-slate-300); font-size: 17px; line-height: 1.6; max-width: 58ch; margin: 0; }
+  .cp-body { font-size: 15.5px; color: var(--text-body); line-height: 1.75; max-width: 68ch; margin: 0 0 20px 0; }
+  .cp-body:last-child { margin-bottom: 0; }
+
+  .cp-reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .cp-reveal.is-visible { opacity: 1; transform: translateY(0); }
+  @media (prefers-reduced-motion: reduce) { .cp-reveal { opacity: 1; transform: none; transition: none; } }
+
+  /* --- hero --- */
+  .cp-hero { position: relative; min-height: 540px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-calc.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .cp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.3) 0%, oklch(from var(--tf-navy-900) l c h / 0.48) 42%, oklch(from var(--tf-navy-900) l c h / 0.6) 68%, oklch(from var(--tf-navy-900) l c h / 0.78) 86%, var(--surface-page) 100%); }
+  .cp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 96px; width: 100%; box-sizing: border-box; }
+  @media (max-width: 720px) { .cp-hero { min-height: 460px; } .cp-hero-inner { padding: 56px 20px 64px; } }
+
+  /* --- calculator embed --- */
+  .cp-calc-wrap { width: 100%; }
+  .cp-calc-wrap iframe { width: 100%; display: block; border: 0; }
+
+  /* --- how this works card (same look as the Resources "available" download card) --- */
+  .cp-info-card { background: var(--surface-card); border: 1.5px solid var(--tf-mint-500); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 36px 40px; max-width: 620px; margin: 0 auto; text-align: left; box-sizing: border-box; }
+  .cp-info-tag { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 12px 0; }
+  .cp-info-card h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 20px; margin: 0 0 10px 0; }
+  .cp-info-card p.body { font-size: 14.5px; color: var(--text-muted); line-height: 1.65; margin: 0 0 22px 0; }
+  @media (max-width: 720px) { .cp-info-card { padding: 28px 26px; } }
+
+  .cp-btn-solid { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; padding: 11px 22px; border-radius: var(--radius-md); text-decoration: none; background: var(--tf-navy-900); color: var(--tf-white); white-space: nowrap; }
+  .cp-btn-solid:hover { background: var(--tf-navy-800); }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="cp-hero">
+  <div class="cp-hero-inner">
+    <p class="cp-eyebrow on-dark">For your own herd</p>
+    <h1 class="cp-h1">Work out what SeaFeed means for your <span class="accent">bottom line</span>.</h1>
+    <p class="cp-lede">Built from real trial results, not published averages. Enter your own herd size, growth rate and costs, the calculator does the rest.</p>
+  </div>
+</div>
+
+<!-- ============ WHY THIS CALCULATOR EXISTS ============ -->
+<div class="cp-section" style="background: linear-gradient(180deg, var(--surface-page) 0%, var(--surface-page) calc(100% - 100px), var(--surface-sunken) 100%);">
+  <div class="cp-page">
+    <h2 class="cp-h2 cp-narrow cp-reveal">Why this calculator exists</h2>
+    <p class="cp-body cp-reveal">This tool is one of two deliverables the project's grant deed requires: an economic feasibility calculator for Tasmanian livestock producers, so you can weigh up SeaFeed for your own operation using real numbers, not projections.</p>
+    <p class="cp-body cp-reveal">It's built on the actual difference measured between the SeaFeed and control groups in this trial, applied to your own herd size, growth rate and cost of production. As the trial runs longer and more farms come online, the numbers behind it get more reliable, so treat today's result as current best evidence, not a final answer.</p>
+  </div>
+</div>
+
+<!-- ============ THE CALCULATOR ITSELF (untouched embed) ============ -->
+<div class="cp-section" style="background: var(--surface-sunken); padding-top: 0; padding-bottom: 56px;">
+  <div class="cp-page cp-calc-wrap cp-reveal">
+    <iframe
+      src="https://jonathanjones-tasfarmers.github.io/lel-website/seafeed-cost-of-production-calculator.html"
+      id="cwwoxv1kl"
+      frameborder="0"
+      scrolling="auto"
+      style="height: 990px;"
+      allow="local-network-access; geolocation https://jonathanjones-tasfarmers.github.io"
+      title="SeaFeed cost of production calculator"></iframe>
+  </div>
+</div>
+
+<!-- ============ HOW THIS CALCULATOR WORKS ============ -->
+<div class="cp-section" style="background: linear-gradient(180deg, var(--surface-sunken) 0%, var(--surface-sunken) calc(100% - 100px), var(--surface-page) 100%); padding-top: 0;">
+  <div class="cp-page" style="text-align: center;">
+    <div class="cp-info-card cp-reveal">
+      <p class="cp-info-tag">Available now</p>
+      <h3>How this calculator works</h3>
+      <p class="body">A full explainer, covering how each number is calculated and how to read your results, is available as a downloadable PDF.</p>
+      <a class="cp-btn-solid" href="https://jonathanjones-tasfarmers.github.io/lel-website/2026-07-23 Economic Feasibility Calculator Methodology and Data Record.pdf" target="_blank" rel="noopener">Read the full explainer (PDF)</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- scroll reveal, restrained: fade + rise, once per element ---
+  (function(){
+    var els = document.querySelectorAll('.cp-reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach(function(el){ el.classList.add('is-visible'); }); return; }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function(el){ io.observe(el); });
+  })();
+</script>
+
+</body>
+</html>
