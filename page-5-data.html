@@ -72,7 +72,7 @@
   ~16% of the band, was the last ~56%). Same bidirectional (top AND
   bottom) approach as before, just consuming much less of the photo.
 
-  29/7 pass (two new producer-facing indicators, Jono's request):
+  29/7 pass (new producer-facing indicator, Jono's request):
   - Added a "Cost of production over time" line chart (SeaFeed vs
     Control) right after the existing latest-snapshot indicator cards,
     same LEL_Economics_Data source and calculation_date field the
@@ -80,16 +80,10 @@
     a single reading - shows whether the cost gap is narrowing or
     holding as the trial matures. Reuses the same renderLineChart/q()
     helpers as the abatement and ADG charts, no new dependencies.
-  - Added a fourth "Net illustrative position per year" card to the
-    "Estimate it for your own herd" calculator: illustrative carbon
-    value minus estimated SeaFeed cost, both of which the calculator
-    was already computing separately. Value goes amber (.negative
-    class, var(--tf-warning)) if the estimated cost outweighs the
-    illustrative value for the entered herd size. .dp-calc-stats grid
-    changed from a fixed 3-column layout to repeat(auto-fit,
-    minmax(180px,1fr)) so the fourth card wraps cleanly at all widths.
-    Same disclosure language as the other illustrative figures on this
-    page - this is not realisable income.
+  - Also tried adding a fourth "Net illustrative position per year"
+    card to the herd calculator (illustrative value minus estimated
+    SeaFeed cost). Jono didn't like it, pulled back out same day -
+    .dp-calc-stats is back to its original 3-column layout.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -228,13 +222,12 @@
   .dp-calc-input-row input[type="number"] { width: 110px; font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--text-heading); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px 12px; }
   .dp-calc-input-row input[type="number"]:focus { outline: none; border-color: var(--tf-mint-500); }
   .dp-calc-input-suffix { color: var(--text-muted); font-size: 13.5px; }
-  .dp-calc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 16px; }
+  .dp-calc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
   @media (max-width: 720px) { .dp-calc-stats { grid-template-columns: 1fr; } }
   .dp-calc-stat-card { background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 18px 20px; }
   .dp-calc-stat-card.accent { border-color: var(--tf-mint-500); }
   .dp-calc-stat-label { font-size: 12.5px; color: var(--text-muted); margin: 0 0 8px 0; }
   .dp-calc-stat-value { font-family: var(--font-display); color: var(--tf-mint-600); font-size: 24px; font-weight: 700; margin: 0; }
-  .dp-calc-stat-value.negative { color: var(--tf-warning); }
   .dp-calc-stat-sub { font-size: 11.5px; color: var(--text-muted); margin: 6px 0 0 0; }
   .dp-calc-note { color: var(--text-muted); font-size: 12px; line-height: 1.6; margin: 0; max-width: 90ch; }
 </style>
@@ -401,11 +394,6 @@
           <p class="dp-calc-stat-label">Estimated SeaFeed cost per year</p>
           <p class="dp-calc-stat-value" id="calc-cost-out">Loading&hellip;</p>
           <p class="dp-calc-stat-sub">Indicative, based on the trial's average cost to date</p>
-        </div>
-        <div class="dp-calc-stat-card">
-          <p class="dp-calc-stat-label">Net illustrative position per year</p>
-          <p class="dp-calc-stat-value" id="calc-net-out">Loading&hellip;</p>
-          <p class="dp-calc-stat-sub">Illustrative value minus estimated SeaFeed cost, not realisable income, see disclosure above</p>
         </div>
       </div>
       <a href="#" class="dp-more-toggle" id="calc-info-toggle">Information &#9662;</a>
@@ -716,7 +704,6 @@
     const calcRateSub = document.getElementById('calc-rate-sub');
     const calcValueOut = document.getElementById('calc-value-out');
     const calcCostOut = document.getElementById('calc-cost-out');
-    const calcNetOut = document.getElementById('calc-net-out');
     const calcNote = document.getElementById('calc-note');
     const calcInfoToggle = document.getElementById('calc-info-toggle');
     const calcInfoWrap = document.getElementById('calc-info-wrap');
@@ -737,8 +724,6 @@
         calcRateSub.textContent = '';
         calcValueOut.textContent = '—';
         calcCostOut.textContent = '—';
-        calcNetOut.textContent = '—';
-        calcNetOut.classList.remove('negative');
         calcNote.textContent = 'Live trial data unavailable right now, try again shortly.';
         calcNote.style.color = '#c98a2e';
         return;
@@ -758,22 +743,12 @@
         ? 'At the trial’s current ' + abatementRate.toFixed(1) + '% modelled abatement rate'
         : '';
       calcValueOut.textContent = '$' + herdValuePerYear.toLocaleString(undefined, { maximumFractionDigits: 0 });
-      let herdCostPerYear = null;
       if (latestEconomics && latestEconomics.cost_per_head_aud != null && latestEconomics.days_of_data) {
         const dailyCostPerHead = latestEconomics.cost_per_head_aud / latestEconomics.days_of_data;
-        herdCostPerYear = dailyCostPerHead * 365 * herdSize;
+        const herdCostPerYear = dailyCostPerHead * 365 * herdSize;
         calcCostOut.textContent = '$' + herdCostPerYear.toLocaleString(undefined, { maximumFractionDigits: 0 });
       } else {
         calcCostOut.textContent = '—';
-      }
-      if (herdCostPerYear != null) {
-        const netPerYear = herdValuePerYear - herdCostPerYear;
-        const sign = netPerYear >= 0 ? '+' : '−';
-        calcNetOut.textContent = sign + '$' + Math.abs(netPerYear).toLocaleString(undefined, { maximumFractionDigits: 0 });
-        calcNetOut.classList.toggle('negative', netPerYear < 0);
-      } else {
-        calcNetOut.textContent = '—';
-        calcNetOut.classList.remove('negative');
       }
       const intakeNote = intakeGPerHdDay != null ? ' (' + intakeGPerHdDay.toFixed(0) + ' g SeaFeed/head/day)' : '';
       calcNote.textContent = 'Based on the trial’s most recent per-head daily methane abatement' + intakeNote + '. Illustrative only, see disclosure above.';
