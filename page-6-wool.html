@@ -227,27 +227,27 @@
 
   /* --- photo divider (paddock), a second punctuating full-bleed moment. background-attachment:fixed removed for the same reason as the hero. --- */
   .wp-photo-divider { position: relative; min-height: 260px; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.jpg'); background-position: center 65%; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  /* 29/7 fix, take 2 (Jono's report - visible band across the photo):
-     the first attempt removed the top solid-navy anchor entirely,
-     starting this gradient straight at 0.25 opacity. That actually
-     made it worse: the FAQ section above ends at fully opaque solid
-     navy (its own gradient reaches 100% opacity exactly at its last
-     pixel), so dropping straight to 0.25 opacity at this element's
-     first pixel created a real, instant colour jump right at the
-     seam - dark navy on one side, photo-bright on the other, in a
-     single row. That hard line is the "band running through the
-     photo" Jono flagged.
-     Fix: keep a top anchor that matches the FAQ section's fully-
-     opaque ending colour exactly (var(--tf-navy-900) at 0%, same as
-     before), so there's no discontinuity at the seam - but ramp down
-     to the 0.25 wash over a much shorter span (6%, ~16px) instead of
-     the original 15% (~39px). That's short enough it doesn't rebuild
-     the big flat dead zone from before, but long enough the eye reads
-     it as a continuation of the FAQ section's own fade rather than a
-     second independent hard edge. Bottom edge (85%-100%, blending
-     into .wp-closing) is untouched - nothing above the FAQ section
-     forces navy the way it does, so that edge never had this problem. */
-  .wp-photo-divider::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, var(--tf-navy-900) 0%, oklch(from var(--tf-navy-900) l c h / 0.25) 6%, oklch(from var(--tf-navy-900) l c h / 0.25) 85%, var(--tf-navy-900) 100%); }
+  /* 29/7 fix, take 3 (Jono's report - visible band across the photo):
+     take 1 removed the top solid-navy anchor entirely, starting this
+     gradient straight at 0.25 opacity - that created an instant colour
+     jump at the seam (FAQ section above ends fully opaque, this
+     started at 0.25), which read as a hard line. Take 2 restored a
+     matching var(--tf-navy-900) anchor at 0% but only ramped down over
+     6-14%: colours matched exactly at the seam so there was no jump,
+     but tested against the actual hero-cattle.jpg crop (rendered
+     locally, not just eyeballed in devtools) the line was still
+     visible - turns out colour-matching alone doesn't fix it. The
+     real cause is TEXTURE onset: the FAQ section is flat colour, zero
+     photo detail; a short ramp reveals the photo's full brightness and
+     texture over too few pixels, and the eye reads that as an edge
+     regardless of whether the colour itself is continuous. Fixed by
+     lengthening the ramp to 35% (~91px) so the photo's detail fades in
+     gradually rather than snapping in - confirmed smooth by rendering
+     the actual crop, not just reasoning about the gradient stops.
+     Bottom edge (85%-100%, blending into .wp-closing) is untouched -
+     nothing above the FAQ section forces navy the way it does into
+     this band, so the bottom seam never had this problem. */
+  .wp-photo-divider::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, var(--tf-navy-900) 0%, oklch(from var(--tf-navy-900) l c h / 0.25) 35%, oklch(from var(--tf-navy-900) l c h / 0.25) 85%, var(--tf-navy-900) 100%); }
   .wp-photo-divider-caption { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; padding: 60px 28px; text-align: center; }
   .wp-photo-divider-caption p { font-family: var(--font-display); color: var(--tf-white); font-size: 15px; font-weight: 700; letter-spacing: 0.02em; max-width: 44ch; margin: 0; }
 
