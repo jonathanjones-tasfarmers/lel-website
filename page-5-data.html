@@ -98,6 +98,13 @@
   Chart now renders a single blended "% ADG difference" line instead of
   two absolute-value lines; heading, caption and legend updated to
   match.
+  - Same-day follow-up (Jono's request): the line/fill now shades red
+    for any segment that sits below zero (SeaFeed behind Control) and
+    keeps the existing green above zero (SeaFeed ahead), via Chart.js
+    per-segment styling (segmentColorBySign() helper, reused wherever
+    else this sign-based shading is useful later). Fill target changed
+    from fill:true ('origin') to the equivalent explicit fill:{value:0}
+    so the zero baseline is unambiguous regardless of axis min/max.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -281,7 +288,7 @@
 
     <div class="dp-chart-section dp-reveal">
       <h3 class="dp-h3">Average daily gain: SeaFeed's edge over time</h3>
-      <p class="dp-chart-caption">% difference in average daily gain, SeaFeed vs control, calculated within each farm then averaged across farms - so the comparison isn't skewed by farms with naturally faster- or slower-growing stock.</p>
+      <p class="dp-chart-caption">% difference in average daily gain, SeaFeed vs control, calculated within each farm then averaged across farms - so the comparison isn't skewed by farms with naturally faster- or slower-growing stock. Shaded green while SeaFeed is ahead, red while it's behind.</p>
       <div class="dp-chart-box">
         <div class="dp-skel dp-skel-chart" id="chart-adg-skeleton"></div>
         <canvas id="chart-adg"></canvas>
@@ -426,7 +433,7 @@
     const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
     const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
     const PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
-    const MINT = '#3aa989', SLATE = '#a9b8c4', WARNING = '#c98a2e';
+    const MINT = '#3aa989', SLATE = '#a9b8c4', WARNING = '#c98a2e', RED = '#c0392b';
     const STALE_AFTER_DAYS = 14;
     // NOTE: this label is still used below for the Productivity/OptiWeigh
     // query, which DOES carry a farm_name field (per-farm rows plus one
@@ -442,6 +449,16 @@
     }
     function fmtDate(epochMs){
       return new Date(epochMs).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'2-digit' });
+    }
+    // 2/8 addition (Jono's request): colour a line segment by whether it sits
+    // above or below zero, so charts like the ADG % difference can shade
+    // green while SeaFeed is ahead and red while it's behind. Segments that
+    // straddle zero are coloured by the average of their two endpoints -
+    // a reasonable simplification rather than splitting the segment exactly
+    // at the crossing point.
+    function segmentColorBySign(ctx, positiveColor, negativeColor){
+      const y0 = ctx.p0.parsed.y, y1 = ctx.p1.parsed.y;
+      return ((y0 + y1) / 2) < 0 ? negativeColor : positiveColor;
     }
     function daysSinceEpoch(epochMs){
       return (Date.now() - epochMs) / (1000 * 60 * 60 * 24);
@@ -557,7 +574,19 @@
         renderLineChart('chart-adg', 'chart-adg-empty',
           allDates.map(d => fmtDate(d)),
           [
-            { label:'SeaFeed vs Control (% ADG difference)', data: blended, borderColor: MINT, backgroundColor:'rgba(58,169,137,0.12)', fill:true, tension:0.35, spanGaps:true, pointRadius:2 }
+            {
+              label:'SeaFeed vs Control (% ADG difference)', data: blended,
+              borderColor: MINT, backgroundColor:'rgba(58,169,137,0.12)',
+              fill:{ value:0 }, tension:0.35, spanGaps:true, pointRadius:2,
+              // 2/8 change (Jono's request): shade red below zero (SeaFeed
+              // behind Control) and keep the existing green above zero
+              // (SeaFeed ahead), instead of a flat green fill regardless of
+              // sign.
+              segment: {
+                borderColor: ctx => segmentColorBySign(ctx, MINT, RED),
+                backgroundColor: ctx => segmentColorBySign(ctx, 'rgba(58,169,137,0.12)', 'rgba(192,57,43,0.12)')
+              }
+            }
           ],
           '% ADG difference (SeaFeed vs Control)'
         );
