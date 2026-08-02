@@ -84,6 +84,20 @@
     card to the herd calculator (illustrative value minus estimated
     SeaFeed cost). Jono didn't like it, pulled back out same day -
     .dp-calc-stats is back to its original 3-column layout.
+
+  2/8 pass (Jono's request, ADG chart methodology change): as more farms
+  with different baseline ADG (species/growth-rate driven) come on
+  board, comparing raw absolute ADG between the pooled SeaFeed and
+  Control aggregate lines would get misleading - a farm with naturally
+  fast- or slow-growing stock can pull the pooled lines apart with no
+  real SeaFeed effect involved. Reworked loadAdg() to query per-farm
+  rows only (excludes the pre-computed AGGREGATE_LABEL row), compute the
+  % ADG difference (SeaFeed vs Control) within each farm/date pair
+  first, then average those per-farm percentages across farms for each
+  date - i.e. per-farm-then-averaged, not a ratio of pooled averages.
+  Chart now renders a single blended "% ADG difference" line instead of
+  two absolute-value lines; heading, caption and legend updated to
+  match.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -266,14 +280,14 @@
     </div>
 
     <div class="dp-chart-section dp-reveal">
-      <h3 class="dp-h3">Average daily gain over time</h3>
-      <p class="dp-chart-caption">Rolling average daily gain, SeaFeed vs control.</p>
+      <h3 class="dp-h3">Average daily gain: SeaFeed's edge over time</h3>
+      <p class="dp-chart-caption">% difference in average daily gain, SeaFeed vs control, calculated within each farm then averaged across farms - so the comparison isn't skewed by farms with naturally faster- or slower-growing stock.</p>
       <div class="dp-chart-box">
         <div class="dp-skel dp-skel-chart" id="chart-adg-skeleton"></div>
         <canvas id="chart-adg"></canvas>
       </div>
       <p class="dp-chart-empty" id="chart-adg-empty" style="display:none;">No productivity readings recorded yet.</p>
-      <div class="dp-legend"><span><span class="dp-legend-dot" style="background:var(--tf-mint-500);"></span>SeaFeed</span><span><span class="dp-legend-dot" style="background:var(--tf-slate-400);"></span>Control</span></div>
+      <div class="dp-legend"><span><span class="dp-legend-dot" style="background:var(--tf-mint-500);"></span>SeaFeed vs Control</span></div>
     </div>
 
     <div class="dp-chart-section dp-reveal">
@@ -500,24 +514,52 @@
     }
 
     async function loadAdg(){
+      // 2/8 change (Jono's request): as more farms with different baseline ADG
+      // (species/growth-rate driven) join the trial, comparing raw absolute ADG
+      // between the SeaFeed and Control aggregate lines gets misleading - a farm
+      // with naturally fast-growing stock can drag the pooled lines apart even
+      // with no real SeaFeed effect. Fixed by computing, per farm and per date,
+      // the % difference of SeaFeed vs Control ((sf-ct)/ct*100), then averaging
+      // those per-farm percentages across all reporting farms for each date -
+      // this normalises out each farm's baseline before blending, rather than
+      // pooling raw g/day and comparing the pooled averages. Rendered as a
+      // single blended % line. Excludes the pre-computed aggregate row and only
+      // uses real per-farm rows so the normalisation happens at the farm level.
       try{
         const [seafeed, control] = await Promise.all([
-          q(PRODUCTIVITY_URL, { where:`treatment_group='seafeed' AND farm_name='${AGGREGATE_LABEL}'`, outFields:"snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"2000", f:"json" }),
-          q(PRODUCTIVITY_URL, { where:`treatment_group='control' AND farm_name='${AGGREGATE_LABEL}'`, outFields:"snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"2000", f:"json" })
+          q(PRODUCTIVITY_URL, { where:`treatment_group='seafeed' AND farm_name<>'${AGGREGATE_LABEL}'`, outFields:"farm_name,snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"4000", f:"json" }),
+          q(PRODUCTIVITY_URL, { where:`treatment_group='control' AND farm_name<>'${AGGREGATE_LABEL}'`, outFields:"farm_name,snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"4000", f:"json" })
         ]);
-        const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
-        const ctRows = control.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.rolling_adg != null);
-        const sfByDate = new Map(sfRows.map(r => [r.snapshot_date, r.rolling_adg]));
-        const ctByDate = new Map(ctRows.map(r => [r.snapshot_date, r.rolling_adg]));
-        const allDates = Array.from(new Set([...sfByDate.keys(), ...ctByDate.keys()])).sort((a, b) => a - b);
+        const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.farm_name != null && a.snapshot_date != null && a.rolling_adg != null);
+        const ctRows = control.features.map(f => f.attributes).filter(a => a.farm_name != null && a.snapshot_date != null && a.rolling_adg != null);
+        const key = r => r.farm_name + '|' + r.snapshot_date;
+        const sfByKey = new Map(sfRows.map(r => [key(r), r.rolling_adg]));
+        const ctByKey = new Map(ctRows.map(r => [key(r), r.rolling_adg]));
+
+        // For every farm/date pair reporting on both sides, compute that farm's
+        // % ADG difference, then group those percentages by date.
+        const pctByDate = new Map(); // snapshot_date -> array of per-farm % diffs
+        for (const [k, sfAdg] of sfByKey){
+          if (!ctByKey.has(k)) continue;
+          const ctAdg = ctByKey.get(k);
+          if (!ctAdg || Math.abs(ctAdg) < 1e-6) continue; // guard divide-by-zero
+          const snapshotDate = Number(k.split('|')[1]);
+          const pct = ((sfAdg - ctAdg) / ctAdg) * 100;
+          if (!pctByDate.has(snapshotDate)) pctByDate.set(snapshotDate, []);
+          pctByDate.get(snapshotDate).push(pct);
+        }
+        const allDates = Array.from(pctByDate.keys()).sort((a, b) => a - b);
+        const blended = allDates.map(d => {
+          const vals = pctByDate.get(d);
+          return vals.reduce((sum, v) => sum + v, 0) / vals.length;
+        });
+
         renderLineChart('chart-adg', 'chart-adg-empty',
           allDates.map(d => fmtDate(d)),
           [
-            { label:'SeaFeed', data: allDates.map(d => sfByDate.has(d) ? sfByDate.get(d) : null), borderColor: MINT, backgroundColor:'transparent', tension:0.35, spanGaps:true, pointRadius:2 },
-            { label:'Control', data: allDates.map(d => ctByDate.has(d) ? ctByDate.get(d) : null), borderColor: SLATE, backgroundColor:'transparent', tension:0.35, spanGaps:true, pointRadius:2 }
+            { label:'SeaFeed vs Control (% ADG difference)', data: blended, borderColor: MINT, backgroundColor:'rgba(58,169,137,0.12)', fill:true, tension:0.35, spanGaps:true, pointRadius:2 }
           ],
-          'Average daily gain (g/day)',
-          { suggestedMin:0, suggestedMax:2000 }
+          '% ADG difference (SeaFeed vs Control)'
         );
       } catch(err){
         console.error('ADG chart failed:', err);
