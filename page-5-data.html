@@ -105,6 +105,32 @@
     else this sign-based shading is useful later). Fill target changed
     from fill:true ('origin') to the equivalent explicit fill:{value:0}
     so the zero baseline is unambiguous regardless of axis min/max.
+
+  3/8 pass (Jono's request, ADG source-of-truth fix): Jono flagged that
+  the Farm page's ADG badge reads -11 g/day while this chart's latest
+  point read -36%, and asked which was right. Investigation (queried
+  both feature services live) found the two numbers were never going
+  to agree - they come from entirely different services/fields:
+    - Farm page (page-2-farms.html): OptiWeigh_Assets_view, field
+      adg_all, single latest reading per treatment. Live check: SeaFeed
+      552 g/day vs Control 563 g/day (both same day) = -11 g/day.
+    - This chart (previous version): OptiWeigh_Cattle_Weights, field
+      rolling_adg, per farm_name. Only one farm (Bowood Farm) currently
+      has per-farm rows, and its rolling_adg swung from 259 to 746
+      g/day over two weeks - real volatility in that field, not a bug
+      in the per-farm-then-averaged maths added on 2/8. On its latest
+      date: SeaFeed 259 vs Control 409 g/day = -36.7%, matching what
+      Jono saw exactly.
+  Also found a THIRD variant on the Home page (live-metrics.html):
+  rolling_adg from the pre-computed trial-aggregate row.
+  Per Jono's explicit choice, unified all of this onto the Farm page's
+  source (OptiWeigh_Assets_view / adg_all / Treatment_Type matching) -
+  see fetchAdgAllHistory() above and the updated loadAdg(). This chart
+  is back to an absolute g/day advantage line (not %) so it always
+  agrees with the Farm page on any given date. live-metrics.html
+  updated the same way in the same pass. adg_all carries no farm_name,
+  so the multi-farm % normalisation from the 2/8 entry is parked, not
+  deleted, in case a farm identifier gets added to that service later.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -288,7 +314,7 @@
 
     <div class="dp-chart-section dp-reveal">
       <h3 class="dp-h3">Average daily gain: SeaFeed's edge over time</h3>
-      <p class="dp-chart-caption">% difference in average daily gain, SeaFeed vs control, calculated within each farm then averaged across farms - so the comparison isn't skewed by farms with naturally faster- or slower-growing stock. Shaded green while SeaFeed is ahead, red while it's behind.</p>
+      <p class="dp-chart-caption">SeaFeed's ADG advantage over control, in grams per day - the same figure and source shown on the Farm page. Shaded green while SeaFeed is ahead, red while it's behind.</p>
       <div class="dp-chart-box">
         <div class="dp-skel dp-skel-chart" id="chart-adg-skeleton"></div>
         <canvas id="chart-adg"></canvas>
@@ -433,6 +459,10 @@
     const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
     const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
     const PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
+    // 3/8 addition (Jono's request): the Farm page's ADG badge reads from a
+    // THIRD OptiWeigh feature service, not this one - see loadAdg() below for
+    // why this page's chart now reads from it too.
+    const ASSETS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Assets_view/FeatureServer/0/query";
     const MINT = '#3aa989', SLATE = '#a9b8c4', WARNING = '#c98a2e', RED = '#c0392b';
     const STALE_AFTER_DAYS = 14;
     // NOTE: this label is still used below for the Productivity/OptiWeigh
@@ -446,6 +476,21 @@
       const data = await res.json();
       if (data.error) throw new Error(data.error.message || "Query failed");
       return data;
+    }
+    // 3/8 addition (Jono's request): same field/service and Treatment_Type
+    // matching the Farm page's ADG badge (page-2-farms.html's
+    // latestAdgForTreatment()), but pulling the FULL history instead of just
+    // the latest reading, so this can be plotted as a trend rather than a
+    // single snapshot.
+    async function fetchAdgAllHistory(likePatterns){
+      const treatmentClause = likePatterns.map(p => `UPPER(Treatment_Type) LIKE '%${p}%'`).join(' OR ');
+      const data = await q(ASSETS_URL, {
+        where: `adg_all IS NOT NULL AND snapshot_date IS NOT NULL AND (${treatmentClause})`,
+        outFields: "adg_all,snapshot_date,Treatment_Type",
+        orderByFields: "snapshot_date ASC, OBJECTID ASC",
+        resultRecordCount: "4000", f: "json"
+      });
+      return data.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.adg_all != null);
     }
     function fmtDate(epochMs){
       return new Date(epochMs).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'2-digit' });
@@ -531,64 +576,64 @@
     }
 
     async function loadAdg(){
-      // 2/8 change (Jono's request): as more farms with different baseline ADG
-      // (species/growth-rate driven) join the trial, comparing raw absolute ADG
-      // between the SeaFeed and Control aggregate lines gets misleading - a farm
-      // with naturally fast-growing stock can drag the pooled lines apart even
-      // with no real SeaFeed effect. Fixed by computing, per farm and per date,
-      // the % difference of SeaFeed vs Control ((sf-ct)/ct*100), then averaging
-      // those per-farm percentages across all reporting farms for each date -
-      // this normalises out each farm's baseline before blending, rather than
-      // pooling raw g/day and comparing the pooled averages. Rendered as a
-      // single blended % line. Excludes the pre-computed aggregate row and only
-      // uses real per-farm rows so the normalisation happens at the farm level.
+      // 3/8 change (Jono's request): this chart previously computed a
+      // per-farm-then-averaged % ADG difference from OptiWeigh_Cattle_Weights'
+      // rolling_adg field (see prior changelog entry below). That produced a
+      // technically-correct but wildly volatile number (e.g. -36%) because it
+      // was only ever averaging ONE farm's noisy day-to-day rolling_adg
+      // (259 g/day one day, 746 g/day two weeks earlier) - and it disagreed
+      // with the Farm page's ADG badge (-11 g/day), which reads a DIFFERENT
+      // feature service/field entirely (OptiWeigh_Assets_view, adg_all).
+      // Jono confirmed the Farm page's -11 g/day is the figure he wants shown
+      // consistently site-wide, so this chart now sources from the exact same
+      // service/field/Treatment_Type matching as the Farm page's
+      // latestAdgForTreatment() (see page-2-farms.html), just pulling full
+      // history instead of one latest reading, and plots the ADG ADVANTAGE IN
+      // G/DAY (not a %) so today's chart value always matches today's Farm
+      // page badge. adg_all has no per-farm breakdown, so the per-farm
+      // normalisation idea is parked, not deleted - reinstate it if/when this
+      // service gains a farm identifier.
       try{
-        const [seafeed, control] = await Promise.all([
-          q(PRODUCTIVITY_URL, { where:`treatment_group='seafeed' AND farm_name<>'${AGGREGATE_LABEL}'`, outFields:"farm_name,snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"4000", f:"json" }),
-          q(PRODUCTIVITY_URL, { where:`treatment_group='control' AND farm_name<>'${AGGREGATE_LABEL}'`, outFields:"farm_name,snapshot_date,rolling_adg", orderByFields:"snapshot_date ASC", resultRecordCount:"4000", f:"json" })
+        const [sfRows, ctRows] = await Promise.all([
+          fetchAdgAllHistory(['SEAFEED', 'SEA FEED']),
+          fetchAdgAllHistory(['CONTROL'])
         ]);
-        const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.farm_name != null && a.snapshot_date != null && a.rolling_adg != null);
-        const ctRows = control.features.map(f => f.attributes).filter(a => a.farm_name != null && a.snapshot_date != null && a.rolling_adg != null);
-        const key = r => r.farm_name + '|' + r.snapshot_date;
-        const sfByKey = new Map(sfRows.map(r => [key(r), r.rolling_adg]));
-        const ctByKey = new Map(ctRows.map(r => [key(r), r.rolling_adg]));
-
-        // For every farm/date pair reporting on both sides, compute that farm's
-        // % ADG difference, then group those percentages by date.
-        const pctByDate = new Map(); // snapshot_date -> array of per-farm % diffs
-        for (const [k, sfAdg] of sfByKey){
-          if (!ctByKey.has(k)) continue;
-          const ctAdg = ctByKey.get(k);
-          if (!ctAdg || Math.abs(ctAdg) < 1e-6) continue; // guard divide-by-zero
-          const snapshotDate = Number(k.split('|')[1]);
-          const pct = ((sfAdg - ctAdg) / ctAdg) * 100;
-          if (!pctByDate.has(snapshotDate)) pctByDate.set(snapshotDate, []);
-          pctByDate.get(snapshotDate).push(pct);
+        // Multiple OptiWeigh sessions can report the same day; average them
+        // per date per treatment so each date yields one figure, same as the
+        // "latest reading" framing used on the Farm page.
+        function avgByDate(rows){
+          const sums = new Map(), counts = new Map();
+          for (const r of rows){
+            sums.set(r.snapshot_date, (sums.get(r.snapshot_date) || 0) + r.adg_all);
+            counts.set(r.snapshot_date, (counts.get(r.snapshot_date) || 0) + 1);
+          }
+          const out = new Map();
+          for (const [d, sum] of sums) out.set(d, sum / counts.get(d));
+          return out;
         }
-        const allDates = Array.from(pctByDate.keys()).sort((a, b) => a - b);
-        const blended = allDates.map(d => {
-          const vals = pctByDate.get(d);
-          return vals.reduce((sum, v) => sum + v, 0) / vals.length;
-        });
+        const sfByDate = avgByDate(sfRows);
+        const ctByDate = avgByDate(ctRows);
+        const allDates = Array.from(new Set([...sfByDate.keys(), ...ctByDate.keys()]))
+          .filter(d => sfByDate.has(d) && ctByDate.has(d))
+          .sort((a, b) => a - b);
+        const diffs = allDates.map(d => (sfByDate.get(d) - ctByDate.get(d)) * 1000); // kg/day -> g/day
 
         renderLineChart('chart-adg', 'chart-adg-empty',
           allDates.map(d => fmtDate(d)),
           [
             {
-              label:'SeaFeed vs Control (% ADG difference)', data: blended,
+              label:'SeaFeed vs Control (ADG advantage, g/day)', data: diffs,
               borderColor: MINT, backgroundColor:'rgba(58,169,137,0.12)',
               fill:{ value:0 }, tension:0.35, spanGaps:true, pointRadius:2,
-              // 2/8 change (Jono's request): shade red below zero (SeaFeed
-              // behind Control) and keep the existing green above zero
-              // (SeaFeed ahead), instead of a flat green fill regardless of
-              // sign.
+              // Shade red below zero (SeaFeed behind Control), green above
+              // zero (SeaFeed ahead) - kept from the 2/8 pass.
               segment: {
                 borderColor: ctx => segmentColorBySign(ctx, MINT, RED),
                 backgroundColor: ctx => segmentColorBySign(ctx, 'rgba(58,169,137,0.12)', 'rgba(192,57,43,0.12)')
               }
             }
           ],
-          '% ADG difference (SeaFeed vs Control)'
+          'ADG advantage (g/day)'
         );
       } catch(err){
         console.error('ADG chart failed:', err);
