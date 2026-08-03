@@ -80,7 +80,24 @@
   const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
   const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
   const BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
-  const PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
+  // 3/8 change (Jono's request): this used to read OptiWeigh_Cattle_Weights'
+  // rolling_adg (trial-aggregate row), which disagreed with the Farm page's
+  // ADG badge - two different feature services/fields for what's supposed to
+  // be the same headline number. Switched to the SAME service/field/matching
+  // as the Farm page (see page-2-farms.html's latestAdgForTreatment()) so
+  // this figure always agrees with the Farm page on any given date. See
+  // page-5-data.html's file-header changelog (3/8 entry) for the full
+  // investigation and live numbers that surfaced this.
+  const ASSETS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Assets_view/FeatureServer/0/query";
+
+  // Now that the trial has multiple farms, Emissions/Economics/Productivity
+  // each carry one row per real farm PLUS one pre-computed, head-count-
+  // weighted trial-wide row per day tagged with this farm_name — see
+  // lel_farms.py (Python side) for where this label comes from. This page
+  // is public/funder-facing ("the case, in brief"), so every query below
+  // filters to that one aggregate row rather than an arbitrary single
+  // farm's figure.
+  const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
 
   async function q(url, params){
     const res = await fetch(url + "?" + new URLSearchParams(params));
@@ -91,7 +108,7 @@
 
   async function fetchLatestSeafeedEmissions(){
     const data = await q(EMISSIONS_URL, {
-      where: "treatment='seafeed'", outFields: "abatement_rate,record_date",
+      where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`, outFields: "abatement_rate,record_date",
       orderByFields: "record_date DESC", resultRecordCount: "1", f: "json"
     });
     return data.features.length ? data.features[0].attributes : null;
@@ -106,7 +123,7 @@
 
   async function fetchEconByTreatment(){
     const data = await q(ECON_URL, {
-      where: "treatment IN ('seafeed','control')",
+      where: `treatment IN ('seafeed','control') AND farm_name='${AGGREGATE_LABEL}'`,
       outFields: "treatment,cumulative_ch4_abated_kg_per_head,representative_head_count,calculation_date",
       orderByFields: "calculation_date DESC", resultRecordCount: "50", f: "json"
     });
@@ -115,12 +132,19 @@
     return latest;
   }
 
-  async function fetchProductivityHistory(treatment){
-    const data = await q(PRODUCTIVITY_URL, {
-      where: `treatment_group='${treatment}'`, outFields: "snapshot_date,rolling_adg",
-      orderByFields: "snapshot_date ASC", resultRecordCount: "2000", f: "json"
+  // 3/8 addition (Jono's request): mirrors page-2-farms.html's
+  // latestAdgForTreatment() exactly, so this figure is guaranteed to match
+  // the Farm page's ADG badge.
+  async function latestAdgForTreatment(likePatterns){
+    const treatmentClause = likePatterns.map(p => `UPPER(Treatment_Type) LIKE '%${p}%'`).join(' OR ');
+    const data = await q(ASSETS_URL, {
+      where: `adg_all IS NOT NULL AND snapshot_date IS NOT NULL AND (${treatmentClause})`,
+      outFields: "adg_all,snapshot_date,Treatment_Type",
+      orderByFields: "snapshot_date DESC, OBJECTID DESC",
+      resultRecordCount: "1", f: "json"
     });
-    return data.features.map(f => f.attributes);
+    const row = data.features[0] && data.features[0].attributes;
+    return row ? { date: row.snapshot_date, value: row.adg_all } : null;
   }
 
   async function loadData(){
@@ -130,20 +154,18 @@
     const ptAdgEl = document.getElementById('pt-adg');
 
     try {
-      const [emissions, gwp, econ, seafeedProd, controlProd] = await Promise.all([
+      const [emissions, gwp, econ, seafeedAdgReading, controlAdgReading] = await Promise.all([
         fetchLatestSeafeedEmissions(), fetchGwp(), fetchEconByTreatment(),
-        fetchProductivityHistory('seafeed'), fetchProductivityHistory('control')
+        latestAdgForTreatment(['SEAFEED', 'SEA FEED']), latestAdgForTreatment(['CONTROL'])
       ]);
 
       const abatementText = (emissions && emissions.abatement_rate != null)
         ? emissions.abatement_rate.toFixed(1) + '%' : '—';
 
-      const seafeedAdg = seafeedProd.length ? seafeedProd[seafeedProd.length-1].rolling_adg : null;
-      const controlAdg = controlProd.length ? controlProd[controlProd.length-1].rolling_adg : null;
       let adgText = '—';
-      if (seafeedAdg != null && controlAdg != null){
-        const diff = seafeedAdg - controlAdg;
-        adgText = (diff>=0?'+':'') + Math.round(diff) + ' g/day';
+      if (seafeedAdgReading != null && controlAdgReading != null){
+        const diffGramsPerDay = (seafeedAdgReading.value - controlAdgReading.value) * 1000;
+        adgText = (diffGramsPerDay>=0?'+':'') + Math.round(diffGramsPerDay) + ' g/day';
       }
 
       ptAbatementEl.textContent = abatementText;
