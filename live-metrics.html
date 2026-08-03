@@ -90,13 +90,16 @@
   // investigation and live numbers that surfaced this.
   const ASSETS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Assets_view/FeatureServer/0/query";
 
-  // Now that the trial has multiple farms, Emissions/Economics/Productivity
-  // each carry one row per real farm PLUS one pre-computed, head-count-
-  // weighted trial-wide row per day tagged with this farm_name — see
-  // lel_farms.py (Python side) for where this label comes from. This page
-  // is public/funder-facing ("the case, in brief"), so every query below
-  // filters to that one aggregate row rather than an arbitrary single
-  // farm's figure.
+  // 3/8 fix (same bug as page-5-data.html's 26/7 entry, never carried over
+  // here until now): Emissions and Economics DON'T have a farm_name field at
+  // all (confirmed live: querying LEL_Emissions_Data_view with a farm_name
+  // filter returns a hard 400, "Invalid field: farm_name"). That column only
+  // exists on the Productivity/OptiWeigh tables. Filtering these two queries
+  // by AGGREGATE_LABEL was silently breaking this whole card (Promise.all
+  // rejects, catch block shows "reconnecting" with every metric stuck on
+  // em-dash) - discovered while verifying the ADG source-of-truth fix below.
+  // Removed the farm_name filter from both queries; AGGREGATE_LABEL is left
+  // in place since nothing else needs removing.
   const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
 
   async function q(url, params){
@@ -108,7 +111,7 @@
 
   async function fetchLatestSeafeedEmissions(){
     const data = await q(EMISSIONS_URL, {
-      where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`, outFields: "abatement_rate,record_date",
+      where: `treatment='seafeed'`, outFields: "abatement_rate,record_date",
       orderByFields: "record_date DESC", resultRecordCount: "1", f: "json"
     });
     return data.features.length ? data.features[0].attributes : null;
@@ -123,7 +126,7 @@
 
   async function fetchEconByTreatment(){
     const data = await q(ECON_URL, {
-      where: `treatment IN ('seafeed','control') AND farm_name='${AGGREGATE_LABEL}'`,
+      where: `treatment IN ('seafeed','control')`,
       outFields: "treatment,cumulative_ch4_abated_kg_per_head,representative_head_count,calculation_date",
       orderByFields: "calculation_date DESC", resultRecordCount: "50", f: "json"
     });
