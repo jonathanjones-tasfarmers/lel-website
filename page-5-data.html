@@ -146,6 +146,30 @@
   ASSETS_URL and fetchAdgAllHistory() as dead code. Chart now shows a real
   multi-week trend; values approximate OptiWeigh's own adgAll methodology,
   not guaranteed to match the Farm page's live badge to the decimal.
+
+  4/8 pass (Jono's request, third ADG source-of-truth unification): the
+  Farm page's ADG badge was switched today to LEL_Economics_Data's
+  weight_gain_kg_per_head/days_of_data (a trial-to-date average, same
+  formula the cost-of-production calculator's adgUpliftKgPerDay already
+  used - see page-2-farms.html's own 4/8 header note for the full story of
+  why adg_all was dropped there). That left THIS chart as the odd one out,
+  reading a third, independent methodology (adg_all_cumulative's per-animal
+  regression, above) that could disagree with both other pages on any given
+  day. loadAdg() now reads LEL_Economics_Data instead of
+  OptiWeigh_Cattle_Weights/adg_all_cumulative: fetches the AGGREGATE_LABEL
+  row for both treatments ordered by calculation_date, pairs SeaFeed and
+  Control by exact calculation_date match (confirmed live - Economics_
+  Pipeline.py writes both treatments' rows with the same timestamp every
+  run), and computes the identical (seafeed.weight_gain_kg_per_head -
+  control.weight_gain_kg_per_head) / min(days_of_data) * 1000 formula as
+  the calculator and the Farm page, per date. Removed the adg_all_cumulative
+  query entirely - PRODUCTIVITY_URL is no longer used by this function.
+  KNOWN TRADE-OFF: LEL_Economics_Data only has daily calculation runs going
+  back to 22/7 (9 runs as at 4/8), fewer and more recent than
+  adg_all_cumulative's longer backfilled history - a shorter but always-
+  consistent line, instead of a longer but independently-computed one.
+  Jono's next step: backfill more Economics history so this chart has more
+  points to show.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -329,7 +353,7 @@
 
     <div class="dp-chart-section dp-reveal">
       <h3 class="dp-h3">Average daily gain: SeaFeed's edge over time</h3>
-      <p class="dp-chart-caption">SeaFeed's ADG advantage over control, in grams per day, tracked since each session began - the same underlying concept as the figure shown on the Farm page. Shaded green while SeaFeed is ahead, red while it's behind.</p>
+      <p class="dp-chart-caption">SeaFeed's ADG advantage over control, in grams per day, trial-to-date average as of each calculation run - the same figure and formula shown on the Farm page. Shaded green while SeaFeed is ahead, red while it's behind.</p>
       <div class="dp-chart-box">
         <div class="dp-skel dp-skel-chart" id="chart-adg-skeleton"></div>
         <canvas id="chart-adg"></canvas>
@@ -473,13 +497,23 @@
   (function(){
     const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
     const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
-    const PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
     const MINT = '#3aa989', SLATE = '#a9b8c4', WARNING = '#c98a2e', RED = '#c0392b';
     const STALE_AFTER_DAYS = 14;
-    // NOTE: this label is still used below for the Productivity/OptiWeigh
-    // query, which DOES carry a farm_name field (per-farm rows plus one
-    // aggregate row). It is deliberately NOT used on the Emissions or
-    // Economics queries any more - see file header comment.
+    // NOTE (updated 4/8): the 26/7 fix removed farm_name filtering from
+    // every Economics/Emissions query on this page because, AT THE TIME,
+    // LEL_Economics_Data had no farm_name field at all. That's no longer
+    // true - 04. Economics_Pipeline.py was later reworked to write
+    // per-farm rows plus one AGGREGATE_LABEL rollup row (same pattern the
+    // Productivity table already used), confirmed live when this constant
+    // was reused for loadAdg()'s 4/8 rewrite below. loadAdg() now filters
+    // on it correctly. The OTHER Economics queries on this page
+    // (latestCostOfProduction, loadCostOfProductionTrend,
+    // fetchLatestEconomics in the herd calculator) were NOT revisited in
+    // this pass and still have no farm_name filter - worth checking
+    // whether they should also be scoped to AGGREGATE_LABEL now that
+    // per-farm rows exist, since an unfiltered "latest by calculation_date"
+    // query could occasionally surface a single farm's figures instead of
+    // the trial-wide pooled result. Flagged for Jono, not fixed here.
     const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
 
     async function q(url, params){
@@ -572,40 +606,36 @@
     }
 
     async function loadAdg(){
-      // 3/8 change, part 2 (Jono's request): the previous version of this
-      // chart read OptiWeigh_Assets_view/adg_all - correct for matching the
-      // Farm page's headline figure, but that table is purge-and-replace
-      // (00. Optiweigh_Pipeline_Sync.py wipes and reloads it every run), so
-      // it only ever held ONE day's reading - the chart could never show a
-      // trend. Jono then had 07. Optiweigh_ADG_Cumulative_Backfill.py
-      // backfill a proper history: a new field, adg_all_cumulative (g/day),
-      // on THIS table (OptiWeigh_Cattle_Weights), reconstructed via a
-      // per-animal linear regression against raw-daily-weights (see that
-      // script and the tasfarmers-optiweigh-api skill for why - short
-      // version: adg_all itself can't be queried historically, and naively
-      // averaging OptiWeigh's own pre-smoothed daily adg values across many
-      // days double-counts overlapping windows, which is what produced a
-      // wildly wrong first backfill attempt). This chart now reads that
-      // backfilled field from the AGGREGATE_LABEL row (weighted across
-      // farms by animal count, same pattern rolling_adg's aggregate already
-      // uses) rather than adg_all/Assets_view, so it shows the real
-      // multi-week trend instead of a single point. Values are an
-      // approximation of OptiWeigh's own adgAll methodology (see the
-      // skill's "honest caveat"), not guaranteed to match the Farm page's
-      // live badge to the decimal on any given day.
+      // 4/8 rewrite (Jono's request, third ADG source-of-truth unification
+      // - see the file header comment for the full story): now reads
+      // LEL_Economics_Data instead of OptiWeigh_Cattle_Weights/
+      // adg_all_cumulative, so this chart always agrees with the Farm
+      // page's badge and the cost-of-production calculator on any given
+      // day - all three now compute the same (seafeed.weight_gain_kg_
+      // per_head - control.weight_gain_kg_per_head) / min(days_of_data)
+      // * 1000 formula, just from different slices of the same table (one
+      // row per date here, vs only the latest row on the Farm page).
+      // SeaFeed and Control rows are paired by an EXACT calculation_date
+      // match rather than nearest-date - confirmed live that Economics_
+      // Pipeline.py always writes both treatments with the identical
+      // timestamp in the same run, so exact matching doesn't drop dates.
       try{
         const [seafeed, control] = await Promise.all([
-          q(PRODUCTIVITY_URL, { where:`treatment_group='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND adg_all_cumulative IS NOT NULL`, outFields:"snapshot_date,adg_all_cumulative", orderByFields:"snapshot_date ASC", resultRecordCount:"4000", f:"json" }),
-          q(PRODUCTIVITY_URL, { where:`treatment_group='control' AND farm_name='${AGGREGATE_LABEL}' AND adg_all_cumulative IS NOT NULL`, outFields:"snapshot_date,adg_all_cumulative", orderByFields:"snapshot_date ASC", resultRecordCount:"4000", f:"json" })
+          q(ECON_URL, { where:`treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL`, outFields:"calculation_date,weight_gain_kg_per_head,days_of_data", orderByFields:"calculation_date ASC", resultRecordCount:"2000", f:"json" }),
+          q(ECON_URL, { where:`treatment='control' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL`, outFields:"calculation_date,weight_gain_kg_per_head,days_of_data", orderByFields:"calculation_date ASC", resultRecordCount:"2000", f:"json" })
         ]);
-        const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.adg_all_cumulative != null);
-        const ctRows = control.features.map(f => f.attributes).filter(a => a.snapshot_date != null && a.adg_all_cumulative != null);
-        const sfByDate = new Map(sfRows.map(r => [r.snapshot_date, r.adg_all_cumulative]));
-        const ctByDate = new Map(ctRows.map(r => [r.snapshot_date, r.adg_all_cumulative]));
+        const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.calculation_date != null);
+        const ctRows = control.features.map(f => f.attributes).filter(a => a.calculation_date != null);
+        const sfByDate = new Map(sfRows.map(r => [r.calculation_date, r]));
+        const ctByDate = new Map(ctRows.map(r => [r.calculation_date, r]));
         const allDates = Array.from(new Set([...sfByDate.keys(), ...ctByDate.keys()]))
           .filter(d => sfByDate.has(d) && ctByDate.has(d))
           .sort((a, b) => a - b);
-        const diffs = allDates.map(d => Math.round((sfByDate.get(d) - ctByDate.get(d)) * 10) / 10); // already g/day
+        const diffs = allDates.map(d => {
+          const sf = sfByDate.get(d), ct = ctByDate.get(d);
+          const daysOfData = Math.min(sf.days_of_data, ct.days_of_data);
+          return Math.round(((sf.weight_gain_kg_per_head - ct.weight_gain_kg_per_head) / daysOfData) * 1000 * 10) / 10;
+        });
 
         renderLineChart('chart-adg', 'chart-adg-empty',
           allDates.map(d => fmtDate(d)),
