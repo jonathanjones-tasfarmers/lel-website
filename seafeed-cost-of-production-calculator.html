@@ -959,7 +959,18 @@
   // completely independent of the iframe's own size, so there's nothing
   // for it to feed back into. Both the ResizeObserver target and the
   // measurement itself use body for this reason.
+  // Third layer, after the event-driven triggers below still let one
+  // transient overshoot slip through in testing (a report sent mid-reflow,
+  // during page load, landed a bit high and nothing afterward corrected
+  // it back down since nothing else changed to re-trigger a report): a
+  // quiet 500ms poll for the life of the page, self-correcting. Cheap
+  // (one scrollHeight read, twice a second) and only ever posts when the
+  // height actually differs from what was last sent, so it's a no-op in
+  // the steady state - just a guarantee that ANY transient drift, from
+  // any cause, gets corrected within half a second rather than lingering
+  // for the rest of the visit.
   let reportHeightScheduled = false;
+  let lastReportedHeight = null;
   function reportHeightToParent() {
     if (reportHeightScheduled) return;
     reportHeightScheduled = true;
@@ -967,10 +978,13 @@
       reportHeightScheduled = false;
       try {
         const h = document.body.scrollHeight;
+        if (h === lastReportedHeight) return;
+        lastReportedHeight = h;
         window.parent.postMessage({ type: "tf-calc-resize", height: h }, "*");
       } catch (e) { /* not embedded, or cross-origin restriction - fine, just skip */ }
     });
   }
+  setInterval(reportHeightToParent, 500);
   if ("ResizeObserver" in window) {
     new ResizeObserver(reportHeightToParent).observe(document.body);
   }
