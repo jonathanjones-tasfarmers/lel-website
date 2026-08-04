@@ -752,6 +752,7 @@
     el("marginSeafeed").textContent = fmtMoney0(marginSeaHerd);
 
     el("results-panel").style.display = "block";
+    reportHeightToParent(); // belt-and-braces alongside the MutationObserver, see its comment above
   }
 
   // Example case study (4/8 addition, Jono's request): a live worked
@@ -804,6 +805,7 @@
       </div>
       <p class="tf-case-note">Uses this calculator's default inputs and today's live trial differential. Change any figure below to see it for your own mob.</p>
     `;
+    reportHeightToParent(); // belt-and-braces alongside the MutationObserver, see its comment above
   }
 
   const fmtDate = iso => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
@@ -926,21 +928,44 @@
   // removed: content got shorter, 990px didn't, leaving dead space below
   // the real content that the visitor has to scroll past for nothing.
   // Fix: report this page's real height to the parent on load and
-  // whenever it changes (ResizeObserver on <html>, catches every case -
-  // toggles, results appearing, resize - no manual number to maintain
-  // ever again), so the parent can size the iframe to match exactly.
-  // See the matching listener in page-7-calculator.html.
+  // whenever it changes, so the parent can size the iframe to match
+  // exactly - no manual number to maintain ever again. See the matching
+  // listener in page-7-calculator.html.
+  //
+  // Belt and braces on how "changed" is detected, after first-cut testing
+  // caught a real gap: a ResizeObserver on <html> alone missed the async
+  // data load swapping placeholder "-" text and loading messages for the
+  // live results/case-study content (a plain innerHTML change didn't
+  // trigger it reliably here). Layered three triggers instead: a
+  // MutationObserver on <body> (childList/subtree/characterData/class
+  // attribute - catches every content swap and every toggle), a
+  // ResizeObserver on <html> (catches pure CSS-driven size changes, e.g.
+  // the case-study detail's max-height transition, that aren't DOM
+  // mutations), and explicit calls at the end of the two functions that
+  // actually populate results (calc(), renderCaseStudy()) as a final
+  // guarantee. All routed through one rAF-debounced reporter so rapid-fire
+  // triggers collapse into a single postMessage per frame.
+  let reportHeightScheduled = false;
   function reportHeightToParent() {
-    try {
-      const h = document.documentElement.scrollHeight;
-      window.parent.postMessage({ type: "tf-calc-resize", height: h }, "*");
-    } catch (e) { /* not embedded, or cross-origin restriction - fine, just skip */ }
+    if (reportHeightScheduled) return;
+    reportHeightScheduled = true;
+    requestAnimationFrame(() => {
+      reportHeightScheduled = false;
+      try {
+        const h = document.documentElement.scrollHeight;
+        window.parent.postMessage({ type: "tf-calc-resize", height: h }, "*");
+      } catch (e) { /* not embedded, or cross-origin restriction - fine, just skip */ }
+    });
   }
   if ("ResizeObserver" in window) {
     new ResizeObserver(reportHeightToParent).observe(document.documentElement);
-  } else {
-    window.addEventListener("resize", reportHeightToParent);
   }
+  if ("MutationObserver" in window) {
+    new MutationObserver(reportHeightToParent).observe(document.body, {
+      childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["class", "style"]
+    });
+  }
+  window.addEventListener("resize", reportHeightToParent);
   window.addEventListener("load", reportHeightToParent);
 
   init();
