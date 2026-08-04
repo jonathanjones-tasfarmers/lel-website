@@ -64,7 +64,7 @@
   }
   html, body { margin: 0; background: transparent; }
   body { font-family: var(--font-body); color: var(--tf-navy-900); }
-  .tf-wrap { max-width: 780px; margin: 0; }
+  .tf-wrap { max-width: 780px; margin: 0 auto; }
   .tf-status-row { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 6px 14px; border-radius: 999px; background: var(--tf-slate-100); border: 1px solid var(--tf-slate-200); cursor: default; }
   .tf-status-row.preliminary { background: #fbf3e7; border-color: #eeddb8; }
   .tf-live-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--tf-mint-500); }
@@ -156,28 +156,28 @@
      estimate" elsewhere in this file, so the page doesn't front-load all
      the reading at once.
 
-     4/8 pass, part 2 (Jono's request): the whole widget was floating
-     centred inside its iframe, out of step with every other page's
-     left-anchored layout, and the photo band was a small rounded card
-     rather than the full-bleed hero treatment used elsewhere. Fixed: (1)
-     .tf-wrap's margin changed from "0 auto" to "0" - the widget now hugs
-     the left edge of its container instead of centring with equal gutters
-     both sides, matching how content sits on every other page; (2) the
-     photo band moved OUTSIDE .tf-wrap and set to width:100%, so it bleeds
-     to the full width of the iframe rather than being capped at 780px -
-     the same "full-width band, inner text held to the page's own
-     max-width" structure every hero/origin-band on this site uses (see
-     page-5-data.html's .dp-hero / .dp-hero-inner for the pattern this
-     mirrors); (3) the overlay gradient is now the same 5-stop recipe used
-     on every page hero (dark navy at top, progressively lightening,
-     fading all the way to solid white at the very bottom so the photo
-     blends seamlessly into the page below it instead of stopping at a
-     hard card edge) - ported to plain rgba here since this file (unlike
-     the full pages) doesn't define the oklch colour-mix tokens the
-     original recipe uses. */
-  .tf-explainer-photo { position: relative; width: 100%; min-height: 220px; overflow: hidden; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/AGP_3851.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); display: flex; align-items: flex-end; box-sizing: border-box; margin-bottom: 24px; }
-  .tf-explainer-photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,18,33,0.12) 0%, rgba(4,18,33,0.32) 42%, rgba(4,18,33,0.48) 68%, rgba(4,18,33,0.72) 86%, #ffffff 100%); }
-  .tf-explainer-photo-inner { position: relative; z-index: 1; max-width: 780px; margin: 0; padding: 26px 0 44px; box-sizing: border-box; }
+     4/8 pass, part 3 (Jono's request: "copy the layout that the home page
+     uses"): parts 1-2's rework was too heavy-handed and diverged from the
+     established pattern instead of just reusing it. This is now a direct
+     port of page-1-home.html's .hp-hero / .hp-hero::before / .hp-hero-inner
+     (same full-bleed band + centred inner max-width structure, same 5-stop
+     gradient stops and opacities: 0.3/0.5/0.62/0.8 at 0%/42%/68%/86%, then
+     solid at 100%). Two adaptations only: this file has no oklch colour-mix
+     tokens defined (unlike the full pages), so the gradient is written as
+     plain rgba(4,18,33,alpha) - mathematically identical output, since
+     oklch(from var(--tf-navy-900) l c h / alpha) doesn't touch navy-900's
+     l/c/h, only its alpha; and the final stop is solid white rather than
+     var(--surface-sunken), because - per the home page's own comment on
+     this exact gradient - it should blend into whatever section comes
+     immediately after it, and here that's the plain white step-card row,
+     not a sunken band like on Home. Inner content uses this file's own
+     780px max-width (matching .tf-wrap) instead of Home's 1180px, margin:0
+     auto to match .tf-wrap's own centring - the same relationship
+     .hp-hero-inner has to .hp-page. */
+  .tf-explainer-photo { position: relative; width: 100%; min-height: 300px; overflow: hidden; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/AGP_3851.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); display: flex; align-items: flex-end; box-sizing: border-box; margin-bottom: 24px; }
+  .tf-explainer-photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,18,33,0.3) 0%, rgba(4,18,33,0.5) 42%, rgba(4,18,33,0.62) 68%, rgba(4,18,33,0.8) 86%, #ffffff 100%); }
+  .tf-explainer-photo-inner { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 44px 0 64px; width: 100%; box-sizing: border-box; }
+  @media (max-width: 640px) { .tf-explainer-photo { min-height: 260px; } .tf-explainer-photo-inner { padding: 32px 0 44px; } }
   .tf-explainer-eyebrow { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tf-mint-300); margin: 0 0 6px 0; }
   .tf-explainer-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--tf-white); margin: 0 0 8px 0; line-height: 1.2; }
   .tf-explainer-lead { font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,0.92); margin: 0; max-width: 58ch; }
