@@ -11,10 +11,10 @@
 
   The calculator tool itself (seafeed-cost-of-production-calculator.html)
   is NOT touched by this rebuild - it's still embedded exactly as it was,
-  same src, same frameborder/scrolling/allow attributes, same fixed
-  990px height. Only the page shell around it (hero, intro copy, "how
-  this works" box) has been rebuilt to match the rest of the site. This
-  keeps the calculator's own function completely untouched.
+  same src, same frameborder/scrolling/allow attributes. Only the page
+  shell around it (hero, intro copy, "how this works" box) has been
+  rebuilt to match the rest of the site. This keeps the calculator's own
+  function completely untouched.
 
   Hero image uses the REAL hosted URL already live on GitHub Pages
   (hero-calc.jpg) - this was already being used by the native Hub page,
@@ -25,6 +25,28 @@
 
   Single self-contained file for a single Hub Iframe widget, same
   pattern as page-1 through page-6.
+
+  NOTE (4/8): this file was live on GitHub Pages already but had never
+  been saved back into the local project folder - added here to restore
+  local as the source of truth per the project's usual edit-locally,
+  push-to-GitHub workflow. Content below matches the live version, plus
+  the height-sync fix described next.
+
+  4/8 pass, part 5 (Jono's request, reviewing the live Hub page): the
+  nested calculator iframe below used to carry a hardcoded
+  style="height: 990px;". That number was tuned for whatever the
+  calculator's content height happened to be at the time it was set, and
+  drifts stale the moment that content changes - which it did, repeatedly,
+  across the same-day reworks of the calculator's own explainer section.
+  Most recently, removing that file's duplicate hero band shortened its
+  content well below 990px, leaving dead space in the iframe below the
+  real content that a visitor had to scroll straight through for nothing.
+  Fixed properly this time instead of just picking a new fixed number:
+  the calculator page now reports its own real height to this page via
+  postMessage on load and on every ResizeObserver-detected change (case
+  study toggle, results appearing, window resize, anything), and the
+  listener below sets the iframe's height to match exactly, every time.
+  No fixed number to maintain here again.
 -->
 <style>
   :root{
@@ -153,6 +175,25 @@
       });
     }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
     els.forEach(function(el){ io.observe(el); });
+  })();
+
+  // --- calculator iframe height sync (4/8 pass, part 5) ---
+  // Matches the postMessage sender added to seafeed-cost-of-production-
+  // calculator.html. Trusts messages only from that file's own origin
+  // (GitHub Pages), and only the specific message shape this pair of
+  // files uses, so this can't be triggered by anything else. Keeps the
+  // style="height: 990px;" above as a sane first-paint fallback before
+  // the real message arrives, then overrides it immediately.
+  (function(){
+    var calcFrame = document.getElementById('cwwoxv1kl');
+    if (!calcFrame) return;
+    window.addEventListener('message', function(e){
+      if (e.origin !== 'https://jonathanjones-tasfarmers.github.io') return;
+      var data = e.data;
+      if (!data || data.type !== 'tf-calc-resize' || typeof data.height !== 'number') return;
+      var next = Math.max(400, Math.ceil(data.height) + 4);
+      calcFrame.style.height = next + 'px';
+    });
   })();
 </script>
 

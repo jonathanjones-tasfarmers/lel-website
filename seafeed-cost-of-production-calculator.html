@@ -916,6 +916,33 @@
     }
   }
 
+  // 4/8 pass, part 5 (Jono's request, reviewing the live Hub page): this
+  // file sits inside a FIXED-height nested iframe in its parent shell,
+  // page-7-calculator.html (style="height: 990px;"). This file's own
+  // content height varies a lot - case study collapsed vs expanded,
+  // before vs after results appear, viewport width - so a single fixed
+  // number in the parent drifts stale the moment content changes here,
+  // exactly what just happened when part 4's duplicate hero band was
+  // removed: content got shorter, 990px didn't, leaving dead space below
+  // the real content that the visitor has to scroll past for nothing.
+  // Fix: report this page's real height to the parent on load and
+  // whenever it changes (ResizeObserver on <html>, catches every case -
+  // toggles, results appearing, resize - no manual number to maintain
+  // ever again), so the parent can size the iframe to match exactly.
+  // See the matching listener in page-7-calculator.html.
+  function reportHeightToParent() {
+    try {
+      const h = document.documentElement.scrollHeight;
+      window.parent.postMessage({ type: "tf-calc-resize", height: h }, "*");
+    } catch (e) { /* not embedded, or cross-origin restriction - fine, just skip */ }
+  }
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(reportHeightToParent).observe(document.documentElement);
+  } else {
+    window.addEventListener("resize", reportHeightToParent);
+  }
+  window.addEventListener("load", reportHeightToParent);
+
   init();
 </script>
 </body>
