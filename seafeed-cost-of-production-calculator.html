@@ -969,12 +969,20 @@
   // the steady state - just a guarantee that ANY transient drift, from
   // any cause, gets corrected within half a second rather than lingering
   // for the rest of the visit.
+  //
+  // Debounced via setTimeout, not requestAnimationFrame: rAF callbacks
+  // are suspended entirely while a document isn't visible (backgrounded
+  // tab, or an iframe not actually painted), which would silently stop
+  // every report - including the safety-net poll - for exactly the
+  // visitors this fix matters most for (anyone who opens the page in a
+  // background tab). setTimeout still runs (browsers throttle it, but
+  // don't stop it) regardless of visibility.
   let reportHeightScheduled = false;
   let lastReportedHeight = null;
   function reportHeightToParent() {
     if (reportHeightScheduled) return;
     reportHeightScheduled = true;
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       reportHeightScheduled = false;
       try {
         const h = document.body.scrollHeight;
@@ -982,7 +990,7 @@
         lastReportedHeight = h;
         window.parent.postMessage({ type: "tf-calc-resize", height: h }, "*");
       } catch (e) { /* not embedded, or cross-origin restriction - fine, just skip */ }
-    });
+    }, 30);
   }
   setInterval(reportHeightToParent, 500);
   if ("ResizeObserver" in window) {
