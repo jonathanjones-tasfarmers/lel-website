@@ -170,6 +170,17 @@
   consistent line, instead of a longer but independently-computed one.
   Jono's next step: backfill more Economics history so this chart has more
   points to show.
+
+  4/8 pass, part 2 (Jono's request, after the weight-gain + abatement
+  backfill was run): the backfill (11. Economics_Backfill_Weight_
+  Abatement.py) extended LEL_Economics_Data's AGGREGATE_LABEL rows back to
+  11/5, but the earliest weeks are thin, single-mob Control data that Jono
+  doesn't consider robust enough to chart. Added an ADG_CHART_START_MS
+  constant (25/6) and an "AND calculation_date >= ..." clause to both
+  loadAdg() queries so the chart only plots from 25/6 onward. This trims
+  the CHART's display window only - the Farm page badge and the
+  cost-of-production calculator both read just the latest row and are
+  unaffected, and the underlying backfilled rows are untouched.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -262,7 +273,7 @@
   @media (prefers-reduced-motion: reduce) { .dp-skel, .dp-skel-white { animation: none !important; } }
 
   /* --- how this data is collected: full-bleed origin band with a floating card --- */
-  .dp-origin-band { position: relative; min-height: 560px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/middle-wool.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .dp-origin-band { position: relative; min-height: 560px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .dp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
     linear-gradient(180deg, var(--surface-page) 0%, transparent 10%),
     linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.5) 0%, oklch(from var(--tf-navy-900) l c h / 0.22) 46%, oklch(from var(--tf-navy-900) l c h / 0.12) 72%); }
@@ -605,6 +616,16 @@
       }
     }
 
+    // 4/8 addition (Jono's request, same-day follow-up): the weight-gain +
+    // abatement backfill (11. Economics_Backfill_Weight_Abatement.py) added
+    // history back to 11/5, but the earliest weeks are single-mob, thin
+    // Control readings - not robust enough to plot with confidence. Jono
+    // asked for this chart specifically to start from 25/6 onward instead
+    // (the Farm page badge and calculator are unaffected - both read only
+    // the latest row, so this trims the CHART's start, not the underlying
+    // data).
+    const ADG_CHART_START_MS = Date.UTC(2026, 5, 25); // month is 0-indexed: 5 = June
+
     async function loadAdg(){
       // 4/8 rewrite (Jono's request, third ADG source-of-truth unification
       // - see the file header comment for the full story): now reads
@@ -621,8 +642,8 @@
       // timestamp in the same run, so exact matching doesn't drop dates.
       try{
         const [seafeed, control] = await Promise.all([
-          q(ECON_URL, { where:`treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL`, outFields:"calculation_date,weight_gain_kg_per_head,days_of_data", orderByFields:"calculation_date ASC", resultRecordCount:"2000", f:"json" }),
-          q(ECON_URL, { where:`treatment='control' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL`, outFields:"calculation_date,weight_gain_kg_per_head,days_of_data", orderByFields:"calculation_date ASC", resultRecordCount:"2000", f:"json" })
+          q(ECON_URL, { where:`treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL AND calculation_date >= ${ADG_CHART_START_MS}`, outFields:"calculation_date,weight_gain_kg_per_head,days_of_data", orderByFields:"calculation_date ASC", resultRecordCount:"2000", f:"json" }),
+          q(ECON_URL, { where:`treatment='control' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL AND calculation_date >= ${ADG_CHART_START_MS}`, outFields:"calculation_date,weight_gain_kg_per_head,days_of_data", orderByFields:"calculation_date ASC", resultRecordCount:"2000", f:"json" })
         ]);
         const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.calculation_date != null);
         const ctRows = control.features.map(f => f.attributes).filter(a => a.calculation_date != null);
