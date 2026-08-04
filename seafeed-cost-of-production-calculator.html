@@ -64,7 +64,7 @@
   }
   html, body { margin: 0; background: transparent; }
   body { font-family: var(--font-body); color: var(--tf-navy-900); }
-  .tf-wrap { max-width: 780px; margin: 0 auto; }
+  .tf-wrap { max-width: 780px; margin: 0 auto; padding-top: 28px; }
   .tf-status-row { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 6px 14px; border-radius: 999px; background: var(--tf-slate-100); border: 1px solid var(--tf-slate-200); cursor: default; }
   .tf-status-row.preliminary { background: #fbf3e7; border-color: #eeddb8; }
   .tf-live-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--tf-mint-500); }
@@ -143,45 +143,30 @@
   /* --- explainer: "how this calculator works" + example case study ---
      4/8 rework (Jono's request): the first version of this section was a
      wall of prose that didn't match the segmented, photo-backed, icon-led
-     style used on every other page. Reworked into: a compact photo band
-     (mirrors the Data/Resources page "origin band" pattern, scaled for
-     this file's narrower iframe-embed width) carrying only the eyebrow +
-     heading + one short sentence, three icon-led step cards (icons reused
-     from this file's own field icons / hero result icons, not new
-     artwork), a two-column icon+label legend instead of paragraph text,
-     and a case study that leads with the big numbers first (matching the
-     real hero-card result treatment below) with the worked-out narrative
-     tucked behind a "see how we worked this out" disclosure - the same
-     collapsible pattern already used for "About this price" / "About this
-     estimate" elsewhere in this file, so the page doesn't front-load all
-     the reading at once.
+     style used on every other page. Reworked into three icon-led step
+     cards (icons reused from this file's own field icons / hero result
+     icons, not new artwork), a two-column icon+label legend instead of
+     paragraph text, and a case study that leads with the big numbers
+     first (matching the real hero-card result treatment below) with the
+     worked-out narrative tucked behind a "see how we worked this out"
+     disclosure - the same collapsible pattern already used for "About
+     this price" / "About this estimate" elsewhere in this file, so the
+     page doesn't front-load all the reading at once.
 
-     4/8 pass, part 3 (Jono's request: "copy the layout that the home page
-     uses"): parts 1-2's rework was too heavy-handed and diverged from the
-     established pattern instead of just reusing it. This is now a direct
-     port of page-1-home.html's .hp-hero / .hp-hero::before / .hp-hero-inner
-     (same full-bleed band + centred inner max-width structure, same 5-stop
-     gradient stops and opacities: 0.3/0.5/0.62/0.8 at 0%/42%/68%/86%, then
-     solid at 100%). Two adaptations only: this file has no oklch colour-mix
-     tokens defined (unlike the full pages), so the gradient is written as
-     plain rgba(4,18,33,alpha) - mathematically identical output, since
-     oklch(from var(--tf-navy-900) l c h / alpha) doesn't touch navy-900's
-     l/c/h, only its alpha; and the final stop is solid white rather than
-     var(--surface-sunken), because - per the home page's own comment on
-     this exact gradient - it should blend into whatever section comes
-     immediately after it, and here that's the plain white step-card row,
-     not a sunken band like on Home. Inner content uses this file's own
-     780px max-width (matching .tf-wrap) instead of Home's 1180px, margin:0
-     auto to match .tf-wrap's own centring - the same relationship
-     .hp-hero-inner has to .hp-page. */
-  .tf-explainer-photo { position: relative; width: 100%; min-height: 300px; overflow: hidden; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/AGP_3851.jpg'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); display: flex; align-items: flex-end; box-sizing: border-box; margin-bottom: 24px; }
-  .tf-explainer-photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(4,18,33,0.3) 0%, rgba(4,18,33,0.5) 42%, rgba(4,18,33,0.62) 68%, rgba(4,18,33,0.8) 86%, #ffffff 100%); }
-  .tf-explainer-photo-inner { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 44px 0 64px; width: 100%; box-sizing: border-box; }
-  @media (max-width: 640px) { .tf-explainer-photo { min-height: 260px; } .tf-explainer-photo-inner { padding: 32px 0 44px; } }
-  .tf-explainer-eyebrow { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tf-mint-300); margin: 0 0 6px 0; }
-  .tf-explainer-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--tf-white); margin: 0 0 8px 0; line-height: 1.2; }
-  .tf-explainer-lead { font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,0.92); margin: 0; max-width: 58ch; }
-
+     4/8 pass, part 4 (Jono's request, reviewing the live Hub page): the
+     photo-band hero this section briefly had (parts 2-3, home-page-style
+     eyebrow/heading/lead) was removed entirely - it duplicated content the
+     Hub page ALREADY carries natively above this iframe on the dedicated
+     Economic Calculator page (its own hero "Work out what SeaFeed means
+     for your bottom line" + a native "Why this calculator exists" section
+     that already explains the differential-only design in its own words).
+     That native copy lives in the Hub page editor, not this file, so it's
+     outside version control here - can't be trimmed from this end. The fix
+     was on this side instead: dropping this file's own restatement of the
+     same point and going straight into the step cards, which cover ground
+     the native copy doesn't (the concrete mechanics + the legend). Kept
+     the .tf-wrap top padding below so content doesn't start flush against
+     the iframe's top edge now that the band's own height isn't providing it. */
   .tf-steps-row { display: flex; align-items: stretch; gap: 10px; margin-bottom: 18px; }
   @media (max-width: 640px) { .tf-steps-row { flex-direction: column; } }
   .tf-step-card { flex: 1; background: var(--tf-white); border: 1px solid var(--tf-slate-200); border-radius: 10px; padding: 16px; }
@@ -233,24 +218,24 @@
 <body>
 
 <!-- ============ EXPLAINER: HOW THIS CALCULATOR WORKS ============ -->
-<!-- 4/8 addition, reworked twice same day (Jono's request): explains the
-     differential-only design BEFORE anyone types a number in - prompted
-     directly by Jono's own question this session ("why is this
-     calculator's cost/kg cheaper than the Data page's
-     cost_per_kg_gain_aud?"). This calculator never uses SeaFeed's own
-     absolute trial cost/growth figures, only the measured GAP between
-     SeaFeed and control, applied on top of the farmer's own numbers.
-     Sits OUTSIDE .tf-wrap deliberately (see the CSS block's own comment
-     above) so it can bleed full-width like every other page's hero band,
-     rather than being capped at .tf-wrap's 780px. -->
-<div class="tf-explainer-photo">
-  <div class="tf-explainer-photo-inner">
-    <p class="tf-explainer-eyebrow">Before you start</p>
-    <h2 class="tf-explainer-title">How this calculator works</h2>
-    <p class="tf-explainer-lead">Your own numbers, plus only the difference the trial has measured between SeaFeed and a control group - not SeaFeed's own figures applied straight to your herd.</p>
-  </div>
-</div>
+<!-- 4/8 addition (Jono's request): explains the differential-only design
+     BEFORE anyone types a number in - prompted directly by Jono's own
+     question this session ("why is this calculator's cost/kg cheaper than
+     the Data page's cost_per_kg_gain_aud?"). This calculator never uses
+     SeaFeed's own absolute trial cost/growth figures, only the measured
+     GAP between SeaFeed and control, applied on top of the farmer's own
+     numbers.
 
+     4/8 pass, part 4 (Jono's request, reviewing the live Hub page): this
+     section used to open with its own photo-band hero (eyebrow "Before you
+     start" / heading "How this calculator works" / lead sentence) before
+     the step cards below. Removed - the dedicated Economic Calculator Hub
+     page already carries a native hero + "Why this calculator exists"
+     section directly above this iframe that says the same thing in its own
+     words, so the two were duplicating each other. That native content
+     lives in the Hub page editor, outside this file, so the fix here was to
+     drop this file's restatement and start straight at the step cards,
+     which add mechanics the native copy doesn't cover. -->
 <div class="tf-wrap">
 
   <div class="tf-steps-row">
