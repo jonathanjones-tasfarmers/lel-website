@@ -30,6 +30,26 @@
   dependency entirely, growth data now comes from the same Economics row
   (weight_gain_kg_per_head / days_of_data), avoiding the mismatch between
   that layer and the pipeline's actual Productivity item.
+
+  4/8 pass (Jono's request): added a "How this calculator works" explainer
+  (three-step card row + a plain-language legend for the four result
+  metrics) above the input panel, and an "Example case study" section right
+  below it - both placed BEFORE the status row / input panel so a farmer
+  reads the logic before typing any numbers in. Prompted directly by a
+  question Jono asked this session: why does this calculator's cost/kg
+  figure come out cheaper for SeaFeed than the Data page's
+  cost_per_kg_gain_aud (which is the reverse)? The explainer states the
+  reason up front - this calculator only ever applies the trial's measured
+  SeaFeed-vs-control DIFFERENCE on top of the farmer's own numbers, it
+  never reads SeaFeed's own absolute trial cost/growth figures the way the
+  Data page's cost-of-production cards do. The case study is a live worked
+  example (new renderCaseStudy() function, called from init() alongside
+  calc()) using this calculator's own default inputs (100 head, 380kg ->
+  480kg, 0.90kg/day, $3.50/head/day) run through the identical "weight
+  view" maths as calc(), so it's reproducible - a farmer who leaves every
+  field untouched sees the interactive calculator below confirm the case
+  study exactly - and stays live/accurate as the trial's own differential
+  changes, deliberately not hardcoded numbers that would go stale.
 -->
 <style>
   :root {
@@ -119,10 +139,115 @@
   .tf-info-toggle { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); font-size: 11.5px; font-weight: 700; color: var(--tf-mint-600); text-decoration: none; border-bottom: 1px solid var(--tf-mint-600); padding-bottom: 1px; cursor: pointer; user-select: none; margin-top: 12px; }
   .tf-info-wrap { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
   .tf-info-wrap.expanded { max-height: 400px; margin-top: 10px; }
+
+  /* --- explainer: "how this calculator works" + example case study --- */
+  .tf-explainer-wrap { margin-bottom: 36px; }
+  .tf-explainer-eyebrow { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 8px 0; }
+  .tf-explainer-title { font-family: var(--font-display); font-size: 21px; font-weight: 700; color: var(--tf-navy-900); margin: 0 0 10px 0; }
+  .tf-explainer-lead { font-size: 14px; line-height: 1.65; color: var(--tf-slate-600); margin: 0 0 22px 0; max-width: 64ch; }
+  .tf-explainer-lead em { color: var(--tf-navy-900); font-style: normal; font-weight: 700; }
+
+  .tf-steps-row { display: flex; align-items: stretch; gap: 10px; margin-bottom: 24px; }
+  @media (max-width: 640px) { .tf-steps-row { flex-direction: column; } }
+  .tf-step-card { flex: 1; background: var(--tf-white); border: 1px solid var(--tf-slate-200); border-radius: 10px; padding: 16px 16px 18px; }
+  .tf-step-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--tf-navy-900); color: var(--tf-white); font-family: var(--font-display); font-size: 11.5px; font-weight: 700; margin-bottom: 10px; }
+  .tf-step-title { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--tf-navy-900); margin: 0 0 6px 0; }
+  .tf-step-text { font-size: 12.5px; line-height: 1.55; color: var(--tf-slate-600); margin: 0; }
+  .tf-step-arrow { display: flex; align-items: center; justify-content: center; color: var(--tf-slate-300); font-size: 16px; flex: 0 0 auto; padding: 0 2px; }
+  @media (max-width: 640px) { .tf-step-arrow { transform: rotate(90deg); margin: -6px 0; } }
+
+  .tf-legend-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 16px; margin-bottom: 20px; }
+  @media (max-width: 560px) { .tf-legend-grid { grid-template-columns: 1fr; } }
+  .tf-legend-item { display: flex; gap: 10px; align-items: flex-start; }
+  .tf-legend-dot2 { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+  .tf-legend-text b { display: block; font-family: var(--font-display); font-size: 12.5px; color: var(--tf-navy-900); margin-bottom: 2px; }
+  .tf-legend-text span { font-size: 12px; color: var(--tf-slate-600); line-height: 1.5; }
+
+  .tf-case-study { background: #eaf8f3; border: 1px solid var(--tf-mint-500); border-radius: 12px; padding: 22px 24px; margin-bottom: 30px; }
+  .tf-case-study-eyebrow { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 8px 0; }
+  .tf-case-study-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: var(--tf-navy-900); margin: 0 0 12px 0; }
+  .tf-case-study p { font-size: 13.5px; line-height: 1.7; color: var(--tf-navy-900); margin: 0 0 14px 0; }
+  .tf-case-study-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 14px 0; }
+  @media (max-width: 560px) { .tf-case-study-stats { grid-template-columns: 1fr; } }
+  .tf-case-stat-card { background: var(--tf-white); border-radius: 8px; padding: 14px 16px; }
+  .tf-case-stat-card.seafeed { border: 1.5px solid var(--tf-mint-500); }
+  .tf-case-stat-card.bau { border: 1px solid var(--tf-slate-200); }
+  .tf-case-stat-label { font-size: 11.5px; color: var(--tf-slate-600); margin: 0; }
+  .tf-case-stat-value { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: var(--tf-navy-900); margin: 4px 0 0 0; }
+  .tf-case-highlight { font-family: var(--font-display); font-weight: 700; color: var(--tf-mint-600); }
+  .tf-case-note { font-size: 11.5px; color: var(--tf-slate-600); line-height: 1.6; margin: 10px 0 0 0; }
+  .tf-jumplink { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: var(--tf-mint-600); text-decoration: none; cursor: pointer; margin-top: 4px; }
 </style>
 </head>
 <body>
 <div class="tf-wrap">
+
+  <!-- ============ EXPLAINER: HOW THIS CALCULATOR WORKS ============ -->
+  <!-- 4/8 addition (Jono's request): farmers were landing straight on a
+       form with no context. This exists specifically to explain the
+       differential-only design BEFORE anyone types a number in - Jono's
+       own question this session ("why is this calculator's cost/kg
+       cheaper than the Data page's cost_per_kg_gain_aud?") is exactly the
+       confusion this is meant to head off: this calculator never uses
+       SeaFeed's own absolute trial cost/growth figures, only the measured
+       GAP between SeaFeed and control, applied on top of the farmer's own
+       numbers. Deliberately distinct from the grey input panels below
+       (step cards + a live worked example) so it reads as "read this
+       first", not "more form to fill in". -->
+  <div class="tf-explainer-wrap">
+    <p class="tf-explainer-eyebrow">Before you start</p>
+    <h2 class="tf-explainer-title">How this calculator works</h2>
+    <p class="tf-explainer-lead">This isn't SeaFeed's own cost or growth figures from the trial applied to your herd. It takes <em>your</em> numbers for a mob run the way you normally run it, then adds only the <em>difference</em> the trial has measured so far between SeaFeed and a control group on the same farms - a bit more feed cost per day, a bit more growth per day - and shows what that difference is worth for your own operation.</p>
+
+    <div class="tf-steps-row">
+      <div class="tf-step-card">
+        <span class="tf-step-num">1</span>
+        <p class="tf-step-title">Tell us about your mob</p>
+        <p class="tf-step-text">Herd size, current weight, target sale weight (or a feeding period), your usual growth rate and cost of production. These come from you, not the trial.</p>
+      </div>
+      <div class="tf-step-arrow">&#8594;</div>
+      <div class="tf-step-card">
+        <span class="tf-step-num">2</span>
+        <p class="tf-step-title">We add the trial's measured difference</p>
+        <p class="tf-step-text">The trial runs SeaFeed against a control group under the same conditions. We take only the gap between them - extra growth per day, extra feed cost per day - and apply it on top of your numbers.</p>
+      </div>
+      <div class="tf-step-arrow">&#8594;</div>
+      <div class="tf-step-card">
+        <span class="tf-step-num">3</span>
+        <p class="tf-step-title">See what it's worth for your herd</p>
+        <p class="tf-step-text">How much sooner you'd reach sale weight, and what that's worth in dollars across your whole mob - plus the full cost and margin breakdown below.</p>
+      </div>
+    </div>
+
+    <div class="tf-legend-grid">
+      <div class="tf-legend-item">
+        <span class="tf-legend-dot2" style="background:var(--tf-navy-900);"></span>
+        <span class="tf-legend-text"><b>Days sooner / kg more</b><span>How much faster (or how much extra weight) SeaFeed gets your mob, at your inputs.</span></span>
+      </div>
+      <div class="tf-legend-item">
+        <span class="tf-legend-dot2" style="background:var(--tf-mint-600);"></span>
+        <span class="tf-legend-text"><b>Net saved, across your herd</b><span>The dollar value of that time or weight advantage, scaled to your whole mob size.</span></span>
+      </div>
+      <div class="tf-legend-item">
+        <span class="tf-legend-dot2" style="background:var(--tf-slate-400);"></span>
+        <span class="tf-legend-text"><b>Cost per kg</b><span>Your full running cost (not just SeaFeed's) spread across the whole weight gap to target - a finishing-period figure, different from the Data page's trial-wide feed-only cost per kg gained.</span></span>
+      </div>
+      <div class="tf-legend-item">
+        <span class="tf-legend-dot2" style="background:var(--tf-warning);"></span>
+        <span class="tf-legend-text"><b>Gross margin</b><span>Revenue minus cost for just the extra kilos gained this period - not full farm profit, and not your animals' starting value.</span></span>
+      </div>
+    </div>
+
+    <p class="tf-field-note" style="margin-bottom:0;">This is an estimate built from your own numbers and the trial's early results, not a guarantee - it updates automatically as more farms and data come online. Not financial advice.</p>
+  </div>
+
+  <!-- ============ EXAMPLE CASE STUDY ============ -->
+  <div class="tf-case-study" id="case-study">
+    <p class="tf-case-study-eyebrow">Example case study</p>
+    <h3 class="tf-case-study-title">A 100-head mob, 380kg to 480kg</h3>
+    <div id="case-study-body"><p>Loading a live worked example from current trial data&hellip;</p></div>
+    <a class="tf-jumplink" id="case-study-jumplink">Try it with your own numbers &#8595;</a>
+  </div>
 
   <div class="tf-status-row" id="status-row" title="Updates automatically as more farms come online and the trial runs longer.">
     <span class="tf-live-dot pulse" id="live-dot"></span>
@@ -438,6 +563,11 @@
   wireInfoToggle("price-info-toggle", "price-info-wrap", "About this price");
   wireInfoToggle("confidence-toggle", "confidence-wrap", "About this estimate");
 
+  el("case-study-jumplink").addEventListener("click", (e) => {
+    e.preventDefault();
+    el("input-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
   const fmtMoney2 = v => "$" + v.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
   const fmtMoney0 = v => "$" + v.toLocaleString(undefined, {maximumFractionDigits: 0});
 
@@ -563,6 +693,53 @@
     el("results-panel").style.display = "block";
   }
 
+  // Example case study (4/8 addition, Jono's request): a live worked
+  // example using the calculator's OWN default inputs below (100 head,
+  // 380kg -> 480kg, 0.90kg/day, $3.50/head/day) run through the exact same
+  // maths as calc()'s "weight" view, so this is reproducible - a farmer who
+  // leaves every field untouched sees the calculator confirm this example
+  // exactly. Recomputed from whatever adgUpliftKgPerDay/
+  // incrementalCostPerHeadDay/daysOfData init() just fetched, so it never
+  // goes stale as the trial progresses - deliberately NOT hardcoded numbers.
+  function renderCaseStudy() {
+    const demoHerd = 100, demoCurrent = 380, demoTarget = 480, demoAdgBau = 0.90, demoCopDayBau = 3.50;
+    const gap = demoTarget - demoCurrent;
+    const adgSea = demoAdgBau + adgUpliftKgPerDay;
+    const copDaySea = demoCopDayBau + incrementalCostPerHeadDay;
+    const daysBau = gap / demoAdgBau;
+    const daysSea = gap / adgSea;
+    const totalCopBau = demoCopDayBau * daysBau;
+    const totalCopSea = copDaySea * daysSea;
+    const copKgBau = totalCopBau / gap;
+    const copKgSea = totalCopSea / gap;
+    const daysSooner = Math.round(daysBau - daysSea);
+    const netSaved = (totalCopBau - totalCopSea) * demoHerd;
+    const positive = daysSooner > 0;
+
+    const resultSentence = positive
+      ? `That's <span class="tf-case-highlight">${daysSooner} day${daysSooner === 1 ? "" : "s"} sooner</span> to sale weight, worth <span class="tf-case-highlight">${fmtMoney0(Math.abs(netSaved))} ${netSaved >= 0 ? "saved" : "more"}</span> across this ${demoHerd}-head mob - the exact result the calculator below will show if you leave every field at its default.`
+      : `At today's trial figures this example doesn't show a turnoff advantage yet - try the calculator below with your own numbers, this gap moves as more trial data comes in.`;
+
+    el("case-study-body").innerHTML = `
+      <p>Take a ${demoHerd}-head mob currently at ${demoCurrent}kg, aiming for a ${demoTarget}kg sale weight, fed at a typical $${demoCopDayBau.toFixed(2)}/head/day and growing at ${demoAdgBau.toFixed(2)}kg/day under business as usual - this calculator's own default settings below, so you can compare directly.</p>
+      <p>The trial's measured SeaFeed difference right now: <span class="tf-case-highlight">+${Math.round(adgUpliftKgPerDay * 1000)} g/day</span> faster growth, at <span class="tf-case-highlight">+${fmtMoney2(incrementalCostPerHeadDay)}/head/day</span> extra feed cost, based on ${daysOfData} days of trial data.</p>
+      <div class="tf-case-study-stats">
+        <div class="tf-case-stat-card bau">
+          <p class="tf-case-stat-label">Business as usual</p>
+          <p class="tf-case-stat-value">${Math.round(daysBau)} days to ${demoTarget}kg</p>
+          <p class="tf-case-stat-label" style="margin-top:8px;">${fmtMoney2(copKgBau)}/kg</p>
+        </div>
+        <div class="tf-case-stat-card seafeed">
+          <p class="tf-case-stat-label" style="color:var(--tf-mint-600); font-weight:700;">With SeaFeed</p>
+          <p class="tf-case-stat-value">${Math.round(daysSea)} days to ${demoTarget}kg</p>
+          <p class="tf-case-stat-label" style="margin-top:8px;">${fmtMoney2(copKgSea)}/kg</p>
+        </div>
+      </div>
+      <p>${resultSentence}</p>
+      <p class="tf-case-note">Uses this calculator's default inputs and today's live trial differential (${daysOfData} days of data). Change any figure below to see what it looks like for your own mob.</p>
+    `;
+  }
+
   const fmtDate = iso => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
   // calculation_date comes back from the Economics layer as an epoch-ms
   // timestamp (esriFieldTypeDate), not the plain "YYYY-MM-DD" string the
@@ -604,6 +781,7 @@
           seafeed.weight_gain_kg_per_head == null || control.weight_gain_kg_per_head == null || !seafeed.days_of_data) {
         setStatus("Not enough trial data yet", "error");
         el("input-panel").style.display = "none";
+        el("case-study-body").innerHTML = "<p>Not enough trial data yet for a live worked example - check back as the trial progresses, or try the calculator below with your own numbers.</p>";
         return;
       }
 
@@ -661,9 +839,11 @@
       const dataUpdatedText = fmtDateFromEpoch(calcDateMs);
       setStatus(`Early trial data, ${daysOfData} days, trial-wide · data as at ${dataUpdatedText}`, "pulse preliminary");
 
+      renderCaseStudy();
       calc();
     } catch (err) {
       setStatus("Live data unavailable right now, try again shortly.", "error");
+      el("case-study-body").innerHTML = "<p>Live example unavailable right now - try the calculator below with your own numbers.</p>";
       console.error("Fetch failed:", err);
     }
   }
