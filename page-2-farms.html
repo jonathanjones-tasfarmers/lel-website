@@ -79,6 +79,23 @@
   ~16% of the band, was the last ~56%). Same bidirectional (top AND
   bottom) approach as before, just consuming much less of the photo.
 
+  4/8 fix: the "ADG advantage" stat no longer reproduces farm-stats-
+  banner.html's logic exactly (see below). It previously diffed
+  OptiWeigh_Assets_view's adg_all, a single live reading per treatment
+  from whichever mob/session happens to be currently monitored, which
+  can flip sign day to day and doesn't necessarily compare the same two
+  mobs (confirmed: it produced -13 g/day off two unrelated sessions,
+  "Sea feed #1" vs "Control #2", while the cost-of-production calculator
+  showed a positive SeaFeed advantage from the same day's data, purely
+  because the two figures were measuring different things). It now uses
+  LEL_Economics_Data's weight_gain_kg_per_head/days_of_data on the trial-
+  aggregate row instead, the same trial-to-date figure and the same
+  "shorter of the two treatments' day counts" logic the calculator's
+  adgUpliftKgPerDay already uses, so the two public pages can't show
+  contradictory ADG signals again. farm-stats-banner.html itself still
+  has the old adg_all logic and would benefit from the same fix, not
+  done as part of this pass since that file isn't embedded here.
+
   Vanilla CSS/JS only, no build step, no external libraries.
 -->
 <style>
@@ -318,7 +335,7 @@
 <div class="fp-closing">
   <div class="fp-closing-inner fp-reveal">
     <h2>Want to see what the trial has found so far?</h2>
-    <p>Real time data can be found on our Data page, the Economic Feasibility Tool and the incoming Adoption Handbook can be found on our Resources page.</p>
+    <p>Interim reports, the economic feasibility tool and the adoption handbook are published on the Resources page, in the menu above.</p>
   </div>
 </div>
 
@@ -335,15 +352,17 @@
     els.forEach(function(el){ io.observe(el); });
   })();
 
-  // --- live stats banner, logic reproduced exactly from
-  //     05. Website/files/farm-stats-banner.html: same endpoints, same
-  //     fallback behaviour, same calculations. Only the CSS classes and
-  //     skeleton markup differ (adapted to this file's class names). ---
+  // --- live stats banner, logic reproduced from 05. Website/files/
+  //     farm-stats-banner.html: same endpoints, same fallback behaviour,
+  //     same calculations, CSS classes and skeleton markup adapted to
+  //     this file's class names EXCEPT for the ADG advantage stat and the
+  //     Economics query's farm_name filter, deliberately changed from
+  //     that file's logic, see the 4/8 fix note at the top of this file. ---
   var EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
   var ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
   var BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
   var PRODUCTIVITY_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
-  var ASSETS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Assets_view/FeatureServer/0/query";
+  var AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
   var STALE_AFTER_DAYS = 14;
 
   var GWP = 28;
@@ -364,8 +383,14 @@
       return data.features.length ? data.features[0].attributes : null;
     });
   }
+  // Audit fix (4/8, same finding as the cost-of-production calculator's
+  // "DATA SOURCE FIX" note): filtered to the trial-aggregate row only.
+  // Without the farm_name filter, a single named farm's own row could
+  // surface here instead of the pooled trial result if it happened to
+  // have a more recent calculation_date, both a correctness bug and a
+  // data-sensitivity problem for a public-facing page.
   function fetchEconLatest(){
-    return q(ECON_URL, { where: "treatment IN ('seafeed','control')", outFields: "treatment,cumulative_ch4_abated_kg_per_head,representative_head_count,cost_per_kg_ch4_abated_aud,cost_per_head_aud,weight_gain_kg_per_head,cost_per_kg_gain_aud,calculation_date", orderByFields: "calculation_date DESC", resultRecordCount: "50", f: "json" }).then(function(data){
+    return q(ECON_URL, { where: "farm_name='" + AGGREGATE_LABEL + "' AND treatment IN ('seafeed','control')", outFields: "treatment,cumulative_ch4_abated_kg_per_head,representative_head_count,cost_per_kg_ch4_abated_aud,cost_per_head_aud,weight_gain_kg_per_head,days_of_data,cost_per_kg_gain_aud,calculation_date", orderByFields: "calculation_date DESC", resultRecordCount: "10", f: "json" }).then(function(data){
       var latest = {};
       data.features.forEach(function(f){ var t = f.attributes.treatment; if (!latest[t]) latest[t] = f.attributes; });
       return latest;
@@ -377,47 +402,44 @@
     });
   }
 
-  function parseDateOnly(dateStr){
-    var parts = dateStr.split('-').map(Number);
-    return new Date(parts[0], parts[1] - 1, parts[2]);
-  }
-  function daysSince(dateStr){
-    return (Date.now() - parseDateOnly(dateStr).getTime()) / 86400000;
-  }
-  function latestAdgForTreatment(likePatterns){
-    var treatmentClause = likePatterns.map(function(p){ return "UPPER(Treatment_Type) LIKE '%" + p + "%'"; }).join(' OR ');
-    return q(ASSETS_URL, {
-      where: "adg_all IS NOT NULL AND snapshot_date IS NOT NULL AND (" + treatmentClause + ")",
-      outFields: "session_id,session_name,adg_all,snapshot_date,Treatment_Type",
-      orderByFields: "snapshot_date DESC, OBJECTID DESC",
-      resultRecordCount: "1",
-      f: "json"
-    }).then(function(data){
-      var row = data.features[0] && data.features[0].attributes;
-      return row ? { date: row.snapshot_date, value: row.adg_all } : null;
-    });
+  // daysSinceEpochMs: calculation_date comes back from the Economics layer
+  // as an epoch-ms timestamp (esriFieldTypeDate), not the plain
+  // "YYYY-MM-DD" string OptiWeigh's snapshot_date uses, hence the separate
+  // helper (same distinction the calculator's fmtDateFromEpoch note makes).
+  function daysSinceEpochMs(ms){
+    return (Date.now() - ms) / 86400000;
   }
 
   function loadBanner(){
     var statusEl = document.getElementById('banner-status');
     Promise.all([
-      fetchGwp(), fetchLatestSeafeedEmissions(), fetchEconLatest(), fetchProdHistory('seafeed'), fetchProdHistory('control'),
-      latestAdgForTreatment(['SEAFEED', 'SEA FEED']), latestAdgForTreatment(['CONTROL'])
+      fetchGwp(), fetchLatestSeafeedEmissions(), fetchEconLatest(), fetchProdHistory('seafeed'), fetchProdHistory('control')
     ]).then(function(results){
       var emissions = results[1], econ = results[2], seafeedProd = results[3], controlProd = results[4];
-      var seafeedAdgReading = results[5], controlAdgReading = results[6];
 
       var abatement = (emissions && emissions.abatement_rate != null) ? emissions.abatement_rate.toFixed(1) + '%' : '—';
 
+      // ADG advantage: sourced from LEL_Economics_Data's trial-aggregate
+      // row (weight_gain_kg_per_head / days_of_data), a genuine trial-to-
+      // date average, NOT OptiWeigh_Assets_view's adg_all (a single live
+      // reading per treatment that can flip sign day to day and doesn't
+      // necessarily compare the same two mobs). Uses the shorter of the
+      // two treatments' day counts as the shared denominator, the same
+      // logic as the cost-of-production calculator's adgUpliftKgPerDay,
+      // so the two public pages can't show contradictory ADG signals.
       var adgMetaEl = document.getElementById('b-adg-meta');
       var adg = '—';
-      if (seafeedAdgReading != null && controlAdgReading != null) {
-        var diffGramsPerDay = (seafeedAdgReading.value - controlAdgReading.value) * 1000;
+      var seafeedEcon = econ['seafeed'], controlEcon = econ['control'];
+      if (seafeedEcon && controlEcon &&
+          seafeedEcon.weight_gain_kg_per_head != null && controlEcon.weight_gain_kg_per_head != null &&
+          seafeedEcon.days_of_data && controlEcon.days_of_data) {
+        var adgDaysOfData = Math.min(seafeedEcon.days_of_data, controlEcon.days_of_data);
+        var diffGramsPerDay = ((seafeedEcon.weight_gain_kg_per_head - controlEcon.weight_gain_kg_per_head) / adgDaysOfData) * 1000;
         adg = (diffGramsPerDay >= 0 ? '+' : '') + Math.round(diffGramsPerDay) + ' g/day';
-        var stale = daysSince(seafeedAdgReading.date) > STALE_AFTER_DAYS || daysSince(controlAdgReading.date) > STALE_AFTER_DAYS;
-        var meta = 'SeaFeed vs control';
+        var stale = daysSinceEpochMs(seafeedEcon.calculation_date) > STALE_AFTER_DAYS || daysSinceEpochMs(controlEcon.calculation_date) > STALE_AFTER_DAYS;
+        var meta = 'SeaFeed vs control, trial-to-date average';
         if (stale) meta += ', reading may be out of date';
-        if (seafeedAdgReading.date !== controlAdgReading.date) meta += ' (readings on different dates)';
+        if (seafeedEcon.days_of_data !== controlEcon.days_of_data) meta += ' (uses the shorter data window of the two treatments)';
         adgMetaEl.textContent = meta;
         adgMetaEl.classList.toggle('stale', stale);
       } else {
@@ -425,7 +447,6 @@
         adgMetaEl.classList.remove('stale');
       }
 
-      var seafeedEcon = econ['seafeed'];
       var co2e = '—';
       if (seafeedEcon && seafeedEcon.cumulative_ch4_abated_kg_per_head != null && seafeedEcon.representative_head_count != null) {
         var totalKgCh4 = seafeedEcon.cumulative_ch4_abated_kg_per_head * seafeedEcon.representative_head_count;
