@@ -625,6 +625,15 @@
     // the latest row, so this trims the CHART's start, not the underlying
     // data).
     const ADG_CHART_START_MS = Date.UTC(2026, 5, 25); // month is 0-indexed: 5 = June
+    // ArcGIS REST rejects a raw epoch-ms literal compared against a Date
+    // field on this service ("Cannot perform query. Invalid query
+    // parameters." - confirmed live 4/8) - needs the ANSI-92 TIMESTAMP
+    // literal syntax instead. Verified live that TIMESTAMP '2026-06-25
+    // 00:00:00' returns rows starting from calculation_date 1782345600000,
+    // i.e. exactly ADG_CHART_START_MS, so the two stay equivalent.
+    function sqlTimestamp(epochMs){
+      return new Date(epochMs).toISOString().slice(0, 19).replace('T', ' ');
+    }
 
     async function loadAdg(){
       // 4/8 rewrite (Jono's request, third ADG source-of-truth unification
@@ -642,8 +651,8 @@
       // timestamp in the same run, so exact matching doesn't drop dates.
       try{
         const [seafeed, control] = await Promise.all([
-          q(ECON_URL, { where:`treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL AND calculation_date >= ${ADG_CHART_START_MS}`, outFields:"calculation_date,weight_gain_kg_per_head,days_of_data", orderByFields:"calculation_date ASC", resultRecordCount:"2000", f:"json" }),
-          q(ECON_URL, { where:`treatment='control' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL AND calculation_date >= ${ADG_CHART_START_MS}`, outFields:"calculation_date,weight_gain_kg_per_head,days_of_data", orderByFields:"calculation_date ASC", resultRecordCount:"2000", f:"json" })
+          q(ECON_URL, { where:`treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL AND calculation_date >= TIMESTAMP '${sqlTimestamp(ADG_CHART_START_MS)}'`, outFields:"calculation_date,weight_gain_kg_per_head,days_of_data", orderByFields:"calculation_date ASC", resultRecordCount:"2000", f:"json" }),
+          q(ECON_URL, { where:`treatment='control' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL AND calculation_date >= TIMESTAMP '${sqlTimestamp(ADG_CHART_START_MS)}'`, outFields:"calculation_date,weight_gain_kg_per_head,days_of_data", orderByFields:"calculation_date ASC", resultRecordCount:"2000", f:"json" })
         ]);
         const sfRows = seafeed.features.map(f => f.attributes).filter(a => a.calculation_date != null);
         const ctRows = control.features.map(f => f.attributes).filter(a => a.calculation_date != null);
