@@ -184,14 +184,25 @@
   // files uses, so this can't be triggered by anything else. Keeps the
   // style="height: 990px;" above as a sane first-paint fallback before
   // the real message arrives, then overrides it immediately.
+  //
+  // Sanity cap (4/8, second pass): the sender measures document.body,
+  // which is content-driven and can't feed back on itself (see that
+  // file's own comment for the full explanation of the feedback loop
+  // this replaced - documentElement's height includes the iframe's own
+  // viewport as a floor, so growing the iframe used to inflate the very
+  // number being measured, growing it again, forever). Capping at a high
+  // but finite 4000px here too, purely as a second line of defence -
+  // this calculator's content should never legitimately need that much,
+  // so hitting the cap is a signal something regressed, not an expected path.
   (function(){
     var calcFrame = document.getElementById('cwwoxv1kl');
     if (!calcFrame) return;
+    var MAX_SANE_HEIGHT = 4000;
     window.addEventListener('message', function(e){
       if (e.origin !== 'https://jonathanjones-tasfarmers.github.io') return;
       var data = e.data;
       if (!data || data.type !== 'tf-calc-resize' || typeof data.height !== 'number') return;
-      var next = Math.max(400, Math.ceil(data.height) + 4);
+      var next = Math.min(MAX_SANE_HEIGHT, Math.max(400, Math.ceil(data.height) + 4));
       calcFrame.style.height = next + 'px';
     });
   })();

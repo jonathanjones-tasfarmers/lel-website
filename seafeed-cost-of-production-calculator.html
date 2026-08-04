@@ -933,18 +933,32 @@
   // listener in page-7-calculator.html.
   //
   // Belt and braces on how "changed" is detected, after first-cut testing
-  // caught a real gap: a ResizeObserver on <html> alone missed the async
-  // data load swapping placeholder "-" text and loading messages for the
-  // live results/case-study content (a plain innerHTML change didn't
-  // trigger it reliably here). Layered three triggers instead: a
-  // MutationObserver on <body> (childList/subtree/characterData/class
-  // attribute - catches every content swap and every toggle), a
-  // ResizeObserver on <html> (catches pure CSS-driven size changes, e.g.
-  // the case-study detail's max-height transition, that aren't DOM
-  // mutations), and explicit calls at the end of the two functions that
-  // actually populate results (calc(), renderCaseStudy()) as a final
-  // guarantee. All routed through one rAF-debounced reporter so rapid-fire
-  // triggers collapse into a single postMessage per frame.
+  // caught a real gap: a ResizeObserver alone missed the async data load
+  // swapping placeholder "-" text and loading messages for the live
+  // results/case-study content (a plain innerHTML change didn't trigger it
+  // reliably here). Layered three triggers instead: a MutationObserver on
+  // <body> (childList/subtree/characterData/class attribute - catches
+  // every content swap and every toggle), a ResizeObserver (catches pure
+  // CSS-driven size changes, e.g. the case-study detail's max-height
+  // transition, that aren't DOM mutations), and explicit calls at the end
+  // of the two functions that actually populate results (calc(),
+  // renderCaseStudy()) as a final guarantee. All routed through one
+  // rAF-debounced reporter so rapid-fire triggers collapse into a single
+  // postMessage per frame.
+  //
+  // IMPORTANT - measure document.body, never document.documentElement:
+  // second-cut testing (manually driving the parent's resize listener)
+  // caught a genuine feedback loop. <html>'s own box is defined by the
+  // CSS spec to always fill at least the iframe's viewport, so
+  // document.documentElement.scrollHeight is max(viewport height, content
+  // height) - once the parent grows the iframe even slightly past the
+  // real content height, that inflated viewport height becomes the NEW
+  // "content" height reported back, and the parent grows it again,
+  // forever. document.body has no such floor: with no explicit height set
+  // on it (true here), its rendered height is pure shrink-to-fit content,
+  // completely independent of the iframe's own size, so there's nothing
+  // for it to feed back into. Both the ResizeObserver target and the
+  // measurement itself use body for this reason.
   let reportHeightScheduled = false;
   function reportHeightToParent() {
     if (reportHeightScheduled) return;
@@ -952,13 +966,13 @@
     requestAnimationFrame(() => {
       reportHeightScheduled = false;
       try {
-        const h = document.documentElement.scrollHeight;
+        const h = document.body.scrollHeight;
         window.parent.postMessage({ type: "tf-calc-resize", height: h }, "*");
       } catch (e) { /* not embedded, or cross-origin restriction - fine, just skip */ }
     });
   }
   if ("ResizeObserver" in window) {
-    new ResizeObserver(reportHeightToParent).observe(document.documentElement);
+    new ResizeObserver(reportHeightToParent).observe(document.body);
   }
   if ("MutationObserver" in window) {
     new MutationObserver(reportHeightToParent).observe(document.body, {
