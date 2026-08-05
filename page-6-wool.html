@@ -175,7 +175,7 @@
   @media (prefers-reduced-motion: reduce) { .wp-reveal { opacity: 1; transform: none; transition: none; } }
 
   /* --- hero, real photo. background-attachment:fixed was removed here, it was silently failing to paint the image inside the Hub iframe and causing the render thread to hang on scroll. --- */
-  .wp-hero { position: relative; min-height: 540px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/wool-hero.'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .wp-hero { position: relative; min-height: 540px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/wool-hero.webp'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .wp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.3) 0%, oklch(from var(--tf-navy-900) l c h / 0.5) 42%, oklch(from var(--tf-navy-900) l c h / 0.65) 68%, oklch(from var(--tf-navy-900) l c h / 0.85) 86%, var(--tf-navy-900) 100%); }
   .wp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 96px; width: 100%; box-sizing: border-box; }
   @media (max-width: 720px) { .wp-hero { min-height: 460px; } .wp-hero-inner { padding: 56px 20px 64px; } }
