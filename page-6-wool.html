@@ -119,6 +119,23 @@
   Vanilla CSS/JS only, no build step, no external libraries, matching the
   self-contained pattern used across every other file in this project
   (see seafeed-cost-of-production-calculator.html's own header comment).
+
+  5/8 pass (Jono's request): the origin band's placeholder photo
+  (hero-partners.webp, reused from the Partners hero) swapped for the
+  real middle-wool.webp he provided. Note: middle-wool.jpg is a portrait
+  photo (1333x2000), so background-size:cover crops the sides fairly
+  tightly on wide screens - flag if that's not the intended framing.
+
+  5/8 pass 2 (Jono's request): removed the .wp-photo-divider section
+  entirely (the paddock photo + "Tasmanian pasture, the same country
+  this could all be grown on." caption, between the dual-track FAQ
+  panel and the closing band) - both the HTML block and its dedicated
+  CSS rules (.wp-photo-divider, ::before, -caption, -caption p) are
+  gone. No transition fix needed: the dual-track section already fades
+  to solid navy at its own end, and .wp-closing already opens on solid
+  navy, so the two sections still meet seamlessly with the divider
+  removed. Page now has two full-bleed photo beats (hero, origin
+  section) instead of three.
 -->
 <style>
   :root{
@@ -225,31 +242,6 @@
   .wp-precision-box strong { color: var(--text-heading); }
   @media (max-width: 720px) { .wp-origin-band { min-height: auto; } .wp-origin-band::before { background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.55) 0%, oklch(from var(--tf-navy-900) l c h / 0.86) 100%); } .wp-origin-inner { padding: 56px 20px; } }
 
-  /* --- photo divider (paddock), a second punctuating full-bleed moment. background-attachment:fixed removed for the same reason as the hero. --- */
-  .wp-photo-divider { position: relative; min-height: 260px; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-cattle.webp'); background-position: center 65%; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  /* 29/7 fix, take 3 (Jono's report - visible band across the photo):
-     take 1 removed the top solid-navy anchor entirely, starting this
-     gradient straight at 0.25 opacity - that created an instant colour
-     jump at the seam (FAQ section above ends fully opaque, this
-     started at 0.25), which read as a hard line. Take 2 restored a
-     matching var(--tf-navy-900) anchor at 0% but only ramped down over
-     6-14%: colours matched exactly at the seam so there was no jump,
-     but tested against the actual hero-cattle.jpg crop (rendered
-     locally, not just eyeballed in devtools) the line was still
-     visible - turns out colour-matching alone doesn't fix it. The
-     real cause is TEXTURE onset: the FAQ section is flat colour, zero
-     photo detail; a short ramp reveals the photo's full brightness and
-     texture over too few pixels, and the eye reads that as an edge
-     regardless of whether the colour itself is continuous. Fixed by
-     lengthening the ramp to 35% (~91px) so the photo's detail fades in
-     gradually rather than snapping in - confirmed smooth by rendering
-     the actual crop, not just reasoning about the gradient stops.
-     Bottom edge (85%-100%, blending into .wp-closing) is untouched -
-     nothing above the FAQ section forces navy the way it does into
-     this band, so the bottom seam never had this problem. */
-  .wp-photo-divider::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, var(--tf-navy-900) 0%, oklch(from var(--tf-navy-900) l c h / 0.25) 35%, oklch(from var(--tf-navy-900) l c h / 0.25) 85%, var(--tf-navy-900) 100%); }
-  .wp-photo-divider-caption { position: relative; height: 100%; display: flex; align-items: center; justify-content: center; padding: 60px 28px; text-align: center; }
-  .wp-photo-divider-caption p { font-family: var(--font-display); color: var(--tf-white); font-size: 15px; font-weight: 700; letter-spacing: 0.02em; max-width: 44ch; margin: 0; }
 
   /* --- garment stat visual --- */
   .wp-scale-card { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 34px 36px; margin-top: 34px; box-shadow: var(--shadow-sm); }
@@ -522,13 +514,6 @@
         <p class="wp-faq-a">No. No established market premium for low-emissions wool exists yet, anywhere. That's precisely the gap a Tasmanian trial and a genuine brand relationship would need to close.</p>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- ============ PHOTO DIVIDER: real Tasmanian paddock, second punctuating moment ============ -->
-<div class="wp-photo-divider">
-  <div class="wp-photo-divider-caption">
-    <p>Tasmanian pasture, the same country this could all be grown on.</p>
   </div>
 </div>
 
