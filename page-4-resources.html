@@ -42,6 +42,19 @@
   Wool page (top fade 0-10%, was 0-18%; bottom fade now only the last
   ~16% of the band, was the last ~56%). Same bidirectional (top AND
   bottom) approach as before, just consuming much less of the photo.
+
+  5/8 pass (Jono's request): the origin band's placeholder photo
+  (AGP_3851.webp, reused from the Data page hero) swapped for the real
+  middle-resources.webp he provided.
+
+  6/8 pass (Jono's request): enlarged the origin band 20% to show more
+  of middle-resources.webp (.rp-origin-band min-height 560px -> 672px),
+  and narrowed the floating text card to compensate (.rp-origin-card
+  max-width 540px -> 480px, about 11% narrower). Padding and font-size
+  on the card are untouched, so the text still reads/wraps essentially
+  the same as before, just inside a slightly tighter column - the photo
+  now shows through more on both the extra height and the extra width
+  freed up beside the card.
 -->
 <style>
   :root{
@@ -118,13 +131,13 @@
   .rp-btn-solid:hover { background: var(--tf-navy-800); }
 
   /* --- where these come from: full-bleed origin band with a floating card --- */
-  .rp-origin-band { position: relative; min-height: 560px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/middle-resources.webp'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
+  .rp-origin-band { position: relative; min-height: 672px; display: flex; align-items: center; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/middle-resources.webp'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
   .rp-origin-band::before { content:""; position:absolute; inset:0; z-index:0; background:
     linear-gradient(180deg, var(--surface-sunken) 0%, transparent 10%),
     linear-gradient(100deg, oklch(from var(--tf-navy-900) l c h / 0.5) 0%, oklch(from var(--tf-navy-900) l c h / 0.22) 46%, oklch(from var(--tf-navy-900) l c h / 0.12) 72%); }
   .rp-origin-band::after { content:""; position:absolute; inset:0; z-index:1; pointer-events:none; background: linear-gradient(to bottom, transparent 0%, transparent 84%, oklch(from var(--surface-page) l c h / 0.4) 91%, oklch(from var(--surface-page) l c h / 0.8) 96%, var(--surface-page) 100%); }
   .rp-origin-inner { position: relative; z-index:2; max-width: 1180px; margin: 0 auto; padding: 100px 28px; width: 100%; box-sizing: border-box; }
-  .rp-origin-card { background: rgba(255,255,255,0.97); border-radius: var(--radius-lg); box-shadow: 0 12px 32px rgba(4,18,33,0.16); padding: 44px 48px; max-width: 540px; }
+  .rp-origin-card { background: rgba(255,255,255,0.97); border-radius: var(--radius-lg); box-shadow: 0 12px 32px rgba(4,18,33,0.16); padding: 44px 48px; max-width: 480px; }
   .rp-origin-card .rp-eyebrow { text-align: left; }
   .rp-origin-card p.body { font-size: 15.5px; color: var(--text-body); line-height: 1.8; margin: 0 0 16px 0; }
   .rp-origin-card p.body:last-child { margin-bottom: 0; }
