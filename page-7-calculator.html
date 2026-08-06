@@ -80,6 +80,16 @@
   seafeed-cost-of-production-calculator.html itself is left on disk and
   on GitHub untouched, in case it's ever wanted again as a standalone
   embeddable widget elsewhere, but this page no longer references it.
+
+  5/8 pass 2 (Jono's request): the step cards ("Tell us about your mob" /
+  etc) and the 4-item legend grid were reading narrower than the "Why
+  this calculator exists" heading above them, since they lived inside
+  .tf-wrap (780px, the calculator form's own column width). Moved both
+  out of .tf-wrap so they now span the full .cp-page width (1180px,
+  matching the section above), enlarged their card padding/type/icons to
+  suit, and switched the legend grid from 2x2 to a single row of 4 at
+  that width (see the CSS comment just above .tf-steps-row for detail).
+  .tf-wrap and everything in it (the actual form/results) are unchanged.
 -->
 <style>
   :root{
@@ -152,6 +162,13 @@
 
   /* ============ merged in from seafeed-cost-of-production-calculator.html (5/8) ============ */
   .tf-wrap { max-width: 780px; margin: 0 auto; padding-top: 28px; }
+  /* 5/8 pass 3 (Jono's request): white card wrapping the actual
+     interactive calculator (status row through results), same
+     background/border/shadow treatment as .cp-info-card further down
+     this page, so the tool visually separates from the light-blue
+     section behind the explainer content above it. */
+  .tf-calc-card { background: var(--surface-card); border: 1.5px solid var(--tf-mint-500); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 32px 36px; }
+  @media (max-width: 720px) { .tf-calc-card { padding: 24px 22px; } }
   .tf-status-row { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 6px 14px; border-radius: 999px; background: var(--tf-slate-100); border: 1px solid var(--tf-slate-200); cursor: default; }
   .tf-status-row.preliminary { background: #fbf3e7; border-color: #eeddb8; }
   .tf-live-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--tf-mint-500); }
@@ -182,6 +199,13 @@
   .tf-field input:focus { outline: none; border-color: var(--tf-mint-500); }
   .tf-field input:disabled { background: var(--tf-slate-100); color: var(--tf-slate-600); }
   .tf-field-note { font-size: 11px; color: var(--tf-slate-600); line-height: 1.5; margin: 12px 0 0 0; }
+  /* 5/8 pass 5 (Jono's request): MLA cost-of-production link, sits inside
+     the same .tf-field-grid row as the copValue field, bottom-aligned
+     with the input via flex so it lines up rather than floating high. */
+  .tf-field-help { display: flex; flex-direction: column; justify-content: flex-end; }
+  .tf-field-help-label { font-size: 12px; color: var(--tf-slate-600); margin: 0 0 5px 0; line-height: 1.4; }
+  .tf-field-help-link { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: var(--tf-mint-600); text-decoration: none; }
+  .tf-field-help-link:hover { text-decoration: underline; }
   .tf-sub-toggle-row { display: flex; gap: 8px; margin: 16px 0 10px 0; }
   .tf-sub-toggle-row.first { margin-top: 4px; }
   .tf-sub-toggle { font-size: 11.5px; font-weight: 700; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--tf-slate-300); background: var(--tf-white); color: var(--tf-slate-600); cursor: pointer; }
@@ -226,25 +250,39 @@
   .tf-info-wrap { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
   .tf-info-wrap.expanded { max-height: 400px; margin-top: 10px; }
 
-  .tf-steps-row { display: flex; align-items: stretch; gap: 10px; margin-bottom: 18px; }
-  @media (max-width: 640px) { .tf-steps-row { flex-direction: column; } }
-  .tf-step-card { flex: 1; background: var(--tf-white); border: 1px solid var(--tf-slate-200); border-radius: 10px; padding: 16px; }
-  .tf-step-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .tf-step-icon { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--tf-mint-100); color: var(--tf-mint-600); flex-shrink: 0; }
-  .tf-step-icon svg { width: 16px; height: 16px; }
-  .tf-step-num { display: inline-flex; align-items: center; justify-content: center; width: 19px; height: 19px; border-radius: 50%; background: var(--tf-navy-900); color: var(--tf-white); font-family: var(--font-display); font-size: 10.5px; font-weight: 700; }
-  .tf-step-title { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--tf-navy-900); margin: 0 0 5px 0; }
-  .tf-step-text { font-size: 12px; line-height: 1.5; color: var(--tf-slate-600); margin: 0; }
-  .tf-step-arrow { display: flex; align-items: center; justify-content: center; color: var(--tf-slate-300); font-size: 16px; flex: 0 0 auto; padding: 0 2px; }
-  @media (max-width: 640px) { .tf-step-arrow { transform: rotate(90deg); margin: -6px 0; } }
+  /* 5/8 pass (Jono's request): the step cards and legend grid used to sit
+     inside .tf-wrap (780px, the same narrow column as the calculator form
+     below them), so they read visibly narrower than the "Why this
+     calculator exists" heading/copy directly above, which lives in the
+     full-width .cp-page container (1180px). Moved both blocks out of
+     .tf-wrap (now direct children of .cp-page, see the HTML above) so
+     they span the same width as that section, and enlarged their card
+     padding/type/icons to fill the extra room instead of looking
+     stretched-but-thin. The legend grid also moved from a 2x2 grid to a
+     single row of 4 at this width, matching the 4-across fact-grid
+     pattern already used on the Wool and Resources pages. .tf-wrap
+     itself (the calculator's own input/results form) is untouched, still
+     780px, that width is still right for a form. */
+  .tf-steps-row { display: flex; align-items: stretch; gap: 16px; margin-bottom: 28px; }
+  @media (max-width: 780px) { .tf-steps-row { flex-direction: column; } }
+  .tf-step-card { flex: 1; background: var(--tf-white); border: 1px solid var(--tf-slate-200); border-radius: 12px; padding: 26px 24px; }
+  .tf-step-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .tf-step-icon { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: var(--tf-mint-100); color: var(--tf-mint-600); flex-shrink: 0; }
+  .tf-step-icon svg { width: 20px; height: 20px; }
+  .tf-step-num { display: inline-flex; align-items: center; justify-content: center; width: 23px; height: 23px; border-radius: 50%; background: var(--tf-navy-900); color: var(--tf-white); font-family: var(--font-display); font-size: 12px; font-weight: 700; }
+  .tf-step-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--tf-navy-900); margin: 0 0 8px 0; }
+  .tf-step-text { font-size: 13.5px; line-height: 1.55; color: var(--tf-slate-600); margin: 0; }
+  .tf-step-arrow { display: flex; align-items: center; justify-content: center; color: var(--tf-slate-300); font-size: 20px; flex: 0 0 auto; padding: 0 4px; }
+  @media (max-width: 780px) { .tf-step-arrow { transform: rotate(90deg); margin: -8px 0; } }
 
-  .tf-legend-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+  .tf-legend-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  @media (max-width: 900px) { .tf-legend-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 560px) { .tf-legend-grid { grid-template-columns: 1fr; } }
-  .tf-legend-card { display: flex; gap: 10px; align-items: flex-start; background: var(--tf-slate-100); border-radius: 8px; padding: 12px 14px; }
-  .tf-legend-icon { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--tf-white); color: var(--tf-mint-600); flex-shrink: 0; box-shadow: 0 1px 2px rgba(4,18,33,0.08); }
-  .tf-legend-icon svg { width: 13px; height: 13px; }
-  .tf-legend-text b { display: block; font-family: var(--font-display); font-size: 12px; color: var(--tf-navy-900); margin-bottom: 2px; }
-  .tf-legend-text span { font-size: 11.5px; color: var(--tf-slate-600); line-height: 1.45; }
+  .tf-legend-card { display: flex; gap: 12px; align-items: flex-start; background: var(--tf-slate-100); border-radius: 10px; padding: 18px 20px; }
+  .tf-legend-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--tf-white); color: var(--tf-mint-600); flex-shrink: 0; box-shadow: 0 1px 2px rgba(4,18,33,0.08); }
+  .tf-legend-icon svg { width: 16px; height: 16px; }
+  .tf-legend-text b { display: block; font-family: var(--font-display); font-size: 13.5px; color: var(--tf-navy-900); margin-bottom: 3px; }
+  .tf-legend-text span { font-size: 12.5px; color: var(--tf-slate-600); line-height: 1.5; }
 
   .tf-explainer-disclaimer { font-size: 11px; color: var(--tf-slate-600); line-height: 1.55; margin: 0 0 28px 0; text-align: left; }
 
@@ -271,7 +309,14 @@
   .tf-case-stat-value { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--tf-navy-900); margin: 3px 0 0 0; }
   .tf-case-highlight { font-family: var(--font-display); font-weight: 700; color: var(--tf-mint-600); }
   .tf-case-note { font-size: 11px; color: var(--tf-slate-600); line-height: 1.55; margin: 10px 0 0 0; }
-  .tf-jumplink { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: var(--tf-mint-600); text-decoration: none; cursor: pointer; margin-top: 14px; }
+  /* 5/8 pass 4 (Jono's request): upgraded from a bare text link to a
+     bordered pill button, matching the .tf-toggle-btn/.tf-sub-toggle
+     "active" look already used elsewhere on this page (mint border +
+     mint-tinted background), rather than introducing a new, heavier
+     button style like .cp-btn-solid. Solid-mint hover added for the
+     same reason real buttons elsewhere on the site get a hover state. */
+  .tf-jumplink { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: var(--tf-mint-600); text-decoration: none; cursor: pointer; margin-top: 14px; border: 1px solid var(--tf-mint-500); background: var(--tf-mint-100); border-radius: 999px; padding: 9px 18px; transition: background 0.2s ease, color 0.2s ease; }
+  .tf-jumplink:hover { background: var(--tf-mint-500); color: var(--tf-white); }
 </style>
 </head>
 <body>
@@ -321,55 +366,55 @@
          words, so the two were duplicating each other. Starts straight
          at the step cards instead, which add mechanics the hero copy
          doesn't cover. -->
+    <div class="tf-steps-row">
+      <div class="tf-step-card">
+        <div class="tf-step-top">
+          <span class="tf-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="15" rx="8" ry="5"></ellipse><circle cx="12" cy="7" r="3.5"></circle><path d="M9 5L7.5 3M15 5l1.5-2"></path></svg></span>
+          <span class="tf-step-num">1</span>
+        </div>
+        <p class="tf-step-title">Tell us about your mob</p>
+        <p class="tf-step-text">Herd size, weights, growth rate, cost of production - your own numbers.</p>
+      </div>
+      <div class="tf-step-arrow">&#8594;</div>
+      <div class="tf-step-card">
+        <div class="tf-step-top">
+          <span class="tf-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg></span>
+          <span class="tf-step-num">2</span>
+        </div>
+        <p class="tf-step-title">We add the trial's measured difference</p>
+        <p class="tf-step-text">Just the SeaFeed-vs-control gap, applied on top of your numbers.</p>
+      </div>
+      <div class="tf-step-arrow">&#8594;</div>
+      <div class="tf-step-card">
+        <div class="tf-step-top">
+          <span class="tf-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 12h.01M17 12h.01"></path></svg></span>
+          <span class="tf-step-num">3</span>
+        </div>
+        <p class="tf-step-title">See what it's worth for your herd</p>
+        <p class="tf-step-text">Days sooner, dollars saved, plus the full breakdown below.</p>
+      </div>
+    </div>
+
+    <div class="tf-legend-grid">
+      <div class="tf-legend-card">
+        <span class="tf-legend-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="4" y1="11" x2="20" y2="11"></line></svg></span>
+        <span class="tf-legend-text"><b>Days sooner / kg more</b><span>How much faster SeaFeed gets your mob to weight.</span></span>
+      </div>
+      <div class="tf-legend-card">
+        <span class="tf-legend-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 12h.01M17 12h.01"></path></svg></span>
+        <span class="tf-legend-text"><b>Net saved, across your herd</b><span>That advantage's dollar value, for your whole mob.</span></span>
+      </div>
+      <div class="tf-legend-card">
+        <span class="tf-legend-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle><text x="12" y="16.5" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor" font-family="Verdana, Tahoma, sans-serif">$</text></svg></span>
+        <span class="tf-legend-text"><b>Cost per kg</b><span>Your full running cost per kg to reach target weight.</span></span>
+      </div>
+      <div class="tf-legend-card">
+        <span class="tf-legend-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg></span>
+        <span class="tf-legend-text"><b>Gross margin</b><span>Revenue minus cost for the extra kilos gained.</span></span>
+      </div>
+    </div>
+
     <div class="tf-wrap">
-
-      <div class="tf-steps-row">
-        <div class="tf-step-card">
-          <div class="tf-step-top">
-            <span class="tf-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="15" rx="8" ry="5"></ellipse><circle cx="12" cy="7" r="3.5"></circle><path d="M9 5L7.5 3M15 5l1.5-2"></path></svg></span>
-            <span class="tf-step-num">1</span>
-          </div>
-          <p class="tf-step-title">Tell us about your mob</p>
-          <p class="tf-step-text">Herd size, weights, growth rate, cost of production - your own numbers.</p>
-        </div>
-        <div class="tf-step-arrow">&#8594;</div>
-        <div class="tf-step-card">
-          <div class="tf-step-top">
-            <span class="tf-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg></span>
-            <span class="tf-step-num">2</span>
-          </div>
-          <p class="tf-step-title">We add the trial's measured difference</p>
-          <p class="tf-step-text">Just the SeaFeed-vs-control gap, applied on top of your numbers.</p>
-        </div>
-        <div class="tf-step-arrow">&#8594;</div>
-        <div class="tf-step-card">
-          <div class="tf-step-top">
-            <span class="tf-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 12h.01M17 12h.01"></path></svg></span>
-            <span class="tf-step-num">3</span>
-          </div>
-          <p class="tf-step-title">See what it's worth for your herd</p>
-          <p class="tf-step-text">Days sooner, dollars saved, plus the full breakdown below.</p>
-        </div>
-      </div>
-
-      <div class="tf-legend-grid">
-        <div class="tf-legend-card">
-          <span class="tf-legend-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="4" y1="11" x2="20" y2="11"></line></svg></span>
-          <span class="tf-legend-text"><b>Days sooner / kg more</b><span>How much faster SeaFeed gets your mob to weight.</span></span>
-        </div>
-        <div class="tf-legend-card">
-          <span class="tf-legend-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 12h.01M17 12h.01"></path></svg></span>
-          <span class="tf-legend-text"><b>Net saved, across your herd</b><span>That advantage's dollar value, for your whole mob.</span></span>
-        </div>
-        <div class="tf-legend-card">
-          <span class="tf-legend-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle><text x="12" y="16.5" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor" font-family="Verdana, Tahoma, sans-serif">$</text></svg></span>
-          <span class="tf-legend-text"><b>Cost per kg</b><span>Your full running cost per kg to reach target weight.</span></span>
-        </div>
-        <div class="tf-legend-card">
-          <span class="tf-legend-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg></span>
-          <span class="tf-legend-text"><b>Gross margin</b><span>Revenue minus cost for the extra kilos gained.</span></span>
-        </div>
-      </div>
 
       <p class="tf-explainer-disclaimer">An estimate, not a guarantee - updates automatically as trial data grows. Not financial advice.</p>
 
@@ -384,6 +429,18 @@
         <div class="tf-case-detail" id="case-study-detail"></div>
         <div><a class="tf-jumplink" id="case-study-jumplink">Try it with your own numbers &#8595;</a></div>
       </div>
+
+      <!-- 5/8 pass 3 (Jono's request): everything from here down through
+           the confidence footnote is the actual interactive tool (the
+           live status row, the two view toggles, both input panels, and
+           the results panel) - wrapped in .tf-calc-card, a white bordered
+           card, so it visually separates from the steps row / legend /
+           disclaimer / case study above, which all stay directly on the
+           section's light-blue background as explanatory lead-in. Same
+           white-card-on-sunken-blue treatment already used for the "How
+           this calculator works" info card further down this page, no
+           new visual language introduced. No copy anywhere was changed. -->
+      <div class="tf-calc-card">
 
       <div class="tf-status-row" id="status-row" title="Updates automatically as more farms come online and the trial runs longer.">
         <span class="tf-live-dot pulse" id="live-dot"></span>
@@ -444,6 +501,15 @@
           <div class="tf-field" style="max-width:220px;">
             <label id="copLabel" for="copValue">Current cost of production ($/head/day)</label>
             <input id="copValue" type="number" step="0.01" value="3.50" min="0">
+          </div>
+          <!-- 5/8 pass 5 (Jono's request): filled the white space next to
+               this field with a link out to MLA's own free Cost of
+               Production tool, for farmers who don't already know this
+               figure. Opens in a new tab so they don't lose their place
+               (or any numbers already entered) in this calculator. -->
+          <div class="tf-field-help">
+            <p class="tf-field-help-label">Don't know this figure?</p>
+            <a class="tf-field-help-link" href="https://tools.mla.com.au/cop/" target="_blank" rel="noopener">Work it out with MLA's free tool ↗</a>
           </div>
         </div>
         <p class="tf-field-note" id="copConversionNote" style="display:none;"></p>
@@ -521,6 +587,8 @@
           This estimate uses your own mob numbers plus the SeaFeed-vs-control difference measured in the trial so far, not a market forecast. It does not account for seasonal price variation, transport, or other on-farm costs. Not financial advice, for a full assessment of your operation, speak with your accountant or farm business advisor alongside using this tool.
         </p>
         <p class="tf-footnote" id="sampleSizeNote"></p>
+      </div>
+
       </div>
 
     </div>
