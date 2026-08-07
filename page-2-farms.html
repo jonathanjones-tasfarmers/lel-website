@@ -264,8 +264,8 @@
   <div class="fp-origin-inner">
     <div class="fp-origin-card fp-reveal">
       <p class="fp-eyebrow">Before you weigh it up</p>
-      <h2 class="fp-h2">Real results, from <span class="accent">Tasmanian</span> working farms</h2>
-      <p class="body">This isn't a prior study extrapolated to your paddock. It's ordinary Tasmanian pasture-based cattle and sheep, fed SeaFeed as part of their normal ration, on working commercial properties.</p>
+      <h2 class="fp-h2">Not a lab result, a <span class="accent">working farm</span> result</h2>
+      <p class="body">This isn't a feedlot study extrapolated to your paddock. It's ordinary Tasmanian pasture-based cattle and sheep, fed SeaFeed as part of their normal ration, on working commercial properties.</p>
       <p class="body">Every number, the ones that flatter SeaFeed and the ones that don't, is published as the trial runs. If you're weighing this up for your own operation, it's the same data your neighbours would be looking at.</p>
     </div>
   </div>
@@ -295,7 +295,7 @@
       <div class="fp-why-card fp-reveal">
         <p class="fp-why-number">04</p>
         <h3 class="fp-h3">Tools you can use, whether you joined or not</h3>
-        <p class="body">The grant requires this project to publish an economic feasibility tool and an adoption handbook for every Tasmanian producer. Work on both is already underway. In the meantime, see an illustrative carbon value estimate for your own herd on our Data page.</p>
+        <p class="body">The grant requires this project to publish an economic feasibility tool and an adoption handbook for every Tasmanian producer, both formal Milestone 6 deliverables due at project completion in February 2029. Work on both is already underway. In the meantime, see an illustrative carbon value estimate for your own herd on our Data page.</p>
       </div>
     </div>
   </div>
@@ -325,7 +325,7 @@
       <div class="fp-involves-card fp-reveal">
         <span class="fp-involves-tag">Animal health &amp; food safety</span>
         <h3 class="fp-h3">Tracked as part of the trial</h3>
-        <p class="body">Animal health, intake and any extra requirements are monitored and reported alongside the productivity numbers, not left out if the news isn't positive.</p>
+        <p class="body">Animal health, intake and any withholding requirements are monitored and reported alongside the productivity numbers, not left out if the news isn't positive.</p>
       </div>
     </div>
   </div>
@@ -335,7 +335,7 @@
 <div class="fp-closing">
   <div class="fp-closing-inner fp-reveal">
     <h2>Want to see what the trial has found so far?</h2>
-    <p>The economic feasibility tool and the adoption handbook are soon to be published on the Resources page, in the menu above.</p>
+    <p>Interim reports, the economic feasibility tool and the adoption handbook are published on the Resources page, in the menu above.</p>
   </div>
 </div>
 
@@ -378,8 +378,16 @@
       return data;
     });
   }
+  // 8/8 fix (Jono's request): re-added the AGGREGATE_LABEL filter this
+  // function never had. LEL_Emissions_Data_view was missing farm_name
+  // entirely until Jono had it added to the view's exposed fields today
+  // (the underlying data has carried per-farm rows since 22/7) - without
+  // this filter, the trial-wide banner stat below could now silently
+  // return a single farm's own abatement_rate instead of the pooled
+  // trial figure, the exact bug the 4/8 fix already caught on the
+  // Economics query just below (fetchEconLatest()).
   function fetchLatestSeafeedEmissions(){
-    return q(EMISSIONS_URL, { where: "treatment='seafeed'", outFields: "abatement_rate,record_date", orderByFields: "record_date DESC", resultRecordCount: "1", f: "json" }).then(function(data){
+    return q(EMISSIONS_URL, { where: "treatment='seafeed' AND farm_name='" + AGGREGATE_LABEL + "'", outFields: "abatement_rate,record_date", orderByFields: "record_date DESC", resultRecordCount: "1", f: "json" }).then(function(data){
       return data.features.length ? data.features[0].attributes : null;
     });
   }
