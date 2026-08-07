@@ -27,7 +27,7 @@
   26/7 fix pass (Jono's notes):
   - Partner strip: swapped text wordmarks for the real hosted partner
     logos (same assets used on the Partners/Resources pages).
-  - Wool band: added the real wool-hero. as a background photo
+  - Wool band: added the real wool-hero.jpg as a background photo
     (previously a flat navy panel).
   - fetchLatestAbatementRate(): removed the "AND farm_name='All Farms
     (Trial Aggregate)'" filter. The LEL_Emissions_Data_view feature
@@ -39,10 +39,21 @@
     stuck on a fallback 30% instead of the real ~24%). Same fix applied
     on the Farms/Data pages.
 
+  8/8 fix (Jono's request, farm_name reinstated): the note above is now
+  out of date. Jono inspected the live item directly and found
+  LEL_Emissions_Data's SOURCE layer has had a real, populated farm_name
+  field since 22/7 - it was only ever missing from LEL_Emissions_Data_view's
+  exposed field list, not the underlying data. Once that was fixed at the
+  service (see 01. Python Scripts/12. Emissions_View_Add_Farm_Name_Field.py),
+  re-added the AGGREGATE_LABEL filter to fetchLatestAbatementRate() -
+  without it, this "latest by record_date" query could now return a single
+  farm's own reading instead of the trial-wide figure this section needs,
+  now that per-farm rows actually exist alongside the aggregate row.
+
   27/7 design-principles refinement pass (Jono's notes):
   - Full-bleed photography as the dominant device: "Why this trial
     exists" was a boxed 2-column text+card grid, now a full-bleed photo
-    band (originally hero-partners., swapped 27/7 for Jono's own
+    band (originally hero-partners.jpg, swapped 27/7 for Jono's own
     middle-home.jpg) with a floating white card carrying the narrative
     and the "at a glance" facts.
     Added a NEW photo-divider section before the closing CTA using
@@ -127,10 +138,6 @@
   bottom) approach as before, just consuming much less of the photo.
   Only the .hp-origin-band::before/::after percentage stops changed,
   the horizontal darkening layer and every other section untouched.
-
-  4/8 My Notes:
-  Work on the actual content to ensure it aligns with the projects 
-  goals and the stakeholders mission.
 
   Vanilla CSS/JS only, no build step, no external libraries.
 -->
@@ -288,7 +295,7 @@
   <div class="hp-hero-inner">
     <p class="hp-eyebrow on-dark">TasFarmers &middot; Sea Forest &middot; Tasmanian Institute of Agriculture</p>
     <h1 class="hp-h1">Cutting methane from Tasmanian livestock, keeping farms <span class="accent">profitable</span>.</h1>
-    <p class="hp-lede" style="margin-bottom:0;">A Tasmanian Government&ndash;funded trial testing whether Sea Forest's <em>Asparagopsis</em> seaweed lick blocks improve productivity, whilst reducing emissions in Tasmanian livestock, with the cost and performance data published as the trial runs, not after it's finished.</p>
+    <p class="hp-lede" style="margin-bottom:0;">A Tasmanian Government&ndash;funded trial testing whether Sea Forest's <em>Asparagopsis</em> seaweed lick blocks cut enteric methane in Tasmanian livestock, with the cost and performance data published as the trial runs, not after it's finished.</p>
   </div>
 </div>
 
@@ -321,7 +328,7 @@
       <div class="hp-how-card hp-reveal">
         <div class="hp-how-number">3</div>
         <h3 class="hp-h3">The goal</h3>
-        <p>This trial is testing whether that promise holds up on real commercial farms, weighing the emissions cut against the actual cost and impact on herd performance, ensuring that this practice is sustainable on all fronts</p>
+        <p>This trial is testing whether that promise holds up on real commercial farms, weighing the emissions cut against the actual cost and impact on herd performance, not just in a lab.</p>
       </div>
     </div>
   </div>
@@ -332,7 +339,7 @@
   <div class="hp-origin-inner">
     <div class="hp-origin-card hp-reveal">
       <p class="hp-eyebrow">Why this trial exists</p>
-      <h2 class="hp-h2">Real promise, tested on <span class="accent">working farms</span></h2>
+      <h2 class="hp-h2">Real promise, tested on a <span class="accent">working farm</span></h2>
       <p class="hp-body"><em>Asparagopsis</em> seaweed supplements have shown real promise in reducing methane from livestock in controlled research settings. What hadn't been tested at commercial scale in Tasmania was whether that promise holds up on a working farm, and what it actually costs.</p>
       <p class="hp-body">That's what this trial is for. Backed by a $4 million grant from the Tasmanian Government, TasFarmers partnered with the Tasmanian Institute of Agriculture for the science and Sea Forest as the supplement's manufacturer to run the trial on the ground and capture the data.</p>
       <p class="hp-body" style="margin-bottom:28px;">The brief is simple to state and hard to deliver: estimate the emissions reduction, weigh it against the real cost and productivity impact, and publish an honest answer, one every Tasmanian livestock producer can use, whether or not they were part of the trial.</p>
@@ -452,7 +459,7 @@
     <div class="hp-mission-inner hp-reveal">
       <p class="hp-eyebrow">Our mission</p>
       <h2 class="hp-h2">Proving emissions and profitability aren't a <span class="accent">trade-off</span></h2>
-      <p class="hp-body">We're testing that promise on working Tasmanian farms, publishing the real numbers as we go so producers can judge the results for themselves.</p>
+      <p class="hp-body">We're testing that promise on working Tasmanian farms, not in a lab, publishing the real numbers as we go so producers can judge the results for themselves.</p>
     </div>
   </div>
 </div>
@@ -493,10 +500,18 @@
   // --- Tasmania-at-scale scenario, logic reproduced exactly from
   //     04. HTML Scripts/05b-why-tasmania-matters.html: same endpoints,
   //     same fallback values, same maths. Only the CSS classes differ.
-  //     NOTE (26/7 fix): the abatement-rate query no longer filters by
-  //     farm_name - see file header comment for why. ---
+  //     8/8 fix: the 26/7 note below is now stale — Jono confirmed
+  //     LEL_Emissions_Data_view has had a real, populated farm_name field
+  //     since 22/7 (it was just missing from this view's exposed field
+  //     list, now fixed at the service). Re-added the AGGREGATE_LABEL
+  //     filter 05b-why-tasmania-matters.html already uses, otherwise this
+  //     "latest by record_date" query could now return a single farm's
+  //     own abatement_rate instead of the trial-wide figure this
+  //     statewide-scaling section needs — same class of bug the 4/8 fix
+  //     already caught on the Economics side. ---
   var EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
   var BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
+  var AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
 
   var CATTLE_ENTERIC_MT = 1.5874;
   var AG_TOTAL_MT = 2.6466;
@@ -517,7 +532,7 @@
 
   function fetchLatestAbatementRate() {
     var params = new URLSearchParams({
-      where: "treatment='seafeed'", outFields: "abatement_rate,record_date",
+      where: "treatment='seafeed' AND farm_name='" + AGGREGATE_LABEL + "'", outFields: "abatement_rate,record_date",
       orderByFields: "record_date DESC", resultRecordCount: "1", f: "json"
     });
     return fetch(EMISSIONS_URL + "?" + params).then(function(res){ return res.json(); }).then(function(data){
