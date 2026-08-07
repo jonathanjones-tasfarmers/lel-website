@@ -54,7 +54,7 @@
     herd calculator section, about how the data is actually collected
     (grounded in facts already stated on this page: live feature-service
     fetches, no farm-level identities exposed). Placeholder image is
-    hero-cattle. (used elsewhere as the Home hero and Wool's photo
+    hero-cattle.jpg (used elsewhere as the Home hero and Wool's photo
     divider, but not previously as an origin band) - swap for a proper
     "middle-data.jpg" once Jono has one.
   - Seamless transitions: removed the one stitched dashed divider that
@@ -181,6 +181,10 @@
   the CHART's display window only - the Farm page badge and the
   cost-of-production calculator both read just the latest row and are
   unaffected, and the underlying backfilled rows are untouched.
+
+  5/8 pass (Jono's request): the origin band's placeholder photo
+  (hero-cattle.webp, reused from the Home hero) swapped for the real
+  middle-data.webp he provided.
 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
@@ -598,10 +602,19 @@
       });
     }
 
+    // 8/8 fix (Jono's request): re-added the AGGREGATE_LABEL filter this
+    // never had. LEL_Emissions_Data_view was missing farm_name entirely
+    // until Jono had it added to the view's exposed fields today (the
+    // underlying data has carried per-farm rows since 22/7) - without this
+    // filter, this "every seafeed row" query would now pull back BOTH
+    // per-farm AND aggregate rows for every date, doubling the points on
+    // this trend chart (and getting worse as more farms come online with
+    // different rates), not just returning the wrong single value the way
+    // the other "latest row" queries on this page would.
     async function loadAbatement(){
       try{
         const data = await q(EMISSIONS_URL, {
-          where:`treatment='seafeed'`, outFields:"abatement_rate,record_date",
+          where:`treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`, outFields:"abatement_rate,record_date",
           orderByFields:"record_date ASC", resultRecordCount:"2000", f:"json"
         });
         const rows = data.features.map(f => f.attributes).filter(a => a.record_date != null && a.abatement_rate != null);
@@ -803,10 +816,21 @@
   // ================= ILLUSTRATIVE VALUE + HERD CALCULATOR =================
   // Preserved from 04. HTML Scripts/farms-illustrative-carbon-value.html,
   // minus the broken farm_name filter (see file header comment).
+  // 8/8 fix (Jono's request): that source file has since been independently
+  // fixed to re-add "AND farm_name='${AGGREGATE_LABEL}'" to both queries
+  // below (confirmed live in farms-illustrative-carbon-value.html itself,
+  // which is now the more up-to-date copy) - this block had fallen behind
+  // it. Brought fetchLatestEconomics()/fetchLatestEmissions() back in line,
+  // now that LEL_Emissions_Data_view actually exposes farm_name (Economics
+  // has had it filterable for longer, but was never revisited when this
+  // block was written). Without it, either "latest by date" query could
+  // return a single farm's own figures instead of the trial-wide pooled
+  // result this illustrative-value/herd-calculator section needs.
   (function(){
     const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
     const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
     const BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
+    const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
     const REFERENCE_PRICE_AUD_PER_TONNE = 32.5;
     let GWP = 28;
 
@@ -819,7 +843,7 @@
     }
     async function fetchLatestEconomics() {
       const params = new URLSearchParams({
-        where: `treatment='seafeed'`,
+        where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`,
         outFields: "cumulative_ch4_abated_kg_per_head,representative_head_count,days_of_data,cost_per_head_aud,calculation_date",
         orderByFields: "calculation_date DESC", resultRecordCount: "1", f: "json"
       });
@@ -831,7 +855,7 @@
     }
     async function fetchLatestEmissions() {
       const params = new URLSearchParams({
-        where: `treatment='seafeed'`,
+        where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`,
         outFields: "methane_abated_g_per_hd_day,intake_g_per_hd_day,abatement_rate,record_date",
         orderByFields: "record_date DESC", resultRecordCount: "1", f: "json"
       });
@@ -922,9 +946,18 @@
     herdSizeInput.addEventListener('input', updateHerdCalculator);
 
     async function init() {
-      try { await fetchGwp(); } catch (err) { console.error('GWP fetch failed, using default 28:', err); }
+      // 5/8 pass (Jono's request, loading-time audit): GWP used to be
+      // awaited BEFORE starting the Economics/Emissions fetches below,
+      // costing one full extra round-trip for no reason - GWP isn't
+      // actually read until the calculation lines further down, once all
+      // three have already resolved. Starting all three at once instead;
+      // GWP's own failure is still swallowed here (falls back to the
+      // default 28, exactly as before) so it can't fail the Promise.all
+      // and block the Economics/Emissions data the rest of this function
+      // depends on.
+      const gwpPromise = fetchGwp().catch(function (err) { console.error('GWP fetch failed, using default 28:', err); });
       try {
-        const [econ, emissions] = await Promise.all([fetchLatestEconomics(), fetchLatestEmissions()]);
+        const [, econ, emissions] = await Promise.all([gwpPromise, fetchLatestEconomics(), fetchLatestEmissions()]);
         latestEconomics = econ;
         latestEmissions = emissions;
         const abatedPerHead = econ.cumulative_ch4_abated_kg_per_head || 0;
