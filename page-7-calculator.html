@@ -1,961 +1,2007 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Work out what SeaFeed means for your bottom line.</title>
-<!--
-  Economic Calculator page rebuild, same design system as home/farms/
-  partners/resources/data/wool redesigns. All copy carried over verbatim
-  from the live native-Hub-block version of this page.
-
-  The calculator tool itself (seafeed-cost-of-production-calculator.html)
-  is NOT touched by this rebuild - it's still embedded exactly as it was,
-  same src, same frameborder/scrolling/allow attributes. Only the page
-  shell around it (hero, intro copy, "how this works" box) has been
-  rebuilt to match the rest of the site. This keeps the calculator's own
-  function completely untouched.
-
-  Hero image uses the REAL hosted URL already live on GitHub Pages
-  (hero-calc.jpg) - this was already being used by the native Hub page,
-  just re-pointed at from this rebuild.
-
-  No separate closing CTA band (matches the Data/Resources-style ending
-  - straight from the last section into the shared site footer).
-
-  Single self-contained file for a single Hub Iframe widget, same
-  pattern as page-1 through page-6.
-
-  NOTE (4/8): this file was live on GitHub Pages already but had never
-  been saved back into the local project folder - added here to restore
-  local as the source of truth per the project's usual edit-locally,
-  push-to-GitHub workflow. Content below matches the live version, plus
-  the height-sync fix described next.
-
-  4/8 pass, part 5 (Jono's request, reviewing the live Hub page): the
-  nested calculator iframe below used to carry a hardcoded
-  style="height: 990px;". That number was tuned for whatever the
-  calculator's content height happened to be at the time it was set, and
-  drifts stale the moment that content changes - which it did, repeatedly,
-  across the same-day reworks of the calculator's own explainer section.
-  Most recently, removing that file's duplicate hero band shortened its
-  content well below 990px, leaving dead space in the iframe below the
-  real content that a visitor had to scroll straight through for nothing.
-  Fixed properly this time instead of just picking a new fixed number:
-  the calculator page now reports its own real height to this page via
-  postMessage on load and on every ResizeObserver-detected change (case
-  study toggle, results appearing, window resize, anything), and the
-  listener below sets the iframe's height to match exactly, every time.
-  No fixed number to maintain here again.
-
-  5/8 pass (Jono's request, merge the iframe'd calculator into this page):
-  the notes above describe the calculator (seafeed-cost-of-production-
-  calculator.html) as staying untouched in its own nested iframe - that's
-  no longer the case. The calculator predates this page's design-system
-  rebuild and carried its own, separately-maintained CSS tokens (mostly
-  identical hex values to this page's, but hand-set rather than derived
-  from the same oklch(from ...) relative-colour formulas this page's :root
-  uses), which meant its text and colours could visibly drift out of step
-  with the rest of the site any time only one file's tokens got updated -
-  exactly what Jono flagged (text size/style reading slightly differently
-  inside the iframe versus the rest of the page). Fix: merged the
-  calculator's HTML, CSS and script directly into this page, removed the
-  iframe entirely, and folded its markup/JS into this page's own
-  <body>/<script>. Its four colour tokens this page didn't already define
-  (--tf-navy-700, --tf-mint-300, --tf-mint-100, --tf-danger) were added to
-  this page's :root using the same oklch(from var(--tf-navy-900)/
-  var(--tf-mint-500) ...) derivation already used for their sibling steps,
-  rather than carried over as the calculator's old static hex values - so
-  there is now exactly one set of design tokens behind every colour on
-  this page, calculator included. The calculator's own postMessage/
-  ResizeObserver/MutationObserver/poll height-sync mechanism (see that
-  file's former "4/8 pass, part 5" comment) and this page's matching
-  listener below have both been removed entirely - that whole mechanism
-  existed only to solve a problem the iframe boundary itself created, so
-  it has nothing left to do once the iframe is gone; the calculator's
-  content now simply flows as part of this page's normal height, like
-  every other section. The calculator's own top-level script is wrapped
-  in an IIFE below purely as tidy scoping hygiene now that it shares a
-  document with this page's other scripts - no behaviour change.
-  seafeed-cost-of-production-calculator.html itself is left on disk and
-  on GitHub untouched, in case it's ever wanted again as a standalone
-  embeddable widget elsewhere, but this page no longer references it.
-
-  5/8 pass 2 (Jono's request): the step cards ("Tell us about your mob" /
-  etc) and the 4-item legend grid were reading narrower than the "Why
-  this calculator exists" heading above them, since they lived inside
-  .tf-wrap (780px, the calculator form's own column width). Moved both
-  out of .tf-wrap so they now span the full .cp-page width (1180px,
-  matching the section above), enlarged their card padding/type/icons to
-  suit, and switched the legend grid from 2x2 to a single row of 4 at
-  that width (see the CSS comment just above .tf-steps-row for detail).
-  .tf-wrap and everything in it (the actual form/results) are unchanged.
--->
-<style>
-  :root{
-    --tf-navy-900:#041221;
-    --tf-navy-800:oklch(from var(--tf-navy-900) calc(l + 0.08) c h);
-    --tf-navy-700:oklch(from var(--tf-navy-900) calc(l + 0.16) c h);
-    --tf-slate-400:#a9b8c4;
-    --tf-slate-300:oklch(from var(--tf-slate-400) calc(l + 0.08) c h);
-    --tf-slate-200:oklch(from var(--tf-slate-400) calc(l + 0.14) c h);
-    --tf-slate-100:oklch(from var(--tf-slate-400) calc(l + 0.19) c h);
-    --tf-slate-600:oklch(from var(--tf-slate-400) calc(l - 0.18) c h);
-    --tf-mint-500:#5ec9a8;
-    --tf-mint-600:oklch(from var(--tf-mint-500) calc(l - 0.1) c h);
-    --tf-mint-400:oklch(from var(--tf-mint-500) calc(l + 0.08) c h);
-    --tf-mint-300:oklch(from var(--tf-mint-500) calc(l + 0.16) c h);
-    --tf-mint-100:oklch(from var(--tf-mint-500) calc(l + 0.30) c h);
-    --tf-white:#ffffff;
-    --tf-warning:#c98a2e;
-    --tf-danger:#b2412f;
-    --surface-page:var(--tf-white);
-    --surface-sunken:var(--tf-slate-100);
-    --surface-card:var(--tf-white);
-    --text-heading:var(--tf-navy-900);
-    --text-body:oklch(from var(--tf-navy-900) calc(l + 0.06) calc(c - 0.005) h);
-    --text-muted:var(--tf-slate-600);
-    --border-subtle:var(--tf-slate-200);
-    --border-default:var(--tf-slate-300);
-    --radius-lg:12px; --radius-md:10px; --radius-sm:6px;
-    --shadow-sm:0 1px 2px rgba(4,18,33,0.08);
-    --font-display:Tahoma,Verdana,sans-serif;
-    --font-body:Verdana,Tahoma,sans-serif;
-  }
-  html, body { margin: 0; background: var(--surface-page); }
-  body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing:antialiased; }
-  .cp-page { max-width: 1180px; margin: 0 auto; }
-  .cp-section { padding: 124px 28px; box-sizing: border-box; }
-  .cp-narrow { max-width: 760px; }
-  @media (max-width: 720px) { .cp-section { padding: 68px 20px; } }
-
-  .cp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px 0; text-align: center; }
-  .cp-eyebrow.on-dark { color: var(--tf-mint-400); text-align: left; }
-  .cp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px,4.4vw,50px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px 0; max-width: 20ch; }
-  .cp-h1 .accent { color: var(--tf-mint-400); }
-  .cp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 20px 0; }
-  .cp-h2 .accent { color: var(--tf-mint-600); }
-  @media (max-width: 720px) { .cp-h2 { font-size: 22px; } }
-  .cp-lede { color: var(--tf-slate-300); font-size: 17px; line-height: 1.6; max-width: 58ch; margin: 0; }
-  .cp-body { font-size: 15.5px; color: var(--text-body); line-height: 1.75; max-width: 68ch; margin: 0 0 20px 0; }
-  .cp-body:last-child { margin-bottom: 0; }
-
-  .cp-reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
-  .cp-reveal.is-visible { opacity: 1; transform: translateY(0); }
-  @media (prefers-reduced-motion: reduce) { .cp-reveal { opacity: 1; transform: none; transition: none; } }
-
-  /* --- hero --- */
-  .cp-hero { position: relative; min-height: 540px; display: flex; align-items: flex-end; background-image: url('https://jonathanjones-tasfarmers.github.io/lel-website/hero-calc.webp'); background-position: center; background-size: cover; background-repeat: no-repeat; background-color: var(--tf-navy-900); }
-  .cp-hero::before { content:""; position:absolute; inset:0; background: linear-gradient(180deg, oklch(from var(--tf-navy-900) l c h / 0.3) 0%, oklch(from var(--tf-navy-900) l c h / 0.48) 42%, oklch(from var(--tf-navy-900) l c h / 0.6) 68%, oklch(from var(--tf-navy-900) l c h / 0.78) 86%, var(--surface-page) 100%); }
-  .cp-hero-inner { position: relative; max-width: 1180px; margin: 0 auto; padding: 72px 28px 96px; width: 100%; box-sizing: border-box; }
-  @media (max-width: 720px) { .cp-hero { min-height: 460px; } .cp-hero-inner { padding: 56px 20px 64px; } }
-
-  /* --- how this works card (same look as the Resources "available" download card) --- */
-  .cp-info-card { background: var(--surface-card); border: 1.5px solid var(--tf-mint-500); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 36px 40px; max-width: 620px; margin: 0 auto; text-align: left; box-sizing: border-box; }
-  .cp-info-tag { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 12px 0; }
-  .cp-info-card h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 20px; margin: 0 0 10px 0; }
-  .cp-info-card p.body { font-size: 14.5px; color: var(--text-muted); line-height: 1.65; margin: 0 0 22px 0; }
-  @media (max-width: 720px) { .cp-info-card { padding: 28px 26px; } }
-
-  .cp-btn-solid { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; padding: 11px 22px; border-radius: var(--radius-md); text-decoration: none; background: var(--tf-navy-900); color: var(--tf-white); white-space: nowrap; }
-  .cp-btn-solid:hover { background: var(--tf-navy-800); }
-
-  /* ============ merged in from seafeed-cost-of-production-calculator.html (5/8) ============ */
-  .tf-wrap { max-width: 780px; margin: 0 auto; padding-top: 28px; }
-  /* 5/8 pass 3 (Jono's request): white card wrapping the actual
-     interactive calculator (status row through results), same
-     background/border/shadow treatment as .cp-info-card further down
-     this page, so the tool visually separates from the light-blue
-     section behind the explainer content above it. */
-  .tf-calc-card { background: var(--surface-card); border: 1.5px solid var(--tf-mint-500); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 32px 36px; }
-  @media (max-width: 720px) { .tf-calc-card { padding: 24px 22px; } }
-  .tf-status-row { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 6px 14px; border-radius: 999px; background: var(--tf-slate-100); border: 1px solid var(--tf-slate-200); cursor: default; }
-  .tf-status-row.preliminary { background: #fbf3e7; border-color: #eeddb8; }
-  .tf-live-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--tf-mint-500); }
-  .tf-live-dot.pulse { animation: tf-pulse 2s infinite; }
-  .tf-live-dot.preliminary { background: var(--tf-warning); }
-  .tf-live-dot.error { background: var(--tf-slate-400); }
-  .tf-status-text { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: var(--tf-slate-600); }
-  .tf-status-text.preliminary { color: #8a5a12; }
-  @keyframes tf-pulse { 0% { box-shadow: 0 0 0 0 rgba(94,201,168,0.55); } 70% { box-shadow: 0 0 0 7px rgba(94,201,168,0); } 100% { box-shadow: 0 0 0 0 rgba(94,201,168,0); } }
-  @media (prefers-reduced-motion: reduce) { .tf-live-dot.pulse { animation: none !important; } }
-
-  .tf-toggle-pair { display: flex; gap: 8px; margin-bottom: 18px; }
-  .tf-toggle-btn { flex: 1; font-family: var(--font-display); font-size: 13.5px; font-weight: 700; padding: 10px 14px; border-radius: 6px; border: 1px solid var(--tf-slate-300); background: var(--tf-white); color: var(--tf-slate-600); cursor: pointer; }
-  .tf-toggle-btn.active { border-color: var(--tf-mint-500); background: var(--tf-mint-100); color: var(--tf-mint-600); }
-
-  .tf-panel { background: var(--tf-slate-100); border: 1px solid var(--tf-slate-300); border-radius: 10px; padding: 20px 22px; margin-bottom: 16px; box-sizing: border-box; }
-  .tf-panel-accent { background: var(--tf-white); border: 2px solid var(--tf-navy-900); }
-  .tf-panel-accent input:focus { border-color: var(--tf-navy-900) !important; }
-  .tf-panel-title { font-family: var(--font-display); color: var(--tf-navy-900); font-size: 14px; font-weight: 700; margin: 0 0 14px 0; }
-  .tf-field-icon.accent { color: var(--tf-white); }
-  .tf-field-icon.accent svg { width: 16px; height: 16px; }
-  .tf-field-icon.accent-badge { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: var(--tf-navy-900); vertical-align: -7px; margin-right: 8px; }
-  .tf-field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px 16px; }
-  .tf-field label { display: block; color: var(--tf-slate-600); font-size: 12px; margin-bottom: 5px; }
-  .tf-field-icon { display: inline-flex; vertical-align: -3px; margin-right: 6px; color: var(--tf-mint-600); }
-  .tf-field-icon svg { width: 14px; height: 14px; display: block; }
-  .tf-field input { width: 100%; box-sizing: border-box; background: var(--tf-white); border: 1px solid var(--tf-slate-300); border-radius: 5px; color: var(--tf-navy-900); font-size: 15px; padding: 9px 10px; font-family: var(--font-body); }
-  .tf-field input:focus { outline: none; border-color: var(--tf-mint-500); }
-  .tf-field input:disabled { background: var(--tf-slate-100); color: var(--tf-slate-600); }
-  .tf-field-note { font-size: 11px; color: var(--tf-slate-600); line-height: 1.5; margin: 12px 0 0 0; }
-  /* 5/8 pass 5 (Jono's request): MLA cost-of-production link, sits inside
-     the same .tf-field-grid row as the copValue field, bottom-aligned
-     with the input via flex so it lines up rather than floating high. */
-  .tf-field-help { display: flex; flex-direction: column; justify-content: flex-end; }
-  .tf-field-help-label { font-size: 12px; color: var(--tf-slate-600); margin: 0 0 5px 0; line-height: 1.4; }
-  .tf-field-help-link { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: var(--tf-mint-600); text-decoration: none; }
-  .tf-field-help-link:hover { text-decoration: underline; }
-  .tf-sub-toggle-row { display: flex; gap: 8px; margin: 16px 0 10px 0; }
-  .tf-sub-toggle-row.first { margin-top: 4px; }
-  .tf-sub-toggle { font-size: 11.5px; font-weight: 700; padding: 6px 10px; border-radius: 4px; border: 1px solid var(--tf-slate-300); background: var(--tf-white); color: var(--tf-slate-600); cursor: pointer; }
-  .tf-sub-toggle.active { border-color: var(--tf-mint-500); background: var(--tf-mint-100); color: var(--tf-mint-600); }
-  .tf-checkbox-row { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; color: var(--tf-slate-600); }
-  .tf-checkbox-row input { width: auto; }
-
-  .tf-results-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 12px; }
-  @media (max-width: 560px) { .tf-results-grid { grid-template-columns: 1fr; } }
-  .tf-metric-card { border-radius: 10px; padding: 16px 18px; }
-  .tf-metric-card.bau { background: var(--tf-slate-100); border: 1px solid var(--tf-slate-200); }
-  .tf-metric-card.seafeed { background: #e9f8f2; border: 1px solid var(--tf-mint-500); }
-  .tf-metric-label { font-size: 12.5px; margin: 0 0 4px 0; color: var(--tf-slate-600); }
-  .tf-metric-card.seafeed .tf-metric-label { color: var(--tf-mint-600); font-weight: 700; }
-  .tf-metric-value { font-family: var(--font-display); font-size: 24px; font-weight: 700; margin: 0; color: var(--tf-navy-900); }
-
-  .tf-hero-card { background: #e9f8f2; border: 1px solid var(--tf-mint-500); border-radius: 12px; padding: 22px 24px 18px; margin-bottom: 16px; }
-  .tf-hero-card.negative { background: #fbecea; border-color: var(--tf-danger); }
-  .tf-hero-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 14px 0; }
-  .tf-hero-card.negative .tf-hero-eyebrow { color: var(--tf-danger); }
-  .tf-hero-stats-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; }
-  .tf-hero-divider { width: 1px; align-self: stretch; background: var(--tf-slate-200); }
-  .tf-hero-stat { text-align: left; }
-  .tf-hero-icon { width: 34px; height: 34px; border-radius: 50%; background: var(--tf-white); display: flex; align-items: center; justify-content: center; margin: 0 0 10px 0; color: var(--tf-mint-600); box-shadow: 0 1px 2px rgba(4,18,33,0.08); }
-  .tf-hero-card.negative .tf-hero-icon { color: var(--tf-danger); }
-  .tf-hero-icon svg { width: 18px; height: 18px; }
-  .tf-hero-value { font-family: var(--font-display); font-size: 30px; font-weight: 700; margin: 0; line-height: 1.15; color: var(--tf-navy-900); }
-  .tf-hero-value .unit { font-size: 14px; font-weight: 400; color: var(--tf-slate-600); margin-left: 2px; }
-  .tf-hero-caption { font-size: 12.5px; color: var(--tf-slate-600); margin: 6px 0 0 0; line-height: 1.4; }
-  @media (max-width: 480px) { .tf-hero-stats-grid { grid-template-columns: 1fr; gap: 14px; } .tf-hero-divider { width: 100%; height: 1px; } }
-
-  .tf-breakdown-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; padding: 12px 2px; border-top: 1px solid var(--tf-slate-200); border-bottom: 1px solid var(--tf-slate-200); margin: 0 0 14px 0; }
-  .tf-breakdown-toggle-label { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--tf-navy-900); }
-  .tf-breakdown-toggle-arrow { font-size: 12px; font-weight: 700; color: var(--tf-mint-600); white-space: nowrap; }
-  .tf-breakdown-content { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
-  .tf-breakdown-content.expanded { max-height: 1000px; }
-
-  .tf-footnote { font-size: 11.5px; color: var(--tf-slate-600); line-height: 1.6; margin: 12px 0 0 0; text-align: center; }
-  .tf-warn-box { background: #fbf3e7; border-left: 3px solid var(--tf-warning); border-radius: 3px; padding: 12px 16px; color: #8a5a12; font-size: 13px; line-height: 1.5; margin-bottom: 16px; }
-
-  .tf-info-toggle { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-display); font-size: 11.5px; font-weight: 700; color: var(--tf-mint-600); text-decoration: none; border-bottom: 1px solid var(--tf-mint-600); padding-bottom: 1px; cursor: pointer; user-select: none; margin-top: 12px; }
-  .tf-info-wrap { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
-  .tf-info-wrap.expanded { max-height: 400px; margin-top: 10px; }
-
-  /* 5/8 pass (Jono's request): the step cards and legend grid used to sit
-     inside .tf-wrap (780px, the same narrow column as the calculator form
-     below them), so they read visibly narrower than the "Why this
-     calculator exists" heading/copy directly above, which lives in the
-     full-width .cp-page container (1180px). Moved both blocks out of
-     .tf-wrap (now direct children of .cp-page, see the HTML above) so
-     they span the same width as that section, and enlarged their card
-     padding/type/icons to fill the extra room instead of looking
-     stretched-but-thin. The legend grid also moved from a 2x2 grid to a
-     single row of 4 at this width, matching the 4-across fact-grid
-     pattern already used on the Wool and Resources pages. .tf-wrap
-     itself (the calculator's own input/results form) is untouched, still
-     780px, that width is still right for a form. */
-  .tf-steps-row { display: flex; align-items: stretch; gap: 16px; margin-bottom: 28px; }
-  @media (max-width: 780px) { .tf-steps-row { flex-direction: column; } }
-  .tf-step-card { flex: 1; background: var(--tf-white); border: 1px solid var(--tf-slate-200); border-radius: 12px; padding: 26px 24px; }
-  .tf-step-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .tf-step-icon { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%; background: var(--tf-mint-100); color: var(--tf-mint-600); flex-shrink: 0; }
-  .tf-step-icon svg { width: 20px; height: 20px; }
-  .tf-step-num { display: inline-flex; align-items: center; justify-content: center; width: 23px; height: 23px; border-radius: 50%; background: var(--tf-navy-900); color: var(--tf-white); font-family: var(--font-display); font-size: 12px; font-weight: 700; }
-  .tf-step-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--tf-navy-900); margin: 0 0 8px 0; }
-  .tf-step-text { font-size: 13.5px; line-height: 1.55; color: var(--tf-slate-600); margin: 0; }
-  .tf-step-arrow { display: flex; align-items: center; justify-content: center; color: var(--tf-slate-300); font-size: 20px; flex: 0 0 auto; padding: 0 4px; }
-  @media (max-width: 780px) { .tf-step-arrow { transform: rotate(90deg); margin: -8px 0; } }
-
-  .tf-legend-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
-  @media (max-width: 900px) { .tf-legend-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 560px) { .tf-legend-grid { grid-template-columns: 1fr; } }
-  .tf-legend-card { display: flex; gap: 12px; align-items: flex-start; background: var(--tf-slate-100); border-radius: 10px; padding: 18px 20px; }
-  .tf-legend-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--tf-white); color: var(--tf-mint-600); flex-shrink: 0; box-shadow: 0 1px 2px rgba(4,18,33,0.08); }
-  .tf-legend-icon svg { width: 16px; height: 16px; }
-  .tf-legend-text b { display: block; font-family: var(--font-display); font-size: 13.5px; color: var(--tf-navy-900); margin-bottom: 3px; }
-  .tf-legend-text span { font-size: 12.5px; color: var(--tf-slate-600); line-height: 1.5; }
-
-  .tf-explainer-disclaimer { font-size: 11px; color: var(--tf-slate-600); line-height: 1.55; margin: 0 0 28px 0; text-align: left; }
-
-  .tf-case-study { background: #eaf8f3; border: 1px solid var(--tf-mint-500); border-radius: 12px; padding: 20px 22px 22px; margin-bottom: 28px; }
-  .tf-case-study-eyebrow { font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 6px 0; }
-  .tf-case-study-title { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--tf-navy-900); margin: 0 0 16px 0; }
-  .tf-case-hero-stats { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; background: var(--tf-white); border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; }
-  @media (max-width: 480px) { .tf-case-hero-stats { grid-template-columns: 1fr; gap: 12px; } }
-  .tf-case-hero-divider { width: 1px; align-self: stretch; background: var(--tf-slate-200); }
-  @media (max-width: 480px) { .tf-case-hero-divider { width: 100%; height: 1px; } }
-  .tf-case-hero-value { font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--tf-navy-900); margin: 0; }
-  .tf-case-hero-value .unit { font-size: 12.5px; font-weight: 400; color: var(--tf-slate-600); margin-left: 3px; }
-  .tf-case-hero-caption { font-size: 11.5px; color: var(--tf-slate-600); margin: 3px 0 0 0; }
-  .tf-case-toggle { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--tf-mint-600); text-decoration: none; cursor: pointer; user-select: none; }
-  .tf-case-detail { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-  .tf-case-detail.expanded { max-height: 900px; margin-top: 14px; }
-  .tf-case-detail p { font-size: 13px; line-height: 1.65; color: var(--tf-navy-900); margin: 0 0 12px 0; }
-  .tf-case-study-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 12px 0; }
-  @media (max-width: 560px) { .tf-case-study-stats { grid-template-columns: 1fr; } }
-  .tf-case-stat-card { background: var(--tf-white); border-radius: 8px; padding: 12px 14px; }
-  .tf-case-stat-card.seafeed { border: 1.5px solid var(--tf-mint-500); }
-  .tf-case-stat-card.bau { border: 1px solid var(--tf-slate-200); }
-  .tf-case-stat-label { font-size: 11px; color: var(--tf-slate-600); margin: 0; }
-  .tf-case-stat-value { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--tf-navy-900); margin: 3px 0 0 0; }
-  .tf-case-highlight { font-family: var(--font-display); font-weight: 700; color: var(--tf-mint-600); }
-  .tf-case-note { font-size: 11px; color: var(--tf-slate-600); line-height: 1.55; margin: 10px 0 0 0; }
-  /* 5/8 pass 4 (Jono's request): upgraded from a bare text link to a
-     bordered pill button, matching the .tf-toggle-btn/.tf-sub-toggle
-     "active" look already used elsewhere on this page (mint border +
-     mint-tinted background), rather than introducing a new, heavier
-     button style like .cp-btn-solid. Solid-mint hover added for the
-     same reason real buttons elsewhere on the site get a hover state. */
-  .tf-jumplink { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: var(--tf-mint-600); text-decoration: none; cursor: pointer; margin-top: 14px; border: 1px solid var(--tf-mint-500); background: var(--tf-mint-100); border-radius: 999px; padding: 9px 18px; transition: background 0.2s ease, color 0.2s ease; }
-  .tf-jumplink:hover { background: var(--tf-mint-500); color: var(--tf-white); }
-</style>
-</head>
-<body>
-
-<!-- ============ HERO ============ -->
-<div class="cp-hero">
-  <div class="cp-hero-inner">
-    <p class="cp-eyebrow on-dark">For your own herd</p>
-    <h1 class="cp-h1">Work out what SeaFeed means for your <span class="accent">bottom line</span>.</h1>
-    <p class="cp-lede">Built from real trial results, not published averages. Enter your own herd size, growth rate and costs, the calculator does the rest.</p>
-  </div>
-</div>
-
-<!-- ============ WHY THIS CALCULATOR EXISTS ============ -->
-<div class="cp-section" style="background: linear-gradient(180deg, var(--surface-page) 0%, var(--surface-page) calc(100% - 100px), var(--surface-sunken) 100%);">
-  <div class="cp-page">
-    <h2 class="cp-h2 cp-narrow cp-reveal">Why this calculator exists</h2>
-    <p class="cp-body cp-reveal">This tool is one of two deliverables the project's grant deed requires: an economic feasibility calculator for Tasmanian livestock producers, so you can weigh up SeaFeed for your own operation using real numbers, not projections.</p>
-    <p class="cp-body cp-reveal">It's built on the actual difference measured between the SeaFeed and control groups in this trial, applied to your own herd size, growth rate and cost of production. As the trial runs longer and more farms come online, the numbers behind it get more reliable, so treat today's result as current best evidence, not a final answer.</p>
-  </div>
-</div>
-
-<!-- ============ THE CALCULATOR ITSELF (merged directly into this page, 5/8) ============ -->
-<div class="cp-section" style="background: var(--surface-sunken); padding-top: 0; padding-bottom: 56px;">
-  <div class="cp-page cp-reveal">
-    <!-- ============ EXPLAINER: HOW THIS CALCULATOR WORKS ============ -->
-    <!-- Merged in from seafeed-cost-of-production-calculator.html (5/8) -
-         this whole tf-wrap block, previously that file's entire <body>,
-         now lives directly in this page instead of inside a nested
-         iframe. History preserved below since it's still accurate design
-         rationale; only the "outside this file" line has been struck
-         through in spirit by the merge itself - there's now only one file.
-
-         4/8 addition (Jono's request): explains the differential-only
-         design BEFORE anyone types a number in - prompted directly by
-         Jono's own question that session ("why is this calculator's
-         cost/kg cheaper than the Data page's cost_per_kg_gain_aud?").
-         This calculator never uses SeaFeed's own absolute trial
-         cost/growth figures, only the measured GAP between SeaFeed and
-         control, applied on top of the farmer's own numbers.
-
-         4/8 pass, part 4: this section used to open with its own
-         photo-band hero (eyebrow "Before you start" / heading "How this
-         calculator works" / lead sentence) before the step cards below.
-         Removed - this page's own hero + "Why this calculator exists"
-         section directly above already says the same thing in its own
-         words, so the two were duplicating each other. Starts straight
-         at the step cards instead, which add mechanics the hero copy
-         doesn't cover. -->
-    <div class="tf-steps-row">
-      <div class="tf-step-card">
-        <div class="tf-step-top">
-          <span class="tf-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="15" rx="8" ry="5"></ellipse><circle cx="12" cy="7" r="3.5"></circle><path d="M9 5L7.5 3M15 5l1.5-2"></path></svg></span>
-          <span class="tf-step-num">1</span>
-        </div>
-        <p class="tf-step-title">Tell us about your mob</p>
-        <p class="tf-step-text">Herd size, weights, growth rate, cost of production - your own numbers.</p>
-      </div>
-      <div class="tf-step-arrow">&#8594;</div>
-      <div class="tf-step-card">
-        <div class="tf-step-top">
-          <span class="tf-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg></span>
-          <span class="tf-step-num">2</span>
-        </div>
-        <p class="tf-step-title">We add the trial's measured difference</p>
-        <p class="tf-step-text">Just the SeaFeed-vs-control gap, applied on top of your numbers.</p>
-      </div>
-      <div class="tf-step-arrow">&#8594;</div>
-      <div class="tf-step-card">
-        <div class="tf-step-top">
-          <span class="tf-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 12h.01M17 12h.01"></path></svg></span>
-          <span class="tf-step-num">3</span>
-        </div>
-        <p class="tf-step-title">See what it's worth for your herd</p>
-        <p class="tf-step-text">Days sooner, dollars saved, plus the full breakdown below.</p>
-      </div>
-    </div>
-
-    <div class="tf-legend-grid">
-      <div class="tf-legend-card">
-        <span class="tf-legend-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="4" y1="11" x2="20" y2="11"></line></svg></span>
-        <span class="tf-legend-text"><b>Days sooner / kg more</b><span>How much faster SeaFeed gets your mob to weight.</span></span>
-      </div>
-      <div class="tf-legend-card">
-        <span class="tf-legend-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 12h.01M17 12h.01"></path></svg></span>
-        <span class="tf-legend-text"><b>Net saved, across your herd</b><span>That advantage's dollar value, for your whole mob.</span></span>
-      </div>
-      <div class="tf-legend-card">
-        <span class="tf-legend-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle><text x="12" y="16.5" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor" font-family="Verdana, Tahoma, sans-serif">$</text></svg></span>
-        <span class="tf-legend-text"><b>Cost per kg</b><span>Your full running cost per kg to reach target weight.</span></span>
-      </div>
-      <div class="tf-legend-card">
-        <span class="tf-legend-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg></span>
-        <span class="tf-legend-text"><b>Gross margin</b><span>Revenue minus cost for the extra kilos gained.</span></span>
-      </div>
-    </div>
-
-    <div class="tf-wrap">
-
-      <p class="tf-explainer-disclaimer">An estimate, not a guarantee - updates automatically as trial data grows. Not financial advice.</p>
-
-      <!-- ============ EXAMPLE CASE STUDY ============ -->
-      <div class="tf-case-study" id="case-study">
-        <p class="tf-case-study-eyebrow">Example case study</p>
-        <h3 class="tf-case-study-title">A 100-head mob, 380kg &#8594; 480kg</h3>
-        <div class="tf-case-hero-stats" id="case-study-hero">
-          <div class="tf-case-hero-stat"><p class="tf-case-hero-value">&mdash;</p><p class="tf-case-hero-caption">Loading a live example&hellip;</p></div>
-        </div>
-        <a class="tf-case-toggle" id="case-study-toggle">See how we worked this out &#9662;</a>
-        <div class="tf-case-detail" id="case-study-detail"></div>
-        <div><a class="tf-jumplink" id="case-study-jumplink">Try it with your own numbers &#8595;</a></div>
-      </div>
-
-      <!-- 5/8 pass 3 (Jono's request): everything from here down through
-           the confidence footnote is the actual interactive tool (the
-           live status row, the two view toggles, both input panels, and
-           the results panel) - wrapped in .tf-calc-card, a white bordered
-           card, so it visually separates from the steps row / legend /
-           disclaimer / case study above, which all stay directly on the
-           section's light-blue background as explanatory lead-in. Same
-           white-card-on-sunken-blue treatment already used for the "How
-           this calculator works" info card further down this page, no
-           new visual language introduced. No copy anywhere was changed. -->
-      <div class="tf-calc-card">
-
-      <div class="tf-status-row" id="status-row" title="Updates automatically as more farms come online and the trial runs longer.">
-        <span class="tf-live-dot pulse" id="live-dot"></span>
-        <span class="tf-status-text" id="status-text">Loading live trial data…</span>
-      </div>
-
-      <div class="tf-toggle-pair">
-        <button class="tf-toggle-btn active" id="viewWeight" type="button">Reach a target weight</button>
-        <button class="tf-toggle-btn" id="viewDuration" type="button">Feed for a set period</button>
-      </div>
-
-      <div class="tf-warn-box" id="no-gain-block" style="display:none;"></div>
-      <div class="tf-warn-box" id="weight-validation-block" style="display:none;"></div>
-
-      <div class="tf-panel" id="input-panel">
-        <p class="tf-panel-title">Your mob</p>
-        <div class="tf-field-grid">
-          <div class="tf-field">
-            <label for="herdSize"><span class="tf-field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="15" rx="8" ry="5"></ellipse><circle cx="12" cy="7" r="3.5"></circle><path d="M9 5L7.5 3M15 5l1.5-2"></path></svg></span>Herd size (head)</label>
-            <input id="herdSize" type="number" value="100" min="1">
-          </div>
-          <div class="tf-field">
-            <label for="currentWeight"><span class="tf-field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"></rect><path d="M12 15a4 4 0 1 1 3-6.7"></path><path d="M12 15l3-4"></path></svg></span>Current weight (kg)</label>
-            <input id="currentWeight" type="number" value="380" min="1">
-          </div>
-          <div class="tf-field" id="targetWeightField">
-            <label for="targetWeight"><span class="tf-field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="4"></circle><circle cx="12" cy="12" r="0.5" fill="currentColor"></circle></svg></span>Target sale weight (kg)</label>
-            <input id="targetWeight" type="number" value="480" min="1">
-          </div>
-          <div class="tf-field" id="durationField" style="display:none;">
-            <label for="durationDays"><span class="tf-field-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="4" y1="11" x2="20" y2="11"></line></svg></span>Feeding period (days)</label>
-            <input id="durationDays" type="number" value="90" min="1">
-          </div>
-        </div>
-
-        <div class="tf-sub-toggle-row first">
-          <button class="tf-sub-toggle active" id="adgDirect" type="button">Enter growth rate directly</button>
-          <button class="tf-sub-toggle" id="adgDerived" type="button">Work it out for me</button>
-        </div>
-        <div class="tf-field-grid" id="adgDirectField">
-          <div class="tf-field" style="max-width:220px;">
-            <label for="adgValue">Current growth rate (kg/day)</label>
-            <input id="adgValue" type="number" step="0.01" value="0.90" min="0.01">
-          </div>
-        </div>
-        <div class="tf-field-grid" id="adgDerivedField" style="display:none;">
-          <div class="tf-field" style="max-width:260px;">
-            <label for="adgTypicalDays">Typical days, current weight to target weight</label>
-            <input id="adgTypicalDays" type="number" value="111" min="1">
-          </div>
-        </div>
-
-        <div class="tf-sub-toggle-row">
-          <button class="tf-sub-toggle active" id="copPerDay" type="button">Cost of production, $/head/day</button>
-          <button class="tf-sub-toggle" id="copPerKg" type="button">Cost of production, $/kg liveweight</button>
-        </div>
-        <div class="tf-field-grid">
-          <div class="tf-field" style="max-width:220px;">
-            <label id="copLabel" for="copValue">Current cost of production ($/head/day)</label>
-            <input id="copValue" type="number" step="0.01" value="3.50" min="0">
-          </div>
-          <!-- 5/8 pass 5 (Jono's request): filled the white space next to
-               this field with a link out to MLA's own free Cost of
-               Production tool, for farmers who don't already know this
-               figure. Opens in a new tab so they don't lose their place
-               (or any numbers already entered) in this calculator. -->
-          <div class="tf-field-help">
-            <p class="tf-field-help-label">Don't know this figure?</p>
-            <a class="tf-field-help-link" href="https://tools.mla.com.au/cop/" target="_blank" rel="noopener">Work it out with MLA's free tool ↗</a>
-          </div>
-        </div>
-        <p class="tf-field-note" id="copConversionNote" style="display:none;"></p>
-      </div>
-
-      <div class="tf-panel tf-panel-accent" id="price-panel">
-        <p class="tf-panel-title">
-          <span class="tf-field-icon accent accent-badge"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"></circle><text x="12" y="16.5" font-size="11" font-weight="700" text-anchor="middle" fill="currentColor" font-family="Verdana, Tahoma, sans-serif">$</text></svg></span>
-          Expected sale price
-        </p>
-        <div class="tf-field" style="max-width:240px;">
-          <label for="salePrice">$ per kg liveweight</label>
-          <input id="salePrice" type="number" step="0.01" value="3.20" min="0">
-        </div>
-        <a href="#" class="tf-info-toggle" id="price-info-toggle">About this price ▾</a>
-        <div class="tf-info-wrap" id="price-info-wrap">
-          <p class="tf-field-note" id="priceRelevanceNote"></p>
-          <p class="tf-field-note" id="priceSourceNote"></p>
-        </div>
-      </div>
-
-      <div id="results-panel" style="display:none;">
-        <div class="tf-hero-card" id="hero-card">
-          <p class="tf-hero-eyebrow" id="hero-eyebrow"></p>
-          <div class="tf-hero-stats-grid">
-            <div class="tf-hero-stat">
-              <div class="tf-hero-icon" id="hero-icon-1"></div>
-              <p class="tf-hero-value" id="hero-value-1">—</p>
-              <p class="tf-hero-caption" id="hero-caption-1"></p>
-            </div>
-            <div class="tf-hero-divider"></div>
-            <div class="tf-hero-stat">
-              <div class="tf-hero-icon" id="hero-icon-2"></div>
-              <p class="tf-hero-value" id="hero-value-2">—</p>
-              <p class="tf-hero-caption" id="hero-caption-2"></p>
-            </div>
-          </div>
-        </div>
-
-        <div class="tf-breakdown-toggle" id="breakdown-toggle">
-          <span class="tf-breakdown-toggle-label">See the full breakdown</span>
-          <span class="tf-breakdown-toggle-arrow" id="breakdown-arrow">Show ▾</span>
-        </div>
-        <div class="tf-breakdown-content" id="breakdown-content">
-          <div class="tf-results-grid">
-            <div class="tf-metric-card bau">
-              <p class="tf-metric-label">Business as usual, cost/kg</p>
-              <p class="tf-metric-value" id="copKgBau">—</p>
-            </div>
-            <div class="tf-metric-card seafeed">
-              <p class="tf-metric-label">With SeaFeed, cost/kg</p>
-              <p class="tf-metric-value" id="copKgSeafeed">—</p>
-            </div>
-          </div>
-
-          <div class="tf-results-grid">
-            <div class="tf-metric-card bau">
-              <p class="tf-metric-label">Business as usual, gross margin</p>
-              <p class="tf-metric-value" id="marginBau">—</p>
-            </div>
-            <div class="tf-metric-card seafeed">
-              <p class="tf-metric-label">With SeaFeed, gross margin</p>
-              <p class="tf-metric-value" id="marginSeafeed">—</p>
-            </div>
-          </div>
-          <p class="tf-field-note" style="margin-bottom:12px;">This treats your current weight as already paid for, only the cost and revenue of the extra kilos gained during this period are counted, not the animal's starting value. That's why margin stays positive even if your cost of production matches your sale price exactly. It's gross margin over the finishing period, not full farm profit.</p>
-        </div>
-      </div>
-
-      <div style="text-align:center;">
-        <a href="#" class="tf-info-toggle" id="confidence-toggle">About this estimate ▾</a>
-      </div>
-      <div class="tf-info-wrap" id="confidence-wrap">
-        <p class="tf-footnote" id="confidence-note">
-          This estimate uses your own mob numbers plus the SeaFeed-vs-control difference measured in the trial so far, not a market forecast. It does not account for seasonal price variation, transport, or other on-farm costs. Not financial advice, for a full assessment of your operation, speak with your accountant or farm business advisor alongside using this tool.
-        </p>
-        <p class="tf-footnote" id="sampleSizeNote"></p>
-      </div>
-
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- ============ HOW THIS CALCULATOR WORKS ============ -->
-<div class="cp-section" style="background: linear-gradient(180deg, var(--surface-sunken) 0%, var(--surface-sunken) calc(100% - 100px), var(--surface-page) 100%); padding-top: 0;">
-  <div class="cp-page" style="text-align: center;">
-    <div class="cp-info-card cp-reveal">
-      <p class="cp-info-tag">Available now</p>
-      <h3>How this calculator works</h3>
-      <p class="body">A full explainer, covering how each number is calculated and how to read your results, is available as a downloadable PDF.</p>
-      <a class="cp-btn-solid" href="https://jonathanjones-tasfarmers.github.io/lel-website/2026-07-23 Economic Feasibility Calculator Methodology and Data Record.pdf" target="_blank" rel="noopener">Read the full explainer (PDF)</a>
-    </div>
-  </div>
-</div>
-
-<script>
-  // --- scroll reveal, restrained: fade + rise, once per element ---
-  (function(){
-    var els = document.querySelectorAll('.cp-reveal');
-    if (!('IntersectionObserver' in window)) { els.forEach(function(el){ el.classList.add('is-visible'); }); return; }
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
-      });
-    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-    els.forEach(function(el){ io.observe(el); });
-  })();
-</script>
-
-<!-- ============ CALCULATOR LOGIC (merged in from seafeed-cost-of-production-calculator.html, 5/8) ============ -->
-<script>
-(function(){
-  const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
-  const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
-
-  // Indicative sale price, MLA Statistics API (National Livestock Reporting
-  // Service data), a free public JSON API confirmed to work with a plain
-  // cross-origin browser fetch (no key, no auth). indicatorID 4 = National
-  // Heavy Steer Indicator, c/kg liveweight, the closest published national
-  // indicator to a finished steer at typical target sale weight. This is a
-  // NATIONAL figure, not Tasmania-specific (Tasmanian saleyards report too
-  // thin a volume for their own daily indicator), always shown as a
-  // starting point for the farmer to override with local knowledge, never
-  // presented as gospel.
-  const MLA_URL = "https://api-mlastatistics.mla.com.au/report/5";
-  const MLA_INDICATOR_ID = 4;
-  const MLA_INDICATOR_LABEL = "MLA National Heavy Steer Indicator";
-
-  async function fetchIndicativeSalePrice() {
-    const from = new Date();
-    from.setDate(from.getDate() - 14);
-    const fromDate = from.toISOString().slice(0, 10);
-    // NOTE: this API's only accepted params are page/fromDate/toDate/indicatorID,
-    // no "f=json" here (that's an ArcGIS REST convention, not MLA's; including
-    // it makes this endpoint 404 with "Undefined parameter: f found!").
-    const params = new URLSearchParams({ indicatorID: String(MLA_INDICATOR_ID), fromDate });
-    const res = await fetch(MLA_URL + "?" + params);
-    const data = await res.json();
-    if (!data.data || !data.data.length) return null;
-    const latest = data.data[data.data.length - 1]; // rows come back chronological ascending
-    return { dollarsPerKg: latest.indicator_value / 100, date: latest.calendar_date };
-  }
-
-  let incrementalCostPerHeadDay = null;
-  let adgUpliftKgPerDay = null;
-  let daysOfData = null;
-  let daysOfDataDiffer = false;
-
-  let view = "weight";
-  let adgMode = "direct";
-  let copMode = "perDay";
-
-  const el = id => document.getElementById(id);
-  const num = id => parseFloat(el(id).value) || 0;
-
-  async function fetchAggregateByTreatment() {
-    const params = new URLSearchParams({
-      where: `farm_name='${AGGREGATE_LABEL}' AND treatment IN ('seafeed','control')`,
-      outFields: "treatment,cost_per_head_aud,weight_gain_kg_per_head,days_of_data,calculation_date,representative_head_count",
-      orderByFields: "calculation_date DESC",
-      resultRecordCount: "10",
-      f: "json"
-    });
-    const res = await fetch(ECON_URL + "?" + params);
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message || "Economics query failed");
-    const latest = {};
-    for (const feat of data.features) {
-      const t = feat.attributes.treatment;
-      if (!latest[t]) latest[t] = feat.attributes;
-    }
-    return latest;
-  }
-
-  // Audit finding 3: a true, farm-name-free COUNT(DISTINCT farm_name) is not
-  // reliably available from this layer, the ArcGIS REST "distinct" flag on
-  // outStatistics was tested against the live service and silently ignored
-  // (it returns a plain row count, not a distinct farm count), and the only
-  // way to derive a real distinct count client-side would be to fetch the
-  // actual farm_name values into the browser first, which reintroduces the
-  // exact farm-level exposure the main query's filter is designed to avoid.
-  // Participating farm count is therefore intentionally NOT auto-disclosed
-  // here. The right fix is for the Economics Pipeline to write a
-  // participating_farm_count field onto the "All Farms (Trial Aggregate)"
-  // row itself, the same way every other aggregate figure already reaches
-  // this calculator, see the implementation note passed back to Jono.
-
-  function setToggle(activeBtn, inactiveBtn) {
-    activeBtn.classList.add("active");
-    inactiveBtn.classList.remove("active");
-  }
-
-  // Sale price only affects the maths in "duration" view (see calc()),
-  // in "weight" view both scenarios sell at the same target weight, so
-  // revenue is identical either way and the price cancels out. Without
-  // this note the field looks broken when someone changes it and nothing
-  // happens, which is exactly what prompted adding it.
-  function updatePriceRelevanceNote() {
-    el("priceRelevanceNote").textContent = view === "weight"
-      ? "Doesn’t affect this result, both paths reach the same target weight, so sale price cancels out. It matters in the “Feed for a set period” view instead."
-      : "";
-  }
-
-  el("viewWeight").addEventListener("click", () => {
-    view = "weight";
-    setToggle(el("viewWeight"), el("viewDuration"));
-    el("targetWeightField").style.display = "";
-    el("durationField").style.display = "none";
-    updatePriceRelevanceNote();
-    calc();
-  });
-  el("viewDuration").addEventListener("click", () => {
-    view = "duration";
-    setToggle(el("viewDuration"), el("viewWeight"));
-    el("targetWeightField").style.display = "none";
-    el("durationField").style.display = "";
-    updatePriceRelevanceNote();
-    calc();
-  });
-  updatePriceRelevanceNote(); // set initial state for the default "weight" view
-
-  el("adgDirect").addEventListener("click", () => {
-    adgMode = "direct";
-    setToggle(el("adgDirect"), el("adgDerived"));
-    el("adgDirectField").style.display = "";
-    el("adgDerivedField").style.display = "none";
-    calc();
-  });
-  el("adgDerived").addEventListener("click", () => {
-    adgMode = "derived";
-    setToggle(el("adgDerived"), el("adgDirect"));
-    el("adgDirectField").style.display = "none";
-    el("adgDerivedField").style.display = "";
-    calc();
-  });
-
-  // Audit finding 4: the $/kg mode converts to a daily figure by
-  // multiplying by the growth rate entered above (copDayBau = copValue *
-  // adgBau, see calc()), an assumption that isn't obvious from the field
-  // alone. Disclosed here, next to the field, only when that mode is in use.
-  function updateCopConversionNote() {
-    const note = el("copConversionNote");
-    if (copMode === "perKg") {
-      note.textContent = "Converted to a daily figure by multiplying by your growth rate above, so a faster-growing mob is modelled as costing proportionally more per day to run.";
-      note.style.display = "";
-    } else {
-      note.style.display = "none";
-    }
-  }
-
-  el("copPerDay").addEventListener("click", () => {
-    copMode = "perDay";
-    setToggle(el("copPerDay"), el("copPerKg"));
-    el("copLabel").textContent = "Current cost of production ($/head/day)";
-    updateCopConversionNote();
-    calc();
-  });
-  el("copPerKg").addEventListener("click", () => {
-    copMode = "perKg";
-    setToggle(el("copPerKg"), el("copPerDay"));
-    el("copLabel").textContent = "Current cost of production ($/kg liveweight)";
-    updateCopConversionNote();
-    calc();
-  });
-
-  ["herdSize","currentWeight","targetWeight","durationDays","salePrice","adgValue","adgTypicalDays","copValue"]
-    .forEach(id => el(id).addEventListener("input", calc));
-
-  el("breakdown-toggle").addEventListener("click", () => {
-    const expanded = el("breakdown-content").classList.toggle("expanded");
-    el("breakdown-arrow").textContent = expanded ? "Hide ▴" : "Show ▾";
-  });
-
-  function wireInfoToggle(toggleId, wrapId, label) {
-    const toggle = el(toggleId);
-    const wrap = el(wrapId);
-    toggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      const expanded = wrap.classList.toggle("expanded");
-      toggle.textContent = expanded ? "Hide ▴" : label + " ▾";
-    });
-  }
-  wireInfoToggle("price-info-toggle", "price-info-wrap", "About this price");
-  wireInfoToggle("confidence-toggle", "confidence-wrap", "About this estimate");
-
-  el("case-study-jumplink").addEventListener("click", (e) => {
-    e.preventDefault();
-    el("input-panel").scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-  el("case-study-toggle").addEventListener("click", (e) => {
-    e.preventDefault();
-    const expanded = el("case-study-detail").classList.toggle("expanded");
-    el("case-study-toggle").textContent = expanded ? "Hide the full workings ▴" : "See how we worked this out ▾";
-  });
-
-  const fmtMoney2 = v => "$" + v.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-  const fmtMoney0 = v => "$" + v.toLocaleString(undefined, {maximumFractionDigits: 0});
-
-  // Self-contained inline icons (no external icon font dependency),
-  // stroke="currentColor" so they pick up the mint/danger colour set by
-  // .tf-hero-icon / .tf-hero-card.negative .tf-hero-icon in the CSS.
-  const ICON_CALENDAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="4" y1="11" x2="20" y2="11"></line></svg>';
-  const ICON_TREND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg>';
-  const ICON_CASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 12h.01M17 12h.01"></path></svg>';
-
-  function calc() {
-    if (adgUpliftKgPerDay === null) return; // live data not loaded yet
-
-    const herd = num("herdSize");
-    const cw = num("currentWeight");
-
-    // Audit finding 5: warn rather than silently floor to a nominal 1kg gap
-    // when the target weight isn't actually above the current weight, so a
-    // typo in either field doesn't produce a technically-meaningless result
-    // with no explanation.
-    const targetBelowCurrent = view === "weight" && num("targetWeight") <= cw;
-    el("weight-validation-block").style.display = targetBelowCurrent ? "block" : "none";
-    if (targetBelowCurrent) {
-      el("weight-validation-block").textContent = "Your target sale weight is at or below your current weight, check these two figures. The result below isn't meaningful until the target weight is higher than the current weight.";
-    }
-
-    let adgBau = adgMode === "direct" ? num("adgValue") : (num("targetWeight") - cw) / (num("adgTypicalDays") || 1);
-    if (adgBau <= 0) adgBau = 0.01;
-    const adgSea = adgBau + adgUpliftKgPerDay;
-
-    const copDayBau = copMode === "perDay" ? num("copValue") : num("copValue") * adgBau;
-    const copDaySea = copDayBau + incrementalCostPerHeadDay;
-
-    const salePrice = num("salePrice");
-    let copKgBau, copKgSeafeed, netSavingHerd, marginBauHerd, marginSeaHerd;
-    let heroPositive, eyebrowText, icon1, stat1Value, stat1Unit, stat1Caption;
-
-    if (view === "weight") {
-      const gap = Math.max(num("targetWeight") - cw, 1);
-      const daysBau = gap / adgBau;
-      const daysSea = gap / adgSea;
-      const totalCopBau = copDayBau * daysBau;
-      const totalCopSea = copDaySea * daysSea;
-
-      copKgBau = totalCopBau / gap;
-      copKgSeafeed = totalCopSea / gap;
-      netSavingHerd = (totalCopBau - totalCopSea) * herd;
-
-      // Gross margin: both paths sell at the SAME target weight, so revenue
-      // per head is identical either way, only the cost to get there
-      // differs. That means (marginSea - marginBau) always equals
-      // netSavingHerd above; showing both absolute figures alongside the
-      // delta just gives scale/context (is $2,898 a lot relative to total
-      // margin, or a rounding error?), it isn't new maths.
-      const revenuePerHead = num("targetWeight") * salePrice;
-      marginBauHerd = (revenuePerHead - totalCopBau) * herd;
-      marginSeaHerd = (revenuePerHead - totalCopSea) * herd;
-
-      const daysDiff = Math.round(daysBau - daysSea);
-      heroPositive = daysDiff > 0;
-      icon1 = ICON_CALENDAR;
-      if (heroPositive) {
-        eyebrowText = "At these inputs, SeaFeed wins";
-        stat1Value = daysDiff; stat1Unit = "days sooner";
-        stat1Caption = `to reach ${num("targetWeight")}kg than business as usual`;
-      } else {
-        eyebrowText = "At these inputs, SeaFeed costs more";
-        stat1Value = 0; stat1Unit = "days sooner";
-        stat1Caption = "no turnoff advantage at current trial figures";
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Work out what SeaFeed means for your bottom line.</title>
+
+    <style>
+      :root {
+        --tf-navy-900: #041221;
+        --tf-navy-800: oklch(from var(--tf-navy-900) calc(l + 0.08) c h);
+        --tf-navy-700: oklch(from var(--tf-navy-900) calc(l + 0.16) c h);
+        --tf-slate-400: #a9b8c4;
+        --tf-slate-300: oklch(from var(--tf-slate-400) calc(l + 0.08) c h);
+        --tf-slate-200: oklch(from var(--tf-slate-400) calc(l + 0.14) c h);
+        --tf-slate-100: oklch(from var(--tf-slate-400) calc(l + 0.19) c h);
+        --tf-slate-600: oklch(from var(--tf-slate-400) calc(l - 0.18) c h);
+        --tf-mint-500: #5ec9a8;
+        --tf-mint-600: oklch(from var(--tf-mint-500) calc(l - 0.1) c h);
+        --tf-mint-400: oklch(from var(--tf-mint-500) calc(l + 0.08) c h);
+        --tf-mint-300: oklch(from var(--tf-mint-500) calc(l + 0.16) c h);
+        --tf-mint-100: oklch(from var(--tf-mint-500) calc(l + 0.3) c h);
+        --tf-white: #ffffff;
+        --tf-warning: #c98a2e;
+        --tf-danger: #b2412f;
+        --surface-page: var(--tf-white);
+        --surface-sunken: var(--tf-slate-100);
+        --surface-card: var(--tf-white);
+        --text-heading: var(--tf-navy-900);
+        --text-body: oklch(
+          from var(--tf-navy-900) calc(l + 0.06) calc(c - 0.005) h
+        );
+        --text-muted: var(--tf-slate-600);
+        --border-subtle: var(--tf-slate-200);
+        --border-default: var(--tf-slate-300);
+        --radius-lg: 12px;
+        --radius-md: 10px;
+        --radius-sm: 6px;
+        --shadow-sm: 0 1px 2px rgba(4, 18, 33, 0.08);
+        --font-display: Tahoma, Verdana, sans-serif;
+        --font-body: Verdana, Tahoma, sans-serif;
       }
-    } else {
-      const d = Math.max(num("durationDays"), 1);
-      const gainBau = adgBau * d;
-      const gainSea = adgSea * d;
-      const totalCopBau = copDayBau * d;
-      const totalCopSea = copDaySea * d;
-
-      copKgBau = totalCopBau / gainBau;
-      copKgSeafeed = totalCopSea / gainSea;
-
-      const extraWeight = gainSea - gainBau;
-      const extraRevenue = extraWeight * salePrice;
-      const extraCost = totalCopSea - totalCopBau;
-      netSavingHerd = (extraRevenue - extraCost) * herd;
-
-      // Here the two paths finish at DIFFERENT weights on the same day, so
-      // sale price genuinely changes each scenario's revenue, not just the
-      // delta between them.
-      marginBauHerd = ((cw + gainBau) * salePrice - totalCopBau) * herd;
-      marginSeaHerd = ((cw + gainSea) * salePrice - totalCopSea) * herd;
-
-      heroPositive = extraWeight > 0;
-      icon1 = ICON_TREND;
-      if (heroPositive) {
-        eyebrowText = `Over ${d} days, SeaFeed wins`;
-        stat1Value = extraWeight.toFixed(1); stat1Unit = "kg more";
-        stat1Caption = "gained than business as usual";
-      } else {
-        eyebrowText = `Over ${d} days, SeaFeed costs more`;
-        stat1Value = "0"; stat1Unit = "kg more";
-        stat1Caption = "no growth advantage at current trial figures";
+      html,
+      body {
+        margin: 0;
+        background: var(--surface-page);
       }
-    }
+      body {
+        font-family: var(--font-body);
+        color: var(--text-body);
+        -webkit-font-smoothing: antialiased;
+      }
+      .cp-page {
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+      .cp-section {
+        padding: 124px 28px;
+        box-sizing: border-box;
+      }
+      .cp-narrow {
+        max-width: 760px;
+      }
+      @media (max-width: 720px) {
+        .cp-section {
+          padding: 68px 20px;
+        }
+      }
 
-    const stat2Value = fmtMoney0(Math.abs(netSavingHerd));
-    const stat2Unit = netSavingHerd >= 0 ? "saved" : "more";
-    const stat2Caption = `net, across this ${herd}-head herd`;
+      .cp-eyebrow {
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--tf-mint-600);
+        margin: 0 0 16px 0;
+        text-align: center;
+      }
+      .cp-eyebrow.on-dark {
+        color: var(--tf-mint-400);
+        text-align: left;
+      }
+      .cp-h1 {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--tf-white);
+        font-size: clamp(32px, 4.4vw, 50px);
+        line-height: 1.1;
+        letter-spacing: -0.01em;
+        margin: 0 0 20px 0;
+        max-width: 20ch;
+      }
+      .cp-h1 .accent {
+        color: var(--tf-mint-400);
+      }
+      .cp-h2 {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--text-heading);
+        font-size: 27px;
+        line-height: 1.2;
+        margin: 0 0 20px 0;
+      }
+      .cp-h2 .accent {
+        color: var(--tf-mint-600);
+      }
+      @media (max-width: 720px) {
+        .cp-h2 {
+          font-size: 22px;
+        }
+      }
+      .cp-lede {
+        color: var(--tf-slate-300);
+        font-size: 17px;
+        line-height: 1.6;
+        max-width: 58ch;
+        margin: 0;
+      }
+      .cp-body {
+        font-size: 15.5px;
+        color: var(--text-body);
+        line-height: 1.75;
+        max-width: 68ch;
+        margin: 0 0 20px 0;
+      }
+      .cp-body:last-child {
+        margin-bottom: 0;
+      }
 
-    el("hero-card").className = "tf-hero-card" + (heroPositive ? "" : " negative");
-    el("hero-eyebrow").textContent = eyebrowText;
-    el("hero-icon-1").innerHTML = icon1;
-    el("hero-icon-2").innerHTML = ICON_CASH;
-    el("hero-value-1").innerHTML = `${stat1Value}<span class="unit">${stat1Unit}</span>`;
-    el("hero-caption-1").textContent = stat1Caption;
-    el("hero-value-2").innerHTML = `${stat2Value}<span class="unit">${stat2Unit}</span>`;
-    el("hero-caption-2").textContent = stat2Caption;
+      .cp-reveal {
+        opacity: 0;
+        transform: translateY(22px);
+        transition:
+          opacity 0.7s ease,
+          transform 0.7s ease;
+      }
+      .cp-reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .cp-reveal {
+          opacity: 1;
+          transform: none;
+          transition: none;
+        }
+      }
 
-    el("copKgBau").textContent = fmtMoney2(copKgBau);
-    el("copKgSeafeed").textContent = fmtMoney2(copKgSeafeed);
-    el("marginBau").textContent = fmtMoney0(marginBauHerd);
-    el("marginSeafeed").textContent = fmtMoney0(marginSeaHerd);
+      /* --- hero --- */
+      .cp-hero {
+        position: relative;
+        min-height: 540px;
+        display: flex;
+        align-items: flex-end;
+        background-image: url("https://jonathanjones-tasfarmers.github.io/lel-website/hero-calc.webp");
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-color: var(--tf-navy-900);
+      }
+      .cp-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          oklch(from var(--tf-navy-900) l c h / 0.3) 0%,
+          oklch(from var(--tf-navy-900) l c h / 0.48) 42%,
+          oklch(from var(--tf-navy-900) l c h / 0.6) 68%,
+          oklch(from var(--tf-navy-900) l c h / 0.78) 86%,
+          var(--surface-page) 100%
+        );
+      }
+      .cp-hero-inner {
+        position: relative;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 72px 28px 96px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      @media (max-width: 720px) {
+        .cp-hero {
+          min-height: 460px;
+        }
+        .cp-hero-inner {
+          padding: 56px 20px 64px;
+        }
+      }
 
-    el("results-panel").style.display = "block";
-  }
+      /* --- how this works card (same look as the Resources "available" download card) --- */
+      .cp-info-card {
+        background: var(--surface-card);
+        border: 1.5px solid var(--tf-mint-500);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: 36px 40px;
+        max-width: 620px;
+        margin: 0 auto;
+        text-align: left;
+        box-sizing: border-box;
+      }
+      .cp-info-tag {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--tf-mint-600);
+        margin: 0 0 12px 0;
+      }
+      .cp-info-card h3 {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--text-heading);
+        font-size: 20px;
+        margin: 0 0 10px 0;
+      }
+      .cp-info-card p.body {
+        font-size: 14.5px;
+        color: var(--text-muted);
+        line-height: 1.65;
+        margin: 0 0 22px 0;
+      }
+      @media (max-width: 720px) {
+        .cp-info-card {
+          padding: 28px 26px;
+        }
+      }
 
-  // Example case study (4/8 addition, Jono's request): a live worked
-  // example using the calculator's OWN default inputs below (100 head,
-  // 380kg -> 480kg, 0.90kg/day, $3.50/head/day) run through the exact same
-  // maths as calc()'s "weight" view, so this is reproducible - a farmer who
-  // leaves every field untouched sees the calculator confirm this example
-  // exactly. Recomputed from whatever adgUpliftKgPerDay/
-  // incrementalCostPerHeadDay/daysOfData init() just fetched, so it never
-  // goes stale as the trial progresses - deliberately NOT hardcoded numbers.
-  function renderCaseStudy() {
-    const demoHerd = 100, demoCurrent = 380, demoTarget = 480, demoAdgBau = 0.90, demoCopDayBau = 3.50;
-    const gap = demoTarget - demoCurrent;
-    const adgSea = demoAdgBau + adgUpliftKgPerDay;
-    const copDaySea = demoCopDayBau + incrementalCostPerHeadDay;
-    const daysBau = gap / demoAdgBau;
-    const daysSea = gap / adgSea;
-    const totalCopBau = demoCopDayBau * daysBau;
-    const totalCopSea = copDaySea * daysSea;
-    const copKgBau = totalCopBau / gap;
-    const copKgSea = totalCopSea / gap;
-    const daysSooner = Math.round(daysBau - daysSea);
-    const netSaved = (totalCopBau - totalCopSea) * demoHerd;
-    const positive = daysSooner > 0;
+      .cp-btn-solid {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 14px;
+        padding: 11px 22px;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        background: var(--tf-navy-900);
+        color: var(--tf-white);
+        white-space: nowrap;
+      }
+      .cp-btn-solid:hover {
+        background: var(--tf-navy-800);
+      }
 
-    el("case-study-hero").innerHTML = `
+      /* ============ merged in from seafeed-cost-of-production-calculator.html (5/8) ============ */
+      .tf-wrap {
+        max-width: 780px;
+        margin: 0 auto;
+        padding-top: 28px;
+      }
+      .tf-calc-card {
+        background: var(--surface-card);
+        border: 1.5px solid var(--tf-mint-500);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        padding: 32px 36px;
+      }
+      @media (max-width: 720px) {
+        .tf-calc-card {
+          padding: 24px 22px;
+        }
+      }
+      .tf-status-row {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 18px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: var(--tf-slate-100);
+        border: 1px solid var(--tf-slate-200);
+        cursor: default;
+      }
+      .tf-status-row.preliminary {
+        background: #fbf3e7;
+        border-color: #eeddb8;
+      }
+      .tf-live-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        background: var(--tf-mint-500);
+      }
+      .tf-live-dot.pulse {
+        animation: tf-pulse 2s infinite;
+      }
+      .tf-live-dot.preliminary {
+        background: var(--tf-warning);
+      }
+      .tf-live-dot.error {
+        background: var(--tf-slate-400);
+      }
+      .tf-status-text {
+        font-family: var(--font-display);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        color: var(--tf-slate-600);
+      }
+      .tf-status-text.preliminary {
+        color: #8a5a12;
+      }
+      @keyframes tf-pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(94, 201, 168, 0.55);
+        }
+        70% {
+          box-shadow: 0 0 0 7px rgba(94, 201, 168, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(94, 201, 168, 0);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .tf-live-dot.pulse {
+          animation: none !important;
+        }
+      }
+
+      .tf-toggle-pair {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+      .tf-toggle-btn {
+        flex: 1;
+        font-family: var(--font-display);
+        font-size: 13.5px;
+        font-weight: 700;
+        padding: 10px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--tf-slate-300);
+        background: var(--tf-white);
+        color: var(--tf-slate-600);
+        cursor: pointer;
+      }
+      .tf-toggle-btn.active {
+        border-color: var(--tf-mint-500);
+        background: var(--tf-mint-100);
+        color: var(--tf-mint-600);
+      }
+
+      .tf-panel {
+        background: var(--tf-slate-100);
+        border: 1px solid var(--tf-slate-300);
+        border-radius: 10px;
+        padding: 20px 22px;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+      }
+      .tf-panel-accent {
+        background: var(--tf-white);
+        border: 2px solid var(--tf-navy-900);
+      }
+      .tf-panel-accent input:focus {
+        border-color: var(--tf-navy-900) !important;
+      }
+      .tf-panel-title {
+        font-family: var(--font-display);
+        color: var(--tf-navy-900);
+        font-size: 14px;
+        font-weight: 700;
+        margin: 0 0 14px 0;
+      }
+      .tf-field-icon.accent {
+        color: var(--tf-white);
+      }
+      .tf-field-icon.accent svg {
+        width: 16px;
+        height: 16px;
+      }
+      .tf-field-icon.accent-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--tf-navy-900);
+        vertical-align: -7px;
+        margin-right: 8px;
+      }
+      .tf-field-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: 14px 16px;
+      }
+      .tf-field label {
+        display: block;
+        color: var(--tf-slate-600);
+        font-size: 12px;
+        margin-bottom: 5px;
+      }
+      .tf-field-icon {
+        display: inline-flex;
+        vertical-align: -3px;
+        margin-right: 6px;
+        color: var(--tf-mint-600);
+      }
+      .tf-field-icon svg {
+        width: 14px;
+        height: 14px;
+        display: block;
+      }
+      .tf-field input {
+        width: 100%;
+        box-sizing: border-box;
+        background: var(--tf-white);
+        border: 1px solid var(--tf-slate-300);
+        border-radius: 5px;
+        color: var(--tf-navy-900);
+        font-size: 15px;
+        padding: 9px 10px;
+        font-family: var(--font-body);
+      }
+      .tf-field input:focus {
+        outline: none;
+        border-color: var(--tf-mint-500);
+      }
+      .tf-field input:disabled {
+        background: var(--tf-slate-100);
+        color: var(--tf-slate-600);
+      }
+      .tf-field-note {
+        font-size: 11px;
+        color: var(--tf-slate-600);
+        line-height: 1.5;
+        margin: 12px 0 0 0;
+      }
+      .tf-field-help {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .tf-field-help-label {
+        font-size: 12px;
+        color: var(--tf-slate-600);
+        margin: 0 0 5px 0;
+        line-height: 1.4;
+      }
+      .tf-field-help-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-family: var(--font-display);
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--tf-mint-600);
+        text-decoration: none;
+      }
+      .tf-field-help-link:hover {
+        text-decoration: underline;
+      }
+      .tf-sub-toggle-row {
+        display: flex;
+        gap: 8px;
+        margin: 16px 0 10px 0;
+      }
+      .tf-sub-toggle-row.first {
+        margin-top: 4px;
+      }
+      .tf-sub-toggle {
+        font-size: 11.5px;
+        font-weight: 700;
+        padding: 6px 10px;
+        border-radius: 4px;
+        border: 1px solid var(--tf-slate-300);
+        background: var(--tf-white);
+        color: var(--tf-slate-600);
+        cursor: pointer;
+      }
+      .tf-sub-toggle.active {
+        border-color: var(--tf-mint-500);
+        background: var(--tf-mint-100);
+        color: var(--tf-mint-600);
+      }
+      .tf-checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--tf-slate-600);
+      }
+      .tf-checkbox-row input {
+        width: auto;
+      }
+
+      .tf-results-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      @media (max-width: 560px) {
+        .tf-results-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .tf-metric-card {
+        border-radius: 10px;
+        padding: 16px 18px;
+      }
+      .tf-metric-card.bau {
+        background: var(--tf-slate-100);
+        border: 1px solid var(--tf-slate-200);
+      }
+      .tf-metric-card.seafeed {
+        background: #e9f8f2;
+        border: 1px solid var(--tf-mint-500);
+      }
+      .tf-metric-label {
+        font-size: 12.5px;
+        margin: 0 0 4px 0;
+        color: var(--tf-slate-600);
+      }
+      .tf-metric-card.seafeed .tf-metric-label {
+        color: var(--tf-mint-600);
+        font-weight: 700;
+      }
+      .tf-metric-value {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+        color: var(--tf-navy-900);
+      }
+
+      .tf-hero-card {
+        background: #e9f8f2;
+        border: 1px solid var(--tf-mint-500);
+        border-radius: 12px;
+        padding: 22px 24px 18px;
+        margin-bottom: 16px;
+      }
+      .tf-hero-card.negative {
+        background: #fbecea;
+        border-color: var(--tf-danger);
+      }
+      .tf-hero-eyebrow {
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--tf-mint-600);
+        margin: 0 0 14px 0;
+      }
+      .tf-hero-card.negative .tf-hero-eyebrow {
+        color: var(--tf-danger);
+      }
+      .tf-hero-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 20px;
+      }
+      .tf-hero-divider {
+        width: 1px;
+        align-self: stretch;
+        background: var(--tf-slate-200);
+      }
+      .tf-hero-stat {
+        text-align: left;
+      }
+      .tf-hero-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: var(--tf-white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 0 10px 0;
+        color: var(--tf-mint-600);
+        box-shadow: 0 1px 2px rgba(4, 18, 33, 0.08);
+      }
+      .tf-hero-card.negative .tf-hero-icon {
+        color: var(--tf-danger);
+      }
+      .tf-hero-icon svg {
+        width: 18px;
+        height: 18px;
+      }
+      .tf-hero-value {
+        font-family: var(--font-display);
+        font-size: 30px;
+        font-weight: 700;
+        margin: 0;
+        line-height: 1.15;
+        color: var(--tf-navy-900);
+      }
+      .tf-hero-value .unit {
+        font-size: 14px;
+        font-weight: 400;
+        color: var(--tf-slate-600);
+        margin-left: 2px;
+      }
+      .tf-hero-caption {
+        font-size: 12.5px;
+        color: var(--tf-slate-600);
+        margin: 6px 0 0 0;
+        line-height: 1.4;
+      }
+      @media (max-width: 480px) {
+        .tf-hero-stats-grid {
+          grid-template-columns: 1fr;
+          gap: 14px;
+        }
+        .tf-hero-divider {
+          width: 100%;
+          height: 1px;
+        }
+      }
+
+      .tf-breakdown-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        user-select: none;
+        padding: 12px 2px;
+        border-top: 1px solid var(--tf-slate-200);
+        border-bottom: 1px solid var(--tf-slate-200);
+        margin: 0 0 14px 0;
+      }
+      .tf-breakdown-toggle-label {
+        font-family: var(--font-display);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--tf-navy-900);
+      }
+      .tf-breakdown-toggle-arrow {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--tf-mint-600);
+        white-space: nowrap;
+      }
+      .tf-breakdown-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.25s ease;
+      }
+      .tf-breakdown-content.expanded {
+        max-height: 1000px;
+      }
+
+      .tf-footnote {
+        font-size: 11.5px;
+        color: var(--tf-slate-600);
+        line-height: 1.6;
+        margin: 12px 0 0 0;
+        text-align: center;
+      }
+      .tf-warn-box {
+        background: #fbf3e7;
+        border-left: 3px solid var(--tf-warning);
+        border-radius: 3px;
+        padding: 12px 16px;
+        color: #8a5a12;
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 16px;
+      }
+
+      .tf-info-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-family: var(--font-display);
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--tf-mint-600);
+        text-decoration: none;
+        border-bottom: 1px solid var(--tf-mint-600);
+        padding-bottom: 1px;
+        cursor: pointer;
+        user-select: none;
+        margin-top: 12px;
+      }
+      .tf-info-wrap {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.25s ease;
+      }
+      .tf-info-wrap.expanded {
+        max-height: 400px;
+        margin-top: 10px;
+      }
+
+      .tf-steps-row {
+        display: flex;
+        align-items: stretch;
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+      @media (max-width: 780px) {
+        .tf-steps-row {
+          flex-direction: column;
+        }
+      }
+      .tf-step-card {
+        flex: 1;
+        background: var(--tf-white);
+        border: 1px solid var(--tf-slate-200);
+        border-radius: 12px;
+        padding: 26px 24px;
+      }
+      .tf-step-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .tf-step-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: var(--tf-mint-100);
+        color: var(--tf-mint-600);
+        flex-shrink: 0;
+      }
+      .tf-step-icon svg {
+        width: 20px;
+        height: 20px;
+      }
+      .tf-step-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 23px;
+        height: 23px;
+        border-radius: 50%;
+        background: var(--tf-navy-900);
+        color: var(--tf-white);
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .tf-step-title {
+        font-family: var(--font-display);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--tf-navy-900);
+        margin: 0 0 8px 0;
+      }
+      .tf-step-text {
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: var(--tf-slate-600);
+        margin: 0;
+      }
+      .tf-step-arrow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--tf-slate-300);
+        font-size: 20px;
+        flex: 0 0 auto;
+        padding: 0 4px;
+      }
+      @media (max-width: 780px) {
+        .tf-step-arrow {
+          transform: rotate(90deg);
+          margin: -8px 0;
+        }
+      }
+
+      .tf-legend-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 28px;
+      }
+      @media (max-width: 900px) {
+        .tf-legend-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 560px) {
+        .tf-legend-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .tf-legend-card {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        background: var(--tf-slate-100);
+        border-radius: 10px;
+        padding: 18px 20px;
+      }
+      .tf-legend-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--tf-white);
+        color: var(--tf-mint-600);
+        flex-shrink: 0;
+        box-shadow: 0 1px 2px rgba(4, 18, 33, 0.08);
+      }
+      .tf-legend-icon svg {
+        width: 16px;
+        height: 16px;
+      }
+      .tf-legend-text b {
+        display: block;
+        font-family: var(--font-display);
+        font-size: 13.5px;
+        color: var(--tf-navy-900);
+        margin-bottom: 3px;
+      }
+      .tf-legend-text span {
+        font-size: 12.5px;
+        color: var(--tf-slate-600);
+        line-height: 1.5;
+      }
+
+      .tf-explainer-disclaimer {
+        font-size: 11px;
+        color: var(--tf-slate-600);
+        line-height: 1.55;
+        margin: 0 0 28px 0;
+        text-align: left;
+      }
+
+      .tf-case-study {
+        background: #eaf8f3;
+        border: 1px solid var(--tf-mint-500);
+        border-radius: 12px;
+        padding: 20px 22px 22px;
+        margin-bottom: 28px;
+      }
+      .tf-case-study-eyebrow {
+        font-family: var(--font-display);
+        font-size: 11.5px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--tf-mint-600);
+        margin: 0 0 6px 0;
+      }
+      .tf-case-study-title {
+        font-family: var(--font-display);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--tf-navy-900);
+        margin: 0 0 16px 0;
+      }
+      .tf-case-hero-stats {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 16px;
+        background: var(--tf-white);
+        border-radius: 10px;
+        padding: 16px 18px;
+        margin-bottom: 12px;
+      }
+      @media (max-width: 480px) {
+        .tf-case-hero-stats {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+      }
+      .tf-case-hero-divider {
+        width: 1px;
+        align-self: stretch;
+        background: var(--tf-slate-200);
+      }
+      @media (max-width: 480px) {
+        .tf-case-hero-divider {
+          width: 100%;
+          height: 1px;
+        }
+      }
+      .tf-case-hero-value {
+        font-family: var(--font-display);
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--tf-navy-900);
+        margin: 0;
+      }
+      .tf-case-hero-value .unit {
+        font-size: 12.5px;
+        font-weight: 400;
+        color: var(--tf-slate-600);
+        margin-left: 3px;
+      }
+      .tf-case-hero-caption {
+        font-size: 11.5px;
+        color: var(--tf-slate-600);
+        margin: 3px 0 0 0;
+      }
+      .tf-case-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--tf-mint-600);
+        text-decoration: none;
+        cursor: pointer;
+        user-select: none;
+      }
+      .tf-case-detail {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+      }
+      .tf-case-detail.expanded {
+        max-height: 900px;
+        margin-top: 14px;
+      }
+      .tf-case-detail p {
+        font-size: 13px;
+        line-height: 1.65;
+        color: var(--tf-navy-900);
+        margin: 0 0 12px 0;
+      }
+      .tf-case-study-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 12px 0;
+      }
+      @media (max-width: 560px) {
+        .tf-case-study-stats {
+          grid-template-columns: 1fr;
+        }
+      }
+      .tf-case-stat-card {
+        background: var(--tf-white);
+        border-radius: 8px;
+        padding: 12px 14px;
+      }
+      .tf-case-stat-card.seafeed {
+        border: 1.5px solid var(--tf-mint-500);
+      }
+      .tf-case-stat-card.bau {
+        border: 1px solid var(--tf-slate-200);
+      }
+      .tf-case-stat-label {
+        font-size: 11px;
+        color: var(--tf-slate-600);
+        margin: 0;
+      }
+      .tf-case-stat-value {
+        font-family: var(--font-display);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--tf-navy-900);
+        margin: 3px 0 0 0;
+      }
+      .tf-case-highlight {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--tf-mint-600);
+      }
+      .tf-case-note {
+        font-size: 11px;
+        color: var(--tf-slate-600);
+        line-height: 1.55;
+        margin: 10px 0 0 0;
+      }
+      .tf-jumplink {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-family: var(--font-display);
+        font-size: 12.5px;
+        font-weight: 700;
+        color: var(--tf-mint-600);
+        text-decoration: none;
+        cursor: pointer;
+        margin-top: 14px;
+        border: 1px solid var(--tf-mint-500);
+        background: var(--tf-mint-100);
+        border-radius: 999px;
+        padding: 9px 18px;
+        transition:
+          background 0.2s ease,
+          color 0.2s ease;
+      }
+      .tf-jumplink:hover {
+        background: var(--tf-mint-500);
+        color: var(--tf-white);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ============ HERO ============ -->
+    <div class="cp-hero">
+      <div class="cp-hero-inner">
+        <p class="cp-eyebrow on-dark">For your own herd</p>
+        <h1 class="cp-h1">
+          Work out what SeaFeed means for your
+          <span class="accent">bottom line</span>.
+        </h1>
+        <p class="cp-lede">
+          Built from real trial results, not published averages. Enter your own
+          herd size, growth rate and costs, the calculator does the rest.
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ WHY THIS CALCULATOR EXISTS ============ -->
+    <div
+      class="cp-section"
+      style="
+        background: linear-gradient(
+          180deg,
+          var(--surface-page) 0%,
+          var(--surface-page) calc(100% - 100px),
+          var(--surface-sunken) 100%
+        );
+      "
+    >
+      <div class="cp-page">
+        <h2 class="cp-h2 cp-narrow cp-reveal">Why this calculator exists</h2>
+        <p class="cp-body cp-reveal">
+          This tool is one of two key deliverables required under the
+          project's grant deed: an economic feasibility calculator to help
+          Tasmanian livestock producers assess whether SeaFeed&trade; is a
+          viable option for their own operation using real numbers rather
+          than projections.
+        </p>
+        <p class="cp-body cp-reveal">
+          The calculator is built on the measured difference between the
+          SeaFeed&trade; and control groups in this trial and can be
+          applied to your own herd size, growth rate and cost of
+          production. As the trial continues and more farms come online
+          and contribute data, the numbers behind the project become more
+          reliable. For now, the results should be treated as the current
+          best available evidence, not a final answer.
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ THE CALCULATOR ITSELF (merged directly into this page, 5/8) ============ -->
+    <div
+      class="cp-section"
+      style="
+        background: var(--surface-sunken);
+        padding-top: 0;
+        padding-bottom: 56px;
+      "
+    >
+      <div class="cp-page cp-reveal">
+        <!-- ============ EXPLAINER: HOW THIS CALCULATOR WORKS ============ -->
+        <div class="tf-steps-row">
+          <div class="tf-step-card">
+            <div class="tf-step-top">
+              <span class="tf-step-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <ellipse cx="12" cy="15" rx="8" ry="5"></ellipse>
+                  <circle cx="12" cy="7" r="3.5"></circle>
+                  <path d="M9 5L7.5 3M15 5l1.5-2"></path></svg
+              ></span>
+              <span class="tf-step-num">1</span>
+            </div>
+            <p class="tf-step-title">Tell us about your mob</p>
+            <p class="tf-step-text">
+              Herd size, weights, growth rate, cost of production - your own
+              numbers.
+            </p>
+          </div>
+          <div class="tf-step-arrow">&#8594;</div>
+          <div class="tf-step-card">
+            <div class="tf-step-top">
+              <span class="tf-step-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="3 17 9 11 13 15 21 7"></polyline>
+                  <polyline points="14 7 21 7 21 14"></polyline></svg
+              ></span>
+              <span class="tf-step-num">2</span>
+            </div>
+            <p class="tf-step-title">We add the trial's measured difference</p>
+            <p class="tf-step-text">
+              Just the SeaFeed-vs-control gap, applied on top of your numbers.
+            </p>
+          </div>
+          <div class="tf-step-arrow">&#8594;</div>
+          <div class="tf-step-card">
+            <div class="tf-step-top">
+              <span class="tf-step-icon"
+                ><svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+                  <circle cx="12" cy="12" r="2"></circle>
+                  <path d="M7 12h.01M17 12h.01"></path></svg
+              ></span>
+              <span class="tf-step-num">3</span>
+            </div>
+            <p class="tf-step-title">See what it's worth for your herd</p>
+            <p class="tf-step-text">
+              Days sooner, dollars saved, plus the full breakdown below.
+            </p>
+          </div>
+        </div>
+
+        <div class="tf-legend-grid">
+          <div class="tf-legend-card">
+            <span class="tf-legend-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="4" y="5" width="16" height="16" rx="2"></rect>
+                <line x1="16" y1="3" x2="16" y2="7"></line>
+                <line x1="8" y1="3" x2="8" y2="7"></line>
+                <line x1="4" y1="11" x2="20" y2="11"></line></svg
+            ></span>
+            <span class="tf-legend-text"
+              ><b>Days sooner / kg more</b
+              ><span
+                >How much faster SeaFeed gets your mob to weight.</span
+              ></span
+            >
+          </div>
+          <div class="tf-legend-card">
+            <span class="tf-legend-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+                <circle cx="12" cy="12" r="2"></circle>
+                <path d="M7 12h.01M17 12h.01"></path></svg
+            ></span>
+            <span class="tf-legend-text"
+              ><b>Net saved, across your herd</b
+              ><span
+                >That advantage's dollar value, for your whole mob.</span
+              ></span
+            >
+          </div>
+          <div class="tf-legend-card">
+            <span class="tf-legend-icon"
+              ><svg viewBox="0 0 24 24">
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                ></circle>
+                <text
+                  x="12"
+                  y="16.5"
+                  font-size="11"
+                  font-weight="700"
+                  text-anchor="middle"
+                  fill="currentColor"
+                  font-family="Verdana, Tahoma, sans-serif"
+                >
+                  $
+                </text>
+              </svg></span
+            >
+            <span class="tf-legend-text"
+              ><b>Cost per kg</b
+              ><span
+                >Your full running cost per kg to reach target weight.</span
+              ></span
+            >
+          </div>
+          <div class="tf-legend-card">
+            <span class="tf-legend-icon"
+              ><svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="3 17 9 11 13 15 21 7"></polyline>
+                <polyline points="14 7 21 7 21 14"></polyline></svg
+            ></span>
+            <span class="tf-legend-text"
+              ><b>Gross margin</b
+              ><span>Revenue minus cost for the extra kilos gained.</span></span
+            >
+          </div>
+        </div>
+
+        <div class="tf-wrap">
+          <p class="tf-explainer-disclaimer">
+            An estimate, not a guarantee - updates automatically as trial data
+            grows. Not financial advice.
+          </p>
+
+          <!-- ============ EXAMPLE CASE STUDY ============ -->
+          <div class="tf-case-study" id="case-study">
+            <p class="tf-case-study-eyebrow">Example case study</p>
+            <h3 class="tf-case-study-title">
+              A 100-head mob, 380kg &#8594; 480kg
+            </h3>
+            <div class="tf-case-hero-stats" id="case-study-hero">
+              <div class="tf-case-hero-stat">
+                <p class="tf-case-hero-value">&mdash;</p>
+                <p class="tf-case-hero-caption">
+                  Loading a live example&hellip;
+                </p>
+              </div>
+            </div>
+            <a class="tf-case-toggle" id="case-study-toggle"
+              >See how we worked this out &#9662;</a
+            >
+            <div class="tf-case-detail" id="case-study-detail"></div>
+            <div>
+              <a class="tf-jumplink" id="case-study-jumplink"
+                >Try it with your own numbers &#8595;</a
+              >
+            </div>
+          </div>
+
+          <div class="tf-calc-card">
+            <div
+              class="tf-status-row"
+              id="status-row"
+              title="Updates automatically as more farms come online and the trial runs longer."
+            >
+              <span class="tf-live-dot pulse" id="live-dot"></span>
+              <span class="tf-status-text" id="status-text"
+                >Loading live trial data…</span
+              >
+            </div>
+
+            <div class="tf-toggle-pair">
+              <button
+                class="tf-toggle-btn active"
+                id="viewWeight"
+                type="button"
+              >
+                Reach a target weight
+              </button>
+              <button class="tf-toggle-btn" id="viewDuration" type="button">
+                Feed for a set period
+              </button>
+            </div>
+
+            <div
+              class="tf-warn-box"
+              id="no-gain-block"
+              style="display: none"
+            ></div>
+            <div
+              class="tf-warn-box"
+              id="weight-validation-block"
+              style="display: none"
+            ></div>
+
+            <div class="tf-panel" id="input-panel">
+              <p class="tf-panel-title">Your mob</p>
+              <div class="tf-field-grid">
+                <div class="tf-field">
+                  <label for="herdSize"
+                    ><span class="tf-field-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <ellipse cx="12" cy="15" rx="8" ry="5"></ellipse>
+                        <circle cx="12" cy="7" r="3.5"></circle>
+                        <path d="M9 5L7.5 3M15 5l1.5-2"></path></svg></span
+                    >Herd size (head)</label
+                  >
+                  <input id="herdSize" type="number" value="100" min="1" />
+                </div>
+                <div class="tf-field">
+                  <label for="currentWeight"
+                    ><span class="tf-field-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <rect x="4" y="4" width="16" height="16" rx="3"></rect>
+                        <path d="M12 15a4 4 0 1 1 3-6.7"></path>
+                        <path d="M12 15l3-4"></path></svg></span
+                    >Current weight (kg)</label
+                  >
+                  <input id="currentWeight" type="number" value="380" min="1" />
+                </div>
+                <div class="tf-field" id="targetWeightField">
+                  <label for="targetWeight"
+                    ><span class="tf-field-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <circle cx="12" cy="12" r="8"></circle>
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="0.5"
+                          fill="currentColor"
+                        ></circle></svg></span
+                    >Target sale weight (kg)</label
+                  >
+                  <input id="targetWeight" type="number" value="480" min="1" />
+                </div>
+                <div class="tf-field" id="durationField" style="display: none">
+                  <label for="durationDays"
+                    ><span class="tf-field-icon"
+                      ><svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <rect x="4" y="5" width="16" height="16" rx="2"></rect>
+                        <line x1="16" y1="3" x2="16" y2="7"></line>
+                        <line x1="8" y1="3" x2="8" y2="7"></line>
+                        <line x1="4" y1="11" x2="20" y2="11"></line></svg></span
+                    >Feeding period (days)</label
+                  >
+                  <input id="durationDays" type="number" value="90" min="1" />
+                </div>
+              </div>
+
+              <div class="tf-sub-toggle-row first">
+                <button
+                  class="tf-sub-toggle active"
+                  id="adgDirect"
+                  type="button"
+                >
+                  Enter growth rate directly
+                </button>
+                <button class="tf-sub-toggle" id="adgDerived" type="button">
+                  Work it out for me
+                </button>
+              </div>
+              <div class="tf-field-grid" id="adgDirectField">
+                <div class="tf-field" style="max-width: 220px">
+                  <label for="adgValue">Current growth rate (kg/day)</label>
+                  <input
+                    id="adgValue"
+                    type="number"
+                    step="0.01"
+                    value="0.90"
+                    min="0.01"
+                  />
+                </div>
+              </div>
+              <div
+                class="tf-field-grid"
+                id="adgDerivedField"
+                style="display: none"
+              >
+                <div class="tf-field" style="max-width: 260px">
+                  <label for="adgTypicalDays"
+                    >Typical days, current weight to target weight</label
+                  >
+                  <input
+                    id="adgTypicalDays"
+                    type="number"
+                    value="111"
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              <div class="tf-sub-toggle-row">
+                <button
+                  class="tf-sub-toggle active"
+                  id="copPerDay"
+                  type="button"
+                >
+                  Cost of production, $/head/day
+                </button>
+                <button class="tf-sub-toggle" id="copPerKg" type="button">
+                  Cost of production, $/kg liveweight
+                </button>
+              </div>
+              <div class="tf-field-grid">
+                <div class="tf-field" style="max-width: 220px">
+                  <label id="copLabel" for="copValue"
+                    >Current cost of production ($/head/day)</label
+                  >
+                  <input
+                    id="copValue"
+                    type="number"
+                    step="0.01"
+                    value="3.50"
+                    min="0"
+                  />
+                </div>
+                <div class="tf-field-help">
+                  <p class="tf-field-help-label">Don't know this figure?</p>
+                  <a
+                    class="tf-field-help-link"
+                    href="https://tools.mla.com.au/cop/"
+                    target="_blank"
+                    rel="noopener"
+                    >Work it out with MLA's free tool ↗</a
+                  >
+                </div>
+              </div>
+              <p
+                class="tf-field-note"
+                id="copConversionNote"
+                style="display: none"
+              ></p>
+            </div>
+
+            <div class="tf-panel tf-panel-accent" id="price-panel">
+              <p class="tf-panel-title">
+                <span class="tf-field-icon accent accent-badge"
+                  ><svg viewBox="0 0 24 24">
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    ></circle>
+                    <text
+                      x="12"
+                      y="16.5"
+                      font-size="11"
+                      font-weight="700"
+                      text-anchor="middle"
+                      fill="currentColor"
+                      font-family="Verdana, Tahoma, sans-serif"
+                    >
+                      $
+                    </text>
+                  </svg></span
+                >
+                Expected sale price
+              </p>
+              <div class="tf-field" style="max-width: 240px">
+                <label for="salePrice">$ per kg liveweight</label>
+                <input
+                  id="salePrice"
+                  type="number"
+                  step="0.01"
+                  value="3.20"
+                  min="0"
+                />
+              </div>
+              <a href="#" class="tf-info-toggle" id="price-info-toggle"
+                >About this price ▾</a
+              >
+              <div class="tf-info-wrap" id="price-info-wrap">
+                <p class="tf-field-note" id="priceRelevanceNote"></p>
+                <p class="tf-field-note" id="priceSourceNote"></p>
+              </div>
+            </div>
+
+            <div id="results-panel" style="display: none">
+              <div class="tf-hero-card" id="hero-card">
+                <p class="tf-hero-eyebrow" id="hero-eyebrow"></p>
+                <div class="tf-hero-stats-grid">
+                  <div class="tf-hero-stat">
+                    <div class="tf-hero-icon" id="hero-icon-1"></div>
+                    <p class="tf-hero-value" id="hero-value-1">—</p>
+                    <p class="tf-hero-caption" id="hero-caption-1"></p>
+                  </div>
+                  <div class="tf-hero-divider"></div>
+                  <div class="tf-hero-stat">
+                    <div class="tf-hero-icon" id="hero-icon-2"></div>
+                    <p class="tf-hero-value" id="hero-value-2">—</p>
+                    <p class="tf-hero-caption" id="hero-caption-2"></p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tf-breakdown-toggle" id="breakdown-toggle">
+                <span class="tf-breakdown-toggle-label"
+                  >See the full breakdown</span
+                >
+                <span class="tf-breakdown-toggle-arrow" id="breakdown-arrow"
+                  >Show ▾</span
+                >
+              </div>
+              <div class="tf-breakdown-content" id="breakdown-content">
+                <div class="tf-results-grid">
+                  <div class="tf-metric-card bau">
+                    <p class="tf-metric-label">Business as usual, cost/kg</p>
+                    <p class="tf-metric-value" id="copKgBau">—</p>
+                  </div>
+                  <div class="tf-metric-card seafeed">
+                    <p class="tf-metric-label">With SeaFeed&trade;, cost/kg</p>
+                    <p class="tf-metric-value" id="copKgSeafeed">—</p>
+                  </div>
+                </div>
+
+                <div class="tf-results-grid">
+                  <div class="tf-metric-card bau">
+                    <p class="tf-metric-label">
+                      Business as usual, gross margin
+                    </p>
+                    <p class="tf-metric-value" id="marginBau">—</p>
+                  </div>
+                  <div class="tf-metric-card seafeed">
+                    <p class="tf-metric-label">With SeaFeed&trade;, gross margin</p>
+                    <p class="tf-metric-value" id="marginSeafeed">—</p>
+                  </div>
+                </div>
+                <p class="tf-field-note" style="margin-bottom: 12px">
+                  This treats your current weight as already paid for, only the
+                  cost and revenue of the extra kilos gained during this period
+                  are counted, not the animal's starting value. That's why
+                  margin stays positive even if your cost of production matches
+                  your sale price exactly. It's gross margin over the finishing
+                  period, not full farm profit.
+                </p>
+              </div>
+            </div>
+
+            <div style="text-align: center">
+              <a href="#" class="tf-info-toggle" id="confidence-toggle"
+                >About this estimate ▾</a
+              >
+            </div>
+            <div class="tf-info-wrap" id="confidence-wrap">
+              <p class="tf-footnote" id="confidence-note">
+                This estimate uses your own mob numbers plus the
+                SeaFeed-vs-control difference measured in the trial so far, not
+                a market forecast. It does not account for seasonal price
+                variation, transport, or other on-farm costs. Not financial
+                advice, for a full assessment of your operation, speak with your
+                accountant or farm business advisor alongside using this tool.
+              </p>
+              <p class="tf-footnote" id="sampleSizeNote"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ HOW THIS CALCULATOR WORKS ============ -->
+    <div
+      class="cp-section"
+      style="
+        background: linear-gradient(
+          180deg,
+          var(--surface-sunken) 0%,
+          var(--surface-sunken) calc(100% - 100px),
+          var(--surface-page) 100%
+        );
+        padding-top: 0;
+      "
+    >
+      <div class="cp-page" style="text-align: center">
+        <div class="cp-info-card cp-reveal">
+          <p class="cp-info-tag">Available now</p>
+          <h3>How this calculator works</h3>
+          <p class="body">
+            A full explainer, covering how each number is calculated and how to
+            read your results, is available as a downloadable PDF.
+          </p>
+          <a
+            class="cp-btn-solid"
+            href="https://jonathanjones-tasfarmers.github.io/lel-website/2026-07-23 Economic Feasibility Calculator Methodology and Data Record.pdf"
+            target="_blank"
+            rel="noopener"
+            >Read the full explainer (PDF)</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // --- scroll reveal, restrained: fade + rise, once per element ---
+      (function () {
+        var els = document.querySelectorAll(".cp-reveal");
+        if (!("IntersectionObserver" in window)) {
+          els.forEach(function (el) {
+            el.classList.add("is-visible");
+          });
+          return;
+        }
+        var io = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                io.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
+        );
+        els.forEach(function (el) {
+          io.observe(el);
+        });
+      })();
+    </script>
+
+    <!-- ============ CALCULATOR LOGIC (merged in from seafeed-cost-of-production-calculator.html, 5/8) ============ -->
+    <script>
+      (function () {
+        const ECON_URL =
+          "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
+        const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
+
+        const MLA_URL = "https://api-mlastatistics.mla.com.au/report/5";
+        const MLA_INDICATOR_ID = 4;
+        const MLA_INDICATOR_LABEL = "MLA National Heavy Steer Indicator";
+
+        async function fetchIndicativeSalePrice() {
+          const from = new Date();
+          from.setDate(from.getDate() - 14);
+          const fromDate = from.toISOString().slice(0, 10);
+
+          const params = new URLSearchParams({
+            indicatorID: String(MLA_INDICATOR_ID),
+            fromDate,
+          });
+          const res = await fetch(MLA_URL + "?" + params);
+          const data = await res.json();
+          if (!data.data || !data.data.length) return null;
+          const latest = data.data[data.data.length - 1]; // rows come back chronological ascending
+          return {
+            dollarsPerKg: latest.indicator_value / 100,
+            date: latest.calendar_date,
+          };
+        }
+
+        let incrementalCostPerHeadDay = null;
+        let adgUpliftKgPerDay = null;
+        let daysOfData = null;
+        let daysOfDataDiffer = false;
+
+        let view = "weight";
+        let adgMode = "direct";
+        let copMode = "perDay";
+
+        const el = (id) => document.getElementById(id);
+        const num = (id) => parseFloat(el(id).value) || 0;
+
+        async function fetchAggregateByTreatment() {
+          const params = new URLSearchParams({
+            where: `farm_name='${AGGREGATE_LABEL}' AND treatment IN ('seafeed','control')`,
+            outFields:
+              "treatment,cost_per_head_aud,weight_gain_kg_per_head,days_of_data,calculation_date,representative_head_count",
+            orderByFields: "calculation_date DESC",
+            resultRecordCount: "10",
+            f: "json",
+          });
+          const res = await fetch(ECON_URL + "?" + params);
+          const data = await res.json();
+          if (data.error)
+            throw new Error(data.error.message || "Economics query failed");
+          const latest = {};
+          for (const feat of data.features) {
+            const t = feat.attributes.treatment;
+            if (!latest[t]) latest[t] = feat.attributes;
+          }
+          return latest;
+        }
+
+        function setToggle(activeBtn, inactiveBtn) {
+          activeBtn.classList.add("active");
+          inactiveBtn.classList.remove("active");
+        }
+
+        function updatePriceRelevanceNote() {
+          el("priceRelevanceNote").textContent =
+            view === "weight"
+              ? "Doesn’t affect this result, both paths reach the same target weight, so sale price cancels out. It matters in the “Feed for a set period” view instead."
+              : "";
+        }
+
+        el("viewWeight").addEventListener("click", () => {
+          view = "weight";
+          setToggle(el("viewWeight"), el("viewDuration"));
+          el("targetWeightField").style.display = "";
+          el("durationField").style.display = "none";
+          updatePriceRelevanceNote();
+          calc();
+        });
+        el("viewDuration").addEventListener("click", () => {
+          view = "duration";
+          setToggle(el("viewDuration"), el("viewWeight"));
+          el("targetWeightField").style.display = "none";
+          el("durationField").style.display = "";
+          updatePriceRelevanceNote();
+          calc();
+        });
+        updatePriceRelevanceNote(); // set initial state for the default "weight" view
+
+        el("adgDirect").addEventListener("click", () => {
+          adgMode = "direct";
+          setToggle(el("adgDirect"), el("adgDerived"));
+          el("adgDirectField").style.display = "";
+          el("adgDerivedField").style.display = "none";
+          calc();
+        });
+        el("adgDerived").addEventListener("click", () => {
+          adgMode = "derived";
+          setToggle(el("adgDerived"), el("adgDirect"));
+          el("adgDirectField").style.display = "none";
+          el("adgDerivedField").style.display = "";
+          calc();
+        });
+
+        function updateCopConversionNote() {
+          const note = el("copConversionNote");
+          if (copMode === "perKg") {
+            note.textContent =
+              "Converted to a daily figure by multiplying by your growth rate above, so a faster-growing mob is modelled as costing proportionally more per day to run.";
+            note.style.display = "";
+          } else {
+            note.style.display = "none";
+          }
+        }
+
+        el("copPerDay").addEventListener("click", () => {
+          copMode = "perDay";
+          setToggle(el("copPerDay"), el("copPerKg"));
+          el("copLabel").textContent =
+            "Current cost of production ($/head/day)";
+          updateCopConversionNote();
+          calc();
+        });
+        el("copPerKg").addEventListener("click", () => {
+          copMode = "perKg";
+          setToggle(el("copPerKg"), el("copPerDay"));
+          el("copLabel").textContent =
+            "Current cost of production ($/kg liveweight)";
+          updateCopConversionNote();
+          calc();
+        });
+
+        [
+          "herdSize",
+          "currentWeight",
+          "targetWeight",
+          "durationDays",
+          "salePrice",
+          "adgValue",
+          "adgTypicalDays",
+          "copValue",
+        ].forEach((id) => el(id).addEventListener("input", calc));
+
+        el("breakdown-toggle").addEventListener("click", () => {
+          const expanded = el("breakdown-content").classList.toggle("expanded");
+          el("breakdown-arrow").textContent = expanded ? "Hide ▴" : "Show ▾";
+        });
+
+        function wireInfoToggle(toggleId, wrapId, label) {
+          const toggle = el(toggleId);
+          const wrap = el(wrapId);
+          toggle.addEventListener("click", (e) => {
+            e.preventDefault();
+            const expanded = wrap.classList.toggle("expanded");
+            toggle.textContent = expanded ? "Hide ▴" : label + " ▾";
+          });
+        }
+        wireInfoToggle(
+          "price-info-toggle",
+          "price-info-wrap",
+          "About this price",
+        );
+        wireInfoToggle(
+          "confidence-toggle",
+          "confidence-wrap",
+          "About this estimate",
+        );
+
+        el("case-study-jumplink").addEventListener("click", (e) => {
+          e.preventDefault();
+          el("input-panel").scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        });
+        el("case-study-toggle").addEventListener("click", (e) => {
+          e.preventDefault();
+          const expanded = el("case-study-detail").classList.toggle("expanded");
+          el("case-study-toggle").textContent = expanded
+            ? "Hide the full workings ▴"
+            : "See how we worked this out ▾";
+        });
+
+        const fmtMoney2 = (v) =>
+          "$" +
+          v.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+        const fmtMoney0 = (v) =>
+          "$" + v.toLocaleString(undefined, { maximumFractionDigits: 0 });
+
+        const ICON_CALENDAR =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"></rect><line x1="16" y1="3" x2="16" y2="7"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="4" y1="11" x2="20" y2="11"></line></svg>';
+        const ICON_TREND =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg>';
+        const ICON_CASH =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M7 12h.01M17 12h.01"></path></svg>';
+
+        function calc() {
+          if (adgUpliftKgPerDay === null) return; // live data not loaded yet
+
+          const herd = num("herdSize");
+          const cw = num("currentWeight");
+
+          const targetBelowCurrent =
+            view === "weight" && num("targetWeight") <= cw;
+          el("weight-validation-block").style.display = targetBelowCurrent
+            ? "block"
+            : "none";
+          if (targetBelowCurrent) {
+            el("weight-validation-block").textContent =
+              "Your target sale weight is at or below your current weight, check these two figures. The result below isn't meaningful until the target weight is higher than the current weight.";
+          }
+
+          let adgBau =
+            adgMode === "direct"
+              ? num("adgValue")
+              : (num("targetWeight") - cw) / (num("adgTypicalDays") || 1);
+          if (adgBau <= 0) adgBau = 0.01;
+          const adgSea = adgBau + adgUpliftKgPerDay;
+
+          const copDayBau =
+            copMode === "perDay" ? num("copValue") : num("copValue") * adgBau;
+          const copDaySea = copDayBau + incrementalCostPerHeadDay;
+
+          const salePrice = num("salePrice");
+          let copKgBau,
+            copKgSeafeed,
+            netSavingHerd,
+            marginBauHerd,
+            marginSeaHerd;
+          let heroPositive,
+            eyebrowText,
+            icon1,
+            stat1Value,
+            stat1Unit,
+            stat1Caption;
+
+          if (view === "weight") {
+            const gap = Math.max(num("targetWeight") - cw, 1);
+            const daysBau = gap / adgBau;
+            const daysSea = gap / adgSea;
+            const totalCopBau = copDayBau * daysBau;
+            const totalCopSea = copDaySea * daysSea;
+
+            copKgBau = totalCopBau / gap;
+            copKgSeafeed = totalCopSea / gap;
+            netSavingHerd = (totalCopBau - totalCopSea) * herd;
+
+            const revenuePerHead = num("targetWeight") * salePrice;
+            marginBauHerd = (revenuePerHead - totalCopBau) * herd;
+            marginSeaHerd = (revenuePerHead - totalCopSea) * herd;
+
+            const daysDiff = Math.round(daysBau - daysSea);
+            heroPositive = daysDiff > 0;
+            icon1 = ICON_CALENDAR;
+            if (heroPositive) {
+              eyebrowText = "At these inputs, SeaFeed™ wins";
+              stat1Value = daysDiff;
+              stat1Unit = "days sooner";
+              stat1Caption = `to reach ${num("targetWeight")}kg than business as usual`;
+            } else {
+              eyebrowText = "At these inputs, SeaFeed costs more";
+              stat1Value = 0;
+              stat1Unit = "days sooner";
+              stat1Caption = "no turnoff advantage at current trial figures";
+            }
+          } else {
+            const d = Math.max(num("durationDays"), 1);
+            const gainBau = adgBau * d;
+            const gainSea = adgSea * d;
+            const totalCopBau = copDayBau * d;
+            const totalCopSea = copDaySea * d;
+
+            copKgBau = totalCopBau / gainBau;
+            copKgSeafeed = totalCopSea / gainSea;
+
+            const extraWeight = gainSea - gainBau;
+            const extraRevenue = extraWeight * salePrice;
+            const extraCost = totalCopSea - totalCopBau;
+            netSavingHerd = (extraRevenue - extraCost) * herd;
+
+            // Here the two paths finish at DIFFERENT weights on the same day, so
+            // sale price genuinely changes each scenario's revenue, not just the
+            // delta between them.
+            marginBauHerd = ((cw + gainBau) * salePrice - totalCopBau) * herd;
+            marginSeaHerd = ((cw + gainSea) * salePrice - totalCopSea) * herd;
+
+            heroPositive = extraWeight > 0;
+            icon1 = ICON_TREND;
+            if (heroPositive) {
+              eyebrowText = `Over ${d} days, SeaFeed wins`;
+              stat1Value = extraWeight.toFixed(1);
+              stat1Unit = "kg more";
+              stat1Caption = "gained than business as usual";
+            } else {
+              eyebrowText = `Over ${d} days, SeaFeed costs more`;
+              stat1Value = "0";
+              stat1Unit = "kg more";
+              stat1Caption = "no growth advantage at current trial figures";
+            }
+          }
+
+          const stat2Value = fmtMoney0(Math.abs(netSavingHerd));
+          const stat2Unit = netSavingHerd >= 0 ? "saved" : "more";
+          const stat2Caption = `net, across this ${herd}-head herd`;
+
+          el("hero-card").className =
+            "tf-hero-card" + (heroPositive ? "" : " negative");
+          el("hero-eyebrow").textContent = eyebrowText;
+          el("hero-icon-1").innerHTML = icon1;
+          el("hero-icon-2").innerHTML = ICON_CASH;
+          el("hero-value-1").innerHTML =
+            `${stat1Value}<span class="unit">${stat1Unit}</span>`;
+          el("hero-caption-1").textContent = stat1Caption;
+          el("hero-value-2").innerHTML =
+            `${stat2Value}<span class="unit">${stat2Unit}</span>`;
+          el("hero-caption-2").textContent = stat2Caption;
+
+          el("copKgBau").textContent = fmtMoney2(copKgBau);
+          el("copKgSeafeed").textContent = fmtMoney2(copKgSeafeed);
+          el("marginBau").textContent = fmtMoney0(marginBauHerd);
+          el("marginSeafeed").textContent = fmtMoney0(marginSeaHerd);
+
+          el("results-panel").style.display = "block";
+        }
+
+        function renderCaseStudy() {
+          const demoHerd = 100,
+            demoCurrent = 380,
+            demoTarget = 480,
+            demoAdgBau = 0.9,
+            demoCopDayBau = 3.5;
+          const gap = demoTarget - demoCurrent;
+          const adgSea = demoAdgBau + adgUpliftKgPerDay;
+          const copDaySea = demoCopDayBau + incrementalCostPerHeadDay;
+          const daysBau = gap / demoAdgBau;
+          const daysSea = gap / adgSea;
+          const totalCopBau = demoCopDayBau * daysBau;
+          const totalCopSea = copDaySea * daysSea;
+          const copKgBau = totalCopBau / gap;
+          const copKgSea = totalCopSea / gap;
+          const daysSooner = Math.round(daysBau - daysSea);
+          const netSaved = (totalCopBau - totalCopSea) * demoHerd;
+          const positive = daysSooner > 0;
+
+          el("case-study-hero").innerHTML = `
       <div class="tf-case-hero-stat">
         <p class="tf-case-hero-value">${positive ? daysSooner : 0}<span class="unit">days sooner</span></p>
         <p class="tf-case-hero-caption">${positive ? `to reach ${demoTarget}kg than business as usual` : "no turnoff advantage at today's figures"}</p>
@@ -967,7 +2013,7 @@
       </div>
     `;
 
-    el("case-study-detail").innerHTML = `
+          el("case-study-detail").innerHTML = `
       <p>A ${demoHerd}-head mob at ${demoCurrent}kg, aiming for ${demoTarget}kg, fed at $${demoCopDayBau.toFixed(2)}/head/day and growing at ${demoAdgBau.toFixed(2)}kg/day under business as usual - this calculator's own default settings below, so you can compare directly.</p>
       <p>Trial's measured SeaFeed difference today: <span class="tf-case-highlight">+${Math.round(adgUpliftKgPerDay * 1000)} g/day</span> faster growth, <span class="tf-case-highlight">+${fmtMoney2(incrementalCostPerHeadDay)}/head/day</span> extra feed cost, from ${daysOfData} days of trial data.</p>
       <div class="tf-case-study-stats">
@@ -976,127 +2022,144 @@
           <p class="tf-case-stat-value">${Math.round(daysBau)} days &middot; ${fmtMoney2(copKgBau)}/kg</p>
         </div>
         <div class="tf-case-stat-card seafeed">
-          <p class="tf-case-stat-label" style="color:var(--tf-mint-600); font-weight:700;">With SeaFeed</p>
+          <p class="tf-case-stat-label" style="color:var(--tf-mint-600); font-weight:700;">With SeaFeed&trade;</p>
           <p class="tf-case-stat-value">${Math.round(daysSea)} days &middot; ${fmtMoney2(copKgSea)}/kg</p>
         </div>
       </div>
       <p class="tf-case-note">Uses this calculator's default inputs and today's live trial differential. Change any figure below to see it for your own mob.</p>
     `;
-  }
-
-  const fmtDate = iso => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-  // calculation_date comes back from the Economics layer as an epoch-ms
-  // timestamp (esriFieldTypeDate), not the plain "YYYY-MM-DD" string the
-  // MLA price date uses, hence the separate formatter (audit finding 1).
-  const fmtDateFromEpoch = ms => new Date(ms).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-
-  function setStatus(text, dotClass) {
-    const isPrelim = !!(dotClass && dotClass.includes("preliminary"));
-    el("status-text").textContent = text;
-    el("status-text").className = "tf-status-text" + (isPrelim ? " preliminary" : "");
-    el("live-dot").className = "tf-live-dot" + (dotClass ? " " + dotClass : "");
-    el("status-row").className = "tf-status-row" + (isPrelim ? " preliminary" : "");
-  }
-
-  async function loadIndicativePrice() {
-    try {
-      const price = await fetchIndicativeSalePrice();
-      if (price) {
-        el("salePrice").value = price.dollarsPerKg.toFixed(2);
-        el("priceSourceNote").textContent = `Sale price auto-filled from the ${MLA_INDICATOR_LABEL}, ${fmtDate(price.date)}, a national figure, override above if you have a better one.`;
-        calc();
-      } else {
-        el("priceSourceNote").textContent = "Live indicative price unavailable, enter your own expected price.";
-      }
-    } catch (err) {
-      el("priceSourceNote").textContent = "Live indicative price unavailable, enter your own expected price.";
-      console.error("MLA price fetch failed:", err);
-    }
-  }
-
-  async function init() {
-    loadIndicativePrice(); // runs independently, a failure here shouldn't block the Economics data below
-    try {
-      const latest = await fetchAggregateByTreatment();
-      const seafeed = latest["seafeed"];
-      const control = latest["control"];
-
-      if (!seafeed || !control || seafeed.cost_per_head_aud == null || control.cost_per_head_aud == null ||
-          seafeed.weight_gain_kg_per_head == null || control.weight_gain_kg_per_head == null || !seafeed.days_of_data) {
-        setStatus("Not enough trial data yet", "error");
-        el("input-panel").style.display = "none";
-        el("case-study-hero").innerHTML = "<p class=\"tf-case-hero-caption\">Not enough trial data yet for a live worked example - check back as the trial progresses.</p>";
-        el("case-study-toggle").style.display = "none";
-        return;
-      }
-
-      // Audit finding 2 fix: the two treatment groups' elapsed days of data
-      // can genuinely differ (e.g. after a monitoring gap in one group's
-      // emissions readings). Dividing by SeaFeed's day count alone in that
-      // case would understate or overstate the daily uplift figures against
-      // a mismatched time window. Using the shorter (more conservative) of
-      // the two day counts avoids overstating either the cost or growth
-      // differential relative to the data actually available for both arms.
-      daysOfData = Math.min(seafeed.days_of_data, control.days_of_data);
-      daysOfDataDiffer = seafeed.days_of_data !== control.days_of_data;
-      incrementalCostPerHeadDay = (seafeed.cost_per_head_aud - control.cost_per_head_aud) / daysOfData;
-      adgUpliftKgPerDay = (seafeed.weight_gain_kg_per_head - control.weight_gain_kg_per_head) / daysOfData;
-
-      // Audit finding 3: surface how much head of livestock sits behind the
-      // current aggregate, in the "About this estimate" panel, so this
-      // isn't just a black-box number. (Participating farm count is not
-      // included, see the note above fetchAggregateByTreatment for why.)
-      // Combined with the finding 2 day-count note so both land in one
-      // place together.
-      {
-        const headBits = [];
-        if (seafeed.representative_head_count) headBits.push(`${seafeed.representative_head_count} head (SeaFeed group)`);
-        if (control.representative_head_count) headBits.push(`${control.representative_head_count} head (control group)`);
-        let note = "";
-        if (headBits.length) {
-          note = `This estimate currently draws on ${headBits.join(" and ")}. As more farms and head come online, these figures, and the estimate above, will update automatically.`;
         }
-        if (daysOfDataDiffer) {
-          note += ` Note: the SeaFeed and control groups currently have slightly different elapsed monitoring days; the shorter of the two, ${daysOfData} days, is used throughout this estimate.`;
+
+        const fmtDate = (iso) =>
+          new Date(iso + "T00:00:00").toLocaleDateString(undefined, {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          });
+
+        const fmtDateFromEpoch = (ms) =>
+          new Date(ms).toLocaleDateString(undefined, {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          });
+
+        function setStatus(text, dotClass) {
+          const isPrelim = !!(dotClass && dotClass.includes("preliminary"));
+          el("status-text").textContent = text;
+          el("status-text").className =
+            "tf-status-text" + (isPrelim ? " preliminary" : "");
+          el("live-dot").className =
+            "tf-live-dot" + (dotClass ? " " + dotClass : "");
+          el("status-row").className =
+            "tf-status-row" + (isPrelim ? " preliminary" : "");
         }
-        if (note) el("sampleSizeNote").textContent = note;
-      }
 
-      if (adgUpliftKgPerDay <= 0) {
-        el("no-gain-block").style.display = "block";
-        el("no-gain-block").textContent = `The SeaFeed group has not shown faster growth than the control group in trial data so far (difference: ${(adgUpliftKgPerDay).toFixed(3)} kg/day). Methane abatement may still be occurring, but a cost-of-production advantage cannot be shown from this trial yet, you can still explore the numbers below.`;
-      }
+        async function loadIndicativePrice() {
+          try {
+            const price = await fetchIndicativeSalePrice();
+            if (price) {
+              el("salePrice").value = price.dollarsPerKg.toFixed(2);
+              el("priceSourceNote").textContent =
+                `Sale price auto-filled from the ${MLA_INDICATOR_LABEL}, ${fmtDate(price.date)}, a national figure, override above if you have a better one.`;
+              calc();
+            } else {
+              el("priceSourceNote").textContent =
+                "Live indicative price unavailable, enter your own expected price.";
+            }
+          } catch (err) {
+            el("priceSourceNote").textContent =
+              "Live indicative price unavailable, enter your own expected price.";
+            console.error("MLA price fetch failed:", err);
+          }
+        }
 
-      // Preliminary framing folded into the one status line instead of a
-      // separate banner, the amber pulse dot + tooltip carry the same
-      // "early data, use with care" meaning without the visual weight of
-      // a full notice box.
-      //
-      // Audit finding 1 fix: show the trial data's OWN calculation date,
-      // not the date the visitor happens to be viewing the page. Uses the
-      // earlier (more conservative) of the two treatments' calculation
-      // dates, so a stalled pipeline for one treatment can't hide behind
-      // the other treatment's more recent run.
-      const calcDateMs = Math.min(
-        new Date(seafeed.calculation_date).getTime(),
-        new Date(control.calculation_date).getTime()
-      );
-      const dataUpdatedText = fmtDateFromEpoch(calcDateMs);
-      setStatus(`Early trial data, ${daysOfData} days, trial-wide · data as at ${dataUpdatedText}`, "pulse preliminary");
+        async function init() {
+          loadIndicativePrice(); // runs independently, a failure here shouldn't block the Economics data below
+          try {
+            const latest = await fetchAggregateByTreatment();
+            const seafeed = latest["seafeed"];
+            const control = latest["control"];
 
-      renderCaseStudy();
-      calc();
-    } catch (err) {
-      setStatus("Live data unavailable right now, try again shortly.", "error");
-      el("case-study-hero").innerHTML = "<p class=\"tf-case-hero-caption\">Live example unavailable right now - try the calculator below with your own numbers.</p>";
-      el("case-study-toggle").style.display = "none";
-      console.error("Fetch failed:", err);
-    }
-  }
+            if (
+              !seafeed ||
+              !control ||
+              seafeed.cost_per_head_aud == null ||
+              control.cost_per_head_aud == null ||
+              seafeed.weight_gain_kg_per_head == null ||
+              control.weight_gain_kg_per_head == null ||
+              !seafeed.days_of_data
+            ) {
+              setStatus("Not enough trial data yet", "error");
+              el("input-panel").style.display = "none";
+              el("case-study-hero").innerHTML =
+                '<p class="tf-case-hero-caption">Not enough trial data yet for a live worked example - check back as the trial progresses.</p>';
+              el("case-study-toggle").style.display = "none";
+              return;
+            }
 
-  init();
-})();
-</script>
+            daysOfData = Math.min(seafeed.days_of_data, control.days_of_data);
+            daysOfDataDiffer = seafeed.days_of_data !== control.days_of_data;
+            incrementalCostPerHeadDay =
+              (seafeed.cost_per_head_aud - control.cost_per_head_aud) /
+              daysOfData;
+            adgUpliftKgPerDay =
+              (seafeed.weight_gain_kg_per_head -
+                control.weight_gain_kg_per_head) /
+              daysOfData;
 
-</body>
+            {
+              const headBits = [];
+              if (seafeed.representative_head_count)
+                headBits.push(
+                  `${seafeed.representative_head_count} head (SeaFeed group)`,
+                );
+              if (control.representative_head_count)
+                headBits.push(
+                  `${control.representative_head_count} head (control group)`,
+                );
+              let note = "";
+              if (headBits.length) {
+                note = `This estimate currently draws on ${headBits.join(" and ")}. As more farms and head come online, these figures, and the estimate above, will update automatically.`;
+              }
+              if (daysOfDataDiffer) {
+                note += ` Note: the SeaFeed and control groups currently have slightly different elapsed monitoring days; the shorter of the two, ${daysOfData} days, is used throughout this estimate.`;
+              }
+              if (note) el("sampleSizeNote").textContent = note;
+            }
+
+            if (adgUpliftKgPerDay <= 0) {
+              el("no-gain-block").style.display = "block";
+              el("no-gain-block").textContent =
+                `The SeaFeed group has not shown faster growth than the control group in trial data so far (difference: ${adgUpliftKgPerDay.toFixed(3)} kg/day). Methane abatement may still be occurring, but a cost-of-production advantage cannot be shown from this trial yet, you can still explore the numbers below.`;
+            }
+
+            const calcDateMs = Math.min(
+              new Date(seafeed.calculation_date).getTime(),
+              new Date(control.calculation_date).getTime(),
+            );
+            const dataUpdatedText = fmtDateFromEpoch(calcDateMs);
+            setStatus(
+              `Early trial data, ${daysOfData} days, trial-wide · data as at ${dataUpdatedText}`,
+              "pulse preliminary",
+            );
+
+            renderCaseStudy();
+            calc();
+          } catch (err) {
+            setStatus(
+              "Live data unavailable right now, try again shortly.",
+              "error",
+            );
+            el("case-study-hero").innerHTML =
+              '<p class="tf-case-hero-caption">Live example unavailable right now - try the calculator below with your own numbers.</p>';
+            el("case-study-toggle").style.display = "none";
+            console.error("Fetch failed:", err);
+          }
+        }
+
+        init();
+      })();
+    </script>
+  </body>
 </html>
