@@ -737,11 +737,11 @@
         <div class="dp-chart-section dp-reveal">
           <h3 class="dp-h3">Average daily gain over time</h3>
           <p class="dp-chart-caption">
-            The ADG of the SeaFeed&trade; group compared to the control
+            The ADG of the lick block group compared to the control
             group, expressed in grams per day. The figure presents the
             trial-to-date average as of each calculation run (the same
             figure and formula is shown on the Farm page). The area under
-            the line is shaded green when the SeaFeed&trade; group is
+            the line is shaded green when the lick block group is
             ahead, and red when the control group is ahead.
           </p>
           <div class="dp-chart-box">
@@ -757,23 +757,23 @@
                 class="dp-legend-dot"
                 style="background: var(--tf-mint-500)"
               ></span
-              >SeaFeed vs Control</span
+              >Lick block vs Control</span
             >
           </div>
         </div>
 
         <div class="dp-chart-section dp-reveal">
-          <h3 class="dp-h3">Cost of production: SeaFeed&trade; vs Control</h3>
+          <h3 class="dp-h3">Cost of production: Lick block vs Control</h3>
           <p class="dp-chart-caption">
             Cost per kg of liveweight gain, rather than total expenditure
             per head. This indexes both treatments to what they actually
             produced, so the comparison is not skewed by the higher cost
-            of SeaFeed&trade; lick block intake.
+            of lick block intake.
           </p>
           <div class="dp-indicator-row">
             <div class="dp-indicator-card">
               <p class="dp-indicator-label" style="color: var(--tf-mint-600)">
-                SeaFeed: cost of production
+                Lick block: cost of production
               </p>
               <div class="dp-indicator-value" id="ind-cop-seafeed">
                 <span class="dp-skel" style="width: 96px; height: 30px"></span>
@@ -794,7 +794,7 @@
               </p>
             </div>
             <div class="dp-indicator-card dp-indicator-card--delta">
-              <p class="dp-indicator-label">SeaFeed vs Control</p>
+              <p class="dp-indicator-label">Lick block vs Control</p>
               <div class="dp-indicator-value" id="ind-cop-delta">
                 <span
                   class="dp-skel-white"
@@ -814,7 +814,7 @@
         <div class="dp-chart-section dp-reveal">
           <h3 class="dp-h3">Cost of production over time</h3>
           <p class="dp-chart-caption">
-            Cost per kg of liveweight gain for the SeaFeed&trade; and
+            Cost per kg of liveweight gain for the Lick block and
             Control groups, presented with every calculation recorded to
             date, not only the latest figure. This allows you to see
             whether the cost difference changes or narrows as the trial
@@ -833,7 +833,7 @@
                 class="dp-legend-dot"
                 style="background: var(--tf-mint-500)"
               ></span
-              >SeaFeed</span
+              >Lick block</span
             ><span
               ><span
                 class="dp-legend-dot"
@@ -1009,7 +1009,7 @@
               </p>
             </div>
             <div class="dp-calc-stat-card">
-              <p class="dp-calc-stat-label">Estimated SeaFeed cost per year</p>
+              <p class="dp-calc-stat-label">Estimated lick block cost per year</p>
               <p class="dp-calc-stat-value" id="calc-cost-out">
                 Loading&hellip;
               </p>
@@ -1257,7 +1257,7 @@
               allDates.map((d) => fmtDate(d)),
               [
                 {
-                  label: "SeaFeed vs Control (ADG advantage, g/day)",
+                  label: "Lick block vs Control (ADG advantage, g/day)",
                   data: diffs,
                   borderColor: MINT,
                   backgroundColor: "rgba(58,169,137,0.12)",
@@ -1423,7 +1423,7 @@
               allDates.map((d) => fmtDate(d)),
               [
                 {
-                  label: "SeaFeed",
+                  label: "Lick block",
                   data: allDates.map((d) =>
                     sfByDate.has(d) ? sfByDate.get(d) : null,
                   ),
