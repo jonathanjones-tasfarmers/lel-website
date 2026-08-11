@@ -578,7 +578,7 @@
               <p class="fp-stat-value" id="b-adg">
                 <span class="fp-skel" style="width: 92px; height: 20px"></span>
               </p>
-              <p class="fp-adg-meta" id="b-adg-meta">Lick block vs control</p>
+              <p class="fp-adg-meta" id="b-adg-meta">KleenGrow vs control</p>
             </div>
             <div class="fp-stat-card sunken">
               <p>Total CO2e abated</p>
@@ -611,7 +611,7 @@
           <p class="body">
             This is not a prior study extrapolated to your paddock. It
             involves ordinary Tasmanian pasture-based cattle and sheep,
-            with KleenGrow lick blocks being incorporated into their normal
+            with KleenGrow blocks being incorporated into their normal
             feeding program, on working commercial properties.
           </p>
           <p class="body">
@@ -716,7 +716,7 @@
             <span class="fp-involves-tag">Storage and handling</span>
             <h3 class="fp-h3">No special infrastructure needed</h3>
             <p class="body">
-              Lick blocks store like any other mineral or molasses block on
+              The blocks store like any other mineral or molasses block on
               farm and there is no refrigeration, mixing equipment or
               dedicated infrastructure to budget for.
             </p>
@@ -919,7 +919,7 @@
                   STALE_AFTER_DAYS ||
                 daysSinceEpochMs(controlEcon.calculation_date) >
                   STALE_AFTER_DAYS;
-              var meta = "Lick block vs control: trial-to-date average";
+              var meta = "KleenGrow vs control: trial-to-date average";
               if (stale) meta += ", reading may be out of date";
               if (seafeedEcon.days_of_data !== controlEcon.days_of_data)
                 meta +=
@@ -927,7 +927,7 @@
               adgMetaEl.textContent = meta;
               adgMetaEl.classList.toggle("stale", stale);
             } else {
-              adgMetaEl.textContent = "Lick block vs control";
+              adgMetaEl.textContent = "KleenGrow vs control";
               adgMetaEl.classList.remove("stale");
             }
 
