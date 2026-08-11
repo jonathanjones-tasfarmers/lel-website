@@ -714,8 +714,7 @@
         <div class="dp-chart-section dp-reveal">
           <h3 class="dp-h3">Methane abatement over time</h3>
           <p class="dp-chart-caption">
-            The modelled abatement rate for the KleenGrow group, presenting
-            every recorded reading, not just the latest figure.
+            The modelled abatement rate for the KleenGrow group.
           </p>
           <div class="dp-chart-box">
             <div
@@ -737,11 +736,7 @@
           <h3 class="dp-h3">Average daily gain over time</h3>
           <p class="dp-chart-caption">
             The ADG of the KleenGrow group compared to the control group,
-            expressed in grams per day. The figure presents the trial-to-date
-            average as of each calculation run (the same figure and formula is
-            shown on the Farm page). The area under the line is shaded green
-            when the KleenGrow group is ahead, and red when the control group
-            is ahead.
+            expressed in grams per day.
           </p>
           <div class="dp-chart-box">
             <div class="dp-skel dp-skel-chart" id="chart-adg-skeleton"></div>
@@ -814,9 +809,7 @@
           <h3 class="dp-h3">Cost of production over time</h3>
           <p class="dp-chart-caption">
             Cost per kg of liveweight gain for the KleenGrow and Control
-            groups, presented with every calculation recorded to date, not only
-            the latest figure. This allows you to see whether the cost
-            difference changes or narrows as the trial progresses.
+            groups.
           </p>
           <div class="dp-chart-box">
             <div class="dp-skel dp-skel-chart" id="chart-cop-skeleton"></div>
@@ -1330,19 +1323,12 @@
             return;
           }
           const diff = seafeed.costPerKgGain - control.costPerKgGain;
-          const pct =
-            control.costPerKgGain !== 0
-              ? (diff / control.costPerKgGain) * 100
-              : null;
           const sign = diff >= 0 ? "+" : "";
           valueEl.innerHTML = `${sign}$${diff.toFixed(2)}<span class="unit">/kg gain</span>`;
           metaEl.textContent =
-            pct !== null
-              ? `${sign}${pct.toFixed(0)}% compared to the Control group's cost per kg gained`
+            seafeed.date !== control.date
+              ? "(readings from different calculation runs)"
               : "";
-          if (seafeed.date !== control.date) {
-            metaEl.textContent += " (readings from different calculation runs)";
-          }
         }
 
         async function loadCostOfProduction() {
