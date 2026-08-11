@@ -736,7 +736,7 @@
           <h3 class="dp-h3">Average daily gain over time</h3>
           <p class="dp-chart-caption">
             The ADG of the KleenGrow group compared to the control group,
-            expressed in grams per day.
+            expressed as a percentage advantage.
           </p>
           <div class="dp-chart-box">
             <div class="dp-skel dp-skel-chart" id="chart-adg-skeleton"></div>
@@ -1222,12 +1222,17 @@
               const sf = sfByDate.get(d),
                 ct = ctByDate.get(d);
               const daysOfData = Math.min(sf.days_of_data, ct.days_of_data);
+              const sfGramsPerDay =
+                (sf.weight_gain_kg_per_head / daysOfData) * 1000;
+              const ctGramsPerDay =
+                (ct.weight_gain_kg_per_head / daysOfData) * 1000;
+              // % is only meaningful against a positive control baseline —
+              // plotted as a gap otherwise, since dividing by that would be
+              // misleading (matches the Farms page card's guard).
+              if (ctGramsPerDay <= 0) return null;
               return (
                 Math.round(
-                  ((sf.weight_gain_kg_per_head - ct.weight_gain_kg_per_head) /
-                    daysOfData) *
-                    1000 *
-                    10,
+                  ((sfGramsPerDay - ctGramsPerDay) / ctGramsPerDay) * 1000,
                 ) / 10
               );
             });
@@ -1238,7 +1243,7 @@
               allDates.map((d) => fmtDate(d)),
               [
                 {
-                  label: "KleenGrow vs Control (ADG advantage, g/day)",
+                  label: "KleenGrow vs Control (ADG advantage, %)",
                   data: diffs,
                   borderColor: MINT,
                   backgroundColor: "rgba(58,169,137,0.12)",
@@ -1259,7 +1264,7 @@
                   },
                 },
               ],
-              "ADG advantage (g/day)",
+              "ADG advantage (%)",
             );
           } catch (err) {
             console.error("ADG chart failed:", err);
