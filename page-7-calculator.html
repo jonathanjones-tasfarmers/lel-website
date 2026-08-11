@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Work out what SeaFeed means for your bottom line.</title>
+    <title>Work out what the lick block means for your bottom line.</title>
 
     <style>
       :root {
@@ -1008,7 +1008,7 @@
       <div class="cp-hero-inner">
         <p class="cp-eyebrow on-dark">For your own herd</p>
         <h1 class="cp-h1">
-          Work out what SeaFeed means for your
+          Work out what the lick block means for your
           <span class="accent">bottom line</span>.
         </h1>
         <p class="cp-lede">
@@ -1035,13 +1035,13 @@
         <p class="cp-body cp-reveal">
           This tool is one of two key deliverables required under the
           project's grant deed: an economic feasibility calculator to help
-          Tasmanian livestock producers assess whether SeaFeed&trade; is a
+          Tasmanian livestock producers assess whether the lick block is a
           viable option for their own operation using real numbers rather
           than projections.
         </p>
         <p class="cp-body cp-reveal">
           The calculator is built on the measured difference between the
-          SeaFeed&trade; and control groups in this trial and can be
+          lick block and control groups in this trial and can be
           applied to your own herd size, growth rate and cost of
           production. As the trial continues and more farms come online
           and contribute data, the numbers behind the project become more
@@ -1105,7 +1105,7 @@
             </div>
             <p class="tf-step-title">We add the trial's measured difference</p>
             <p class="tf-step-text">
-              Just the SeaFeed-vs-control gap, applied on top of your numbers.
+              Just the lick-block-vs-control gap, applied on top of your numbers.
             </p>
           </div>
           <div class="tf-step-arrow">&#8594;</div>
@@ -1152,7 +1152,7 @@
             <span class="tf-legend-text"
               ><b>Days sooner / kg more</b
               ><span
-                >How much faster SeaFeed gets your mob to weight.</span
+                >How much faster the lick block gets your mob to weight.</span
               ></span
             >
           </div>
@@ -1542,7 +1542,7 @@
                     <p class="tf-metric-value" id="copKgBau">—</p>
                   </div>
                   <div class="tf-metric-card seafeed">
-                    <p class="tf-metric-label">With SeaFeed&trade;, cost/kg</p>
+                    <p class="tf-metric-label">With the lick block, cost/kg</p>
                     <p class="tf-metric-value" id="copKgSeafeed">—</p>
                   </div>
                 </div>
@@ -1555,7 +1555,7 @@
                     <p class="tf-metric-value" id="marginBau">—</p>
                   </div>
                   <div class="tf-metric-card seafeed">
-                    <p class="tf-metric-label">With SeaFeed&trade;, gross margin</p>
+                    <p class="tf-metric-label">With the lick block, gross margin</p>
                     <p class="tf-metric-value" id="marginSeafeed">—</p>
                   </div>
                 </div>
@@ -1578,7 +1578,7 @@
             <div class="tf-info-wrap" id="confidence-wrap">
               <p class="tf-footnote" id="confidence-note">
                 This estimate uses your own mob numbers plus the
-                SeaFeed-vs-control difference measured in the trial so far, not
+                lick-block-vs-control difference measured in the trial so far, not
                 a market forecast. It does not account for seasonal price
                 variation, transport, or other on-farm costs. Not financial
                 advice, for a full assessment of your operation, speak with your
@@ -1912,12 +1912,12 @@
             heroPositive = daysDiff > 0;
             icon1 = ICON_CALENDAR;
             if (heroPositive) {
-              eyebrowText = "At these inputs, SeaFeed™ wins";
+              eyebrowText = "At these inputs, the lick block wins";
               stat1Value = daysDiff;
               stat1Unit = "days sooner";
               stat1Caption = `to reach ${num("targetWeight")}kg than business as usual`;
             } else {
-              eyebrowText = "At these inputs, SeaFeed costs more";
+              eyebrowText = "At these inputs, the lick block costs more";
               stat1Value = 0;
               stat1Unit = "days sooner";
               stat1Caption = "no turnoff advantage at current trial figures";
@@ -1946,12 +1946,12 @@
             heroPositive = extraWeight > 0;
             icon1 = ICON_TREND;
             if (heroPositive) {
-              eyebrowText = `Over ${d} days, SeaFeed wins`;
+              eyebrowText = `Over ${d} days, the lick block wins`;
               stat1Value = extraWeight.toFixed(1);
               stat1Unit = "kg more";
               stat1Caption = "gained than business as usual";
             } else {
-              eyebrowText = `Over ${d} days, SeaFeed costs more`;
+              eyebrowText = `Over ${d} days, the lick block costs more`;
               stat1Value = "0";
               stat1Unit = "kg more";
               stat1Caption = "no growth advantage at current trial figures";
@@ -2015,14 +2015,14 @@
 
           el("case-study-detail").innerHTML = `
       <p>A ${demoHerd}-head mob at ${demoCurrent}kg, aiming for ${demoTarget}kg, fed at $${demoCopDayBau.toFixed(2)}/head/day and growing at ${demoAdgBau.toFixed(2)}kg/day under business as usual - this calculator's own default settings below, so you can compare directly.</p>
-      <p>Trial's measured SeaFeed difference today: <span class="tf-case-highlight">+${Math.round(adgUpliftKgPerDay * 1000)} g/day</span> faster growth, <span class="tf-case-highlight">+${fmtMoney2(incrementalCostPerHeadDay)}/head/day</span> extra feed cost, from ${daysOfData} days of trial data.</p>
+      <p>Trial's measured lick block difference today: <span class="tf-case-highlight">+${Math.round(adgUpliftKgPerDay * 1000)} g/day</span> faster growth, <span class="tf-case-highlight">+${fmtMoney2(incrementalCostPerHeadDay)}/head/day</span> extra feed cost, from ${daysOfData} days of trial data.</p>
       <div class="tf-case-study-stats">
         <div class="tf-case-stat-card bau">
           <p class="tf-case-stat-label">Business as usual</p>
           <p class="tf-case-stat-value">${Math.round(daysBau)} days &middot; ${fmtMoney2(copKgBau)}/kg</p>
         </div>
         <div class="tf-case-stat-card seafeed">
-          <p class="tf-case-stat-label" style="color:var(--tf-mint-600); font-weight:700;">With SeaFeed&trade;</p>
+          <p class="tf-case-stat-label" style="color:var(--tf-mint-600); font-weight:700;">With the lick block</p>
           <p class="tf-case-stat-value">${Math.round(daysSea)} days &middot; ${fmtMoney2(copKgSea)}/kg</p>
         </div>
       </div>
@@ -2112,7 +2112,7 @@
               const headBits = [];
               if (seafeed.representative_head_count)
                 headBits.push(
-                  `${seafeed.representative_head_count} head (SeaFeed group)`,
+                  `${seafeed.representative_head_count} head (lick block group)`,
                 );
               if (control.representative_head_count)
                 headBits.push(
@@ -2123,7 +2123,7 @@
                 note = `This estimate currently draws on ${headBits.join(" and ")}. As more farms and head come online, these figures, and the estimate above, will update automatically.`;
               }
               if (daysOfDataDiffer) {
-                note += ` Note: the SeaFeed and control groups currently have slightly different elapsed monitoring days; the shorter of the two, ${daysOfData} days, is used throughout this estimate.`;
+                note += ` Note: the lick block and control groups currently have slightly different elapsed monitoring days; the shorter of the two, ${daysOfData} days, is used throughout this estimate.`;
               }
               if (note) el("sampleSizeNote").textContent = note;
             }
@@ -2131,7 +2131,7 @@
             if (adgUpliftKgPerDay <= 0) {
               el("no-gain-block").style.display = "block";
               el("no-gain-block").textContent =
-                `The SeaFeed group has not shown faster growth than the control group in trial data so far (difference: ${adgUpliftKgPerDay.toFixed(3)} kg/day). Methane abatement may still be occurring, but a cost-of-production advantage cannot be shown from this trial yet, you can still explore the numbers below.`;
+                `The lick block group has not shown faster growth than the control group in trial data so far (difference: ${adgUpliftKgPerDay.toFixed(3)} kg/day). Methane abatement may still be occurring, but a cost-of-production advantage cannot be shown from this trial yet, you can still explore the numbers below.`;
             }
 
             const calcDateMs = Math.min(
