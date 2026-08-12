@@ -4,8 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>
-      Cutting methane from Tasmanian livestock while keeping farms
-      profitable.
+      Cutting methane from Tasmanian livestock while keeping farms profitable.
     </title>
 
     <style>
@@ -207,11 +206,10 @@
         inset: 0;
         background: linear-gradient(
           180deg,
-          oklch(from var(--tf-navy-900) l c h / 0.3) 0%,
-          oklch(from var(--tf-navy-900) l c h / 0.5) 42%,
-          oklch(from var(--tf-navy-900) l c h / 0.62) 68%,
-          oklch(from var(--tf-navy-900) l c h / 0.8) 86%,
-          var(--surface-sunken) 100%
+          oklch(from var(--tf-navy-900) l c h / 0.25) 0%,
+          oklch(from var(--tf-navy-900) l c h / 0.4) 45%,
+          oklch(from var(--tf-navy-900) l c h / 0.55) 75%,
+          var(--surface-page) 100%
         );
       }
       .hp-hero-inner {
@@ -229,46 +227,6 @@
         .hp-hero-inner {
           padding: 56px 20px 64px;
         }
-      }
-
-      /* --- partner strip --- */
-      .hp-partner-strip {
-        background: linear-gradient(
-          180deg,
-          var(--surface-sunken) 0%,
-          var(--surface-sunken) calc(100% - 44px),
-          var(--surface-page) 100%
-        );
-        padding: 52px 28px;
-      }
-      .hp-partner-label {
-        text-align: center;
-        font-family: var(--font-display);
-        font-size: 11.5px;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        margin: 0 0 26px 0;
-      }
-      .hp-partner-row {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 56px;
-        flex-wrap: wrap;
-      }
-      .hp-partner-row img {
-        max-height: 32px;
-        width: auto;
-        object-fit: contain;
-        opacity: 0.85;
-      }
-      .hp-partner-sub {
-        text-align: center;
-        font-size: 12.5px;
-        color: var(--text-muted);
-        margin: 22px 0 0 0;
       }
 
       /* --- how it works: numbered icon circles --- */
@@ -325,12 +283,12 @@
         inset: 0;
         z-index: 0;
         background:
-          linear-gradient(180deg, var(--surface-page) 0%, transparent 10%),
+          linear-gradient(180deg, var(--surface-page) 0%, transparent 16%),
           linear-gradient(
             100deg,
-            oklch(from var(--tf-navy-900) l c h / 0.5) 0%,
-            oklch(from var(--tf-navy-900) l c h / 0.22) 46%,
-            oklch(from var(--tf-navy-900) l c h / 0.12) 72%
+            oklch(from var(--tf-navy-900) l c h / 0.38) 0%,
+            oklch(from var(--tf-navy-900) l c h / 0.18) 46%,
+            oklch(from var(--tf-navy-900) l c h / 0.08) 72%
           );
       }
       .hp-origin-band::after {
@@ -342,10 +300,11 @@
         background: linear-gradient(
           to bottom,
           transparent 0%,
-          transparent 84%,
-          oklch(from var(--tf-navy-900) l c h / 0.4) 91%,
-          oklch(from var(--tf-navy-900) l c h / 0.8) 96%,
-          var(--tf-navy-900) 100%
+          transparent 55%,
+          oklch(from var(--tf-navy-900) l c h / 0.25) 72%,
+          oklch(from var(--tf-navy-900) l c h / 0.55) 85%,
+          oklch(from var(--tf-navy-900) l c h / 0.8) 93%,
+          var(--surface-page) 100%
         );
       }
       .hp-origin-inner {
@@ -407,76 +366,6 @@
       .hp-glance-row span:last-child {
         color: var(--text-heading);
         font-weight: 700;
-      }
-
-      /* --- looking ahead: wool --- */
-      .hp-wool-band {
-        background: linear-gradient(
-          180deg,
-          var(--tf-navy-900) 0%,
-          var(--tf-navy-900) calc(100% - 110px),
-          var(--surface-page) 100%
-        );
-      }
-      .hp-wool-band .hp-body {
-        color: var(--tf-slate-200);
-      }
-      .hp-milestone-tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 999px;
-        padding: 8px 18px;
-        margin: 26px 0 28px 0;
-      }
-      .hp-milestone-tag .label {
-        font-family: var(--font-display);
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: var(--tf-mint-400);
-      }
-      .hp-milestone-tag .dates {
-        font-size: 12.5px;
-        color: var(--tf-slate-300);
-      }
-      .hp-wool-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-      }
-      @media (max-width: 720px) {
-        .hp-wool-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-      .hp-wool-card {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: var(--radius-lg);
-        padding: 22px 24px;
-      }
-      .hp-wool-card h3 {
-        font-family: var(--font-display);
-        font-size: 14.5px;
-        font-weight: 700;
-        color: var(--tf-white);
-        margin: 0 0 8px 0;
-      }
-      .hp-wool-card p {
-        font-size: 13.5px;
-        color: var(--tf-slate-300);
-        line-height: 1.65;
-        margin: 0;
-      }
-      .hp-wool-links {
-        display: flex;
-        gap: 24px;
-        flex-wrap: wrap;
-        margin-top: 28px;
       }
 
       /* --- tasmania at scale (live calculator, logic preserved from 05b-why-tasmania-matters.html) --- */
@@ -644,7 +533,7 @@
         background: linear-gradient(
           160deg,
           var(--surface-sunken) 0%,
-          var(--tf-navy-900) 24%,
+          var(--tf-navy-900) 42%,
           #0d2a2a 100%
         );
         padding: 108px 28px;
@@ -693,35 +582,12 @@
         </h1>
         <p class="hp-lede" style="margin-bottom: 0">
           A Tasmanian Government&ndash;funded trial testing whether lick block
-          supplementation can improve productivity in Tasmanian livestock,
-          while the Sea Forest SeaFeed&trade; it contains helps reduce greenhouse 
-          gas emissions, with cost and performance data published throughout the trial 
-          rather than after its completion.
+          supplementation can improve productivity in Tasmanian livestock, while
+          the Sea Forest SeaFeed&trade; it contains helps reduce greenhouse gas
+          emissions, with cost and performance data published throughout the
+          trial rather than after its completion.
         </p>
       </div>
-    </div>
-
-    <!-- ============ PARTNER STRIP ============ -->
-    <div class="hp-partner-strip">
-      <p class="hp-partner-label">Delivered in partnership with</p>
-      <div class="hp-partner-row">
-        <a href="https://tasfarmers.com.au" target="_blank" rel="noopener"
-          ><img
-            src="https://jonathanjones-tasfarmers.github.io/lel-website/TasFarmers_Logo_H_C.png.png"
-            alt="TasFarmers"
-        /></a>
-        <a href="https://www.seaforest.com.au/" target="_blank" rel="noopener"
-          ><img
-            src="https://jonathanjones-tasfarmers.github.io/lel-website/seaforest-logo.webp"
-            alt="Sea Forest"
-        /></a>
-        <a href="https://www.utas.edu.au/tia" target="_blank" rel="noopener"
-          ><img
-            src="https://jonathanjones-tasfarmers.github.io/lel-website/tia-logo.png"
-            alt="Tasmanian Institute of Agriculture"
-        /></a>
-      </div>
-      <p class="hp-partner-sub">Supported by the Tasmanian Government</p>
     </div>
 
     <!-- ============ HOW IT WORKS ============ -->
@@ -734,10 +600,10 @@
             <h3 class="hp-h3">The opportunity</h3>
             <p>
               Livestock digestion produces methane, a greenhouse gas that is
-              significantly more potent than CO&#8322;. Reducing these
-              emissions is one of the greatest opportunities for Tasmanian and
-              global agriculture but, until now, has been difficult to achieve
-              without compromising farm productivity.
+              significantly more potent than CO&#8322;. Reducing these emissions
+              is one of the greatest opportunities for Tasmanian and global
+              agriculture but, until now, has been difficult to achieve without
+              compromising farm productivity.
             </p>
           </div>
           <div class="hp-how-card hp-reveal">
@@ -745,21 +611,21 @@
             <h3 class="hp-h3">The idea</h3>
             <p>
               KleenGrow lick blocks, or if preferred loose licks, containing Sea
-              Forest's SeaFeed&trade; are provided to livestock as part of
-              their normal diet. Research has demonstrated that the active
-              compound can significantly reduce the methane produced by
-              cattle during digestion.
+              Forest's SeaFeed&trade; are provided to livestock as part of their
+              normal diet. Research has demonstrated that the active compound
+              can significantly reduce the methane produced by cattle during
+              digestion.
             </p>
           </div>
           <div class="hp-how-card hp-reveal">
             <div class="hp-how-number">3</div>
             <h3 class="hp-h3">The goal</h3>
             <p>
-              This trial is testing whether that promise holds up on
-              commercial farms by assessing the cost-effectiveness of
-              reducing emissions against the cost and impact on herd
-              performance, while demonstrating that this practice is both
-              environmentally and economically sustainable.
+              This trial is testing whether that promise holds up on commercial
+              farms by assessing the cost-effectiveness of reducing emissions
+              against the cost and impact on herd performance, while
+              demonstrating that this practice is both environmentally and
+              economically sustainable.
             </p>
           </div>
         </div>
@@ -776,11 +642,10 @@
           </h2>
           <p class="hp-body">
             <em>Asparagopsis</em> seaweed-based supplements have demonstrated
-            considerable promise in reducing livestock methane emissions
-            under controlled research settings. What remains untested at a
-            commercial scale in Tasmania is whether these benefits can be
-            achieved on working farms and at what cost. This is the purpose
-            of the trial.
+            considerable promise in reducing livestock methane emissions under
+            controlled research settings. What remains untested at a commercial
+            scale in Tasmania is whether these benefits can be achieved on
+            working farms and at what cost. This is the purpose of the trial.
           </p>
           <p class="hp-body">
             Backed by a $4 million grant from the Tasmanian Government,
@@ -789,11 +654,11 @@
             the trial on participating farms and capture the data.
           </p>
           <p class="hp-body" style="margin-bottom: 28px">
-            The objective is simple to state but challenging to deliver:
-            measure the emissions reduction, assess it against the real
-            costs and quantify herd performance, and publish a transparent
-            result that every Tasmanian livestock producer can use, whether
-            or not they participated in the trial.
+            The objective is simple to state but challenging to deliver: measure
+            the emissions reduction, assess it against the real costs and
+            quantify herd performance, and publish a transparent result that
+            every Tasmanian livestock producer can use, whether or not they
+            participated in the trial.
           </p>
           <div class="hp-origin-glance">
             <p class="hp-glance-label">At a glance</p>
@@ -820,78 +685,6 @@
       </div>
     </div>
 
-    <!-- ============ LOOKING AHEAD: WOOL ============ -->
-    <div class="hp-wool-band">
-      <div class="hp-section">
-        <div class="hp-page">
-          <p class="hp-eyebrow on-dark hp-reveal">Looking ahead</p>
-          <h2 class="hp-h2 hp-narrow hp-reveal" style="color: var(--tf-white)">
-            Where <span class="accent">wool</span> could fit in
-          </h2>
-          <p class="hp-body hp-reveal">
-            Beef is the current focus of the trial, but wool is the next
-            potential area of expansion. Milestone 5 of the project's Grant
-            Deed includes scope for a wool-focused sheep cohort, using a
-            similar on-farm delivery model and monitoring infrastructure to
-            assess wool fibre and product quality. No wool producers have
-            yet been confirmed, so this remains a stated ambition rather
-            than an actively running program. However, it presents an open
-            invitation to millers, brands and industry bodies that are
-            interested in helping to shape what that sustainable wool
-            collaboration could look like.
-          </p>
-
-          <div class="hp-milestone-tag hp-reveal">
-            <span class="label">Milestone 5 &middot; Upcoming</span>
-            <span class="dates">Sep 2026 &ndash; 31 Dec 2028</span>
-          </div>
-
-          <div class="hp-wool-grid hp-reveal">
-            <div class="hp-wool-card">
-              <h3>Wool is in scope for this milestone</h3>
-              <p>
-                Long-term pasture-based beef trials and sheep and wool
-                cohorts run through to completion, with bi-annual progress
-                and data reports to track herd production metrics, methane
-                emissions and product quality (meat, wool).
-              </p>
-            </div>
-            <div class="hp-wool-card">
-              <h3>Proven delivery model</h3>
-              <p>
-                The same on-farm feeding protocols and monitoring infrastructure
-                already used for beef, ready to extend to a wool cohort.
-              </p>
-            </div>
-            <div class="hp-wool-card">
-              <h3>Not yet locked in</h3>
-              <p>
-                No wool producers, millers or brands have yet been
-                confirmed. Early conversations can help shape what this
-                will look like.
-              </p>
-            </div>
-            <div class="hp-wool-card">
-              <h3>Published as it happens</h3>
-              <p>
-                If this component proceeds, results follow the same real-time,
-                trial-to-date approach as everything else on this site.
-              </p>
-            </div>
-          </div>
-
-          <p
-            class="hp-body hp-reveal"
-            style="margin-top: 28px; margin-bottom: 0"
-          >
-            Millers, brands and industry bodies interested in helping shape
-            this work can contact the project through the Resources page.
-            The full project timeline is available on the Partners page.
-          </p>
-        </div>
-      </div>
-    </div>
-
     <!-- ============ TASMANIA AT SCALE (live calculator) ============ -->
     <div
       class="hp-section"
@@ -899,7 +692,7 @@
         background: linear-gradient(
           180deg,
           var(--surface-page) 0%,
-          var(--surface-page) calc(100% - 110px),
+          var(--surface-page) calc(100% - 220px),
           var(--surface-sunken) 100%
         );
       "
