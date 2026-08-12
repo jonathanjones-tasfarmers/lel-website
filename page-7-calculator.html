@@ -165,10 +165,9 @@
         inset: 0;
         background: linear-gradient(
           180deg,
-          oklch(from var(--tf-navy-900) l c h / 0.3) 0%,
-          oklch(from var(--tf-navy-900) l c h / 0.48) 42%,
-          oklch(from var(--tf-navy-900) l c h / 0.6) 68%,
-          oklch(from var(--tf-navy-900) l c h / 0.78) 86%,
+          oklch(from var(--tf-navy-900) l c h / 0.25) 0%,
+          oklch(from var(--tf-navy-900) l c h / 0.4) 45%,
+          oklch(from var(--tf-navy-900) l c h / 0.55) 75%,
           var(--surface-page) 100%
         );
       }
@@ -1025,7 +1024,7 @@
         background: linear-gradient(
           180deg,
           var(--surface-page) 0%,
-          var(--surface-page) calc(100% - 100px),
+          var(--surface-page) calc(100% - 200px),
           var(--surface-sunken) 100%
         );
       "
@@ -1598,7 +1597,7 @@
         background: linear-gradient(
           180deg,
           var(--surface-sunken) 0%,
-          var(--surface-sunken) calc(100% - 100px),
+          var(--surface-sunken) calc(100% - 200px),
           var(--surface-page) 100%
         );
         padding-top: 0;
@@ -2157,6 +2156,51 @@
             console.error("Fetch failed:", err);
           }
         }
+
+        // ---------------------------------------------------------------
+        // 8/10 addition (Jono's request): pre-fill from the producer
+        // portal (farmer-portal-template.html), which links here with a
+        // farm's OWN "business as usual" (Control group) trial figures as
+        // query params, so a farmer already in the trial sees the
+        // calculator pre-loaded with their own real mob instead of the
+        // generic 100-head/380kg defaults. Deliberately uses that farm's
+        // CONTROL data, not SeaFeed's — this tool's inputs represent the
+        // baseline mob BEFORE lick blocks (adgBau/copDayBau in calc()
+        // above), and it adds the trial's demonstrated SeaFeed uplift on
+        // top of whatever's entered here, so seeding it with SeaFeed's
+        // own already-uplifted numbers would double-count the benefit.
+        // All params optional — anything missing just leaves the
+        // calculator's normal default untouched.
+        // ---------------------------------------------------------------
+        (function applyPortalPrefill() {
+          const params = new URLSearchParams(window.location.search);
+          const herdSize = params.get("herdSize");
+          const currentWeight = params.get("currentWeight");
+          const adgValue = params.get("adgValue");
+          const copPerKg = params.get("copPerKg");
+          const farm = params.get("farm");
+
+          if (!herdSize && !currentWeight && !adgValue && !copPerKg) return;
+
+          if (herdSize) el("herdSize").value = herdSize;
+          if (currentWeight) el("currentWeight").value = currentWeight;
+          if (adgValue) el("adgValue").value = adgValue;
+          if (copPerKg) {
+            el("copValue").value = copPerKg;
+            el("copPerKg").click(); // switches copMode + label + recalculates
+          }
+
+          if (farm) {
+            const banner = document.createElement("p");
+            banner.className = "tf-field-note";
+            banner.style.marginBottom = "14px";
+            banner.textContent =
+              `Pre-filled with ${farm}'s own Control-group trial data as the starting point — change any figure below to explore other scenarios.`;
+            el("input-panel").insertBefore(banner, el("input-panel").firstChild);
+          }
+
+          calc();
+        })();
 
         init();
       })();
