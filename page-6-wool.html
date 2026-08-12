@@ -177,10 +177,9 @@
         inset: 0;
         background: linear-gradient(
           180deg,
-          oklch(from var(--tf-navy-900) l c h / 0.3) 0%,
-          oklch(from var(--tf-navy-900) l c h / 0.5) 42%,
-          oklch(from var(--tf-navy-900) l c h / 0.65) 68%,
-          oklch(from var(--tf-navy-900) l c h / 0.85) 86%,
+          oklch(from var(--tf-navy-900) l c h / 0.25) 0%,
+          oklch(from var(--tf-navy-900) l c h / 0.42) 45%,
+          oklch(from var(--tf-navy-900) l c h / 0.6) 75%,
           var(--tf-navy-900) 100%
         );
       }
@@ -236,7 +235,7 @@
         background: linear-gradient(
           180deg,
           var(--tf-navy-900) 0%,
-          var(--tf-navy-900) calc(100% - 100px),
+          var(--tf-navy-900) calc(100% - 200px),
           var(--surface-page) 100%
         );
         padding: 64px 28px 76px;
@@ -385,12 +384,12 @@
         inset: 0;
         z-index: 0;
         background:
-          linear-gradient(180deg, var(--surface-page) 0%, transparent 10%),
+          linear-gradient(180deg, var(--surface-page) 0%, transparent 16%),
           linear-gradient(
             100deg,
-            oklch(from var(--tf-navy-900) l c h / 0.78) 0%,
-            oklch(from var(--tf-navy-900) l c h / 0.5) 42%,
-            oklch(from var(--tf-navy-900) l c h / 0.12) 68%
+            oklch(from var(--tf-navy-900) l c h / 0.6) 0%,
+            oklch(from var(--tf-navy-900) l c h / 0.35) 42%,
+            oklch(from var(--tf-navy-900) l c h / 0.08) 68%
           );
       }
       .wp-origin-band::after {
@@ -402,9 +401,10 @@
         background: linear-gradient(
           to bottom,
           transparent 0%,
-          transparent 84%,
-          oklch(from var(--surface-page) l c h / 0.4) 91%,
-          oklch(from var(--surface-page) l c h / 0.8) 96%,
+          transparent 55%,
+          oklch(from var(--surface-page) l c h / 0.25) 72%,
+          oklch(from var(--surface-page) l c h / 0.55) 85%,
+          oklch(from var(--surface-page) l c h / 0.8) 93%,
           var(--surface-page) 100%
         );
       }
@@ -454,8 +454,8 @@
         .wp-origin-band::before {
           background: linear-gradient(
             180deg,
-            oklch(from var(--tf-navy-900) l c h / 0.55) 0%,
-            oklch(from var(--tf-navy-900) l c h / 0.86) 100%
+            oklch(from var(--tf-navy-900) l c h / 0.45) 0%,
+            oklch(from var(--tf-navy-900) l c h / 0.7) 100%
           );
         }
         .wp-origin-inner {
@@ -990,7 +990,7 @@
         background: linear-gradient(
           180deg,
           var(--surface-page) 0%,
-          var(--surface-page) calc(100% - 110px),
+          var(--surface-page) calc(100% - 220px),
           var(--surface-sunken) 100%
         );
       "
@@ -1058,7 +1058,7 @@
         background: linear-gradient(
           180deg,
           var(--surface-sunken) 0%,
-          var(--surface-sunken) calc(100% - 110px),
+          var(--surface-sunken) calc(100% - 220px),
           var(--surface-page) 100%
         );
       "
@@ -1200,7 +1200,7 @@
         background: linear-gradient(
           180deg,
           var(--surface-page) 0%,
-          var(--surface-page) calc(100% - 120px),
+          var(--surface-page) calc(100% - 240px),
           var(--tf-navy-900) 100%
         );
       "
