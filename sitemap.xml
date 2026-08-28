@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Low Emissions Livestock Project — sitemap for the GitHub Pages content
+  host (jonathanjones-tasfarmers.github.io/lel-website/).
+
+  Sitemap URLs must live on the same host as the sitemap itself (Google
+  ignores cross-domain entries), so this lists the GitHub Pages page URLs,
+  not the Hub URLs — even though the Hub URLs are the canonical/public-
+  facing ones (see each page's <link rel="canonical"> tag). Submit this
+  file's URL in Google Search Console for whichever property you verify;
+  if that ends up being the Hub domain rather than this GitHub Pages
+  domain, a plain link to this sitemap from a page Google already crawls
+  is enough for discovery even without direct submission.
+
+  Deploy: add to the root of the lel-website GitHub repo and push.
+
+  lastmod values below reflect this SEO pass (2026-08-26) — update them
+  whenever a page's content changes materially, not on every trivial edit.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://jonathanjones-tasfarmers.github.io/lel-website/page-1-home.html</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://jonathanjones-tasfarmers.github.io/lel-website/page-2-farms.html</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jonathanjones-tasfarmers.github.io/lel-website/page-3-partners.html</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://jonathanjones-tasfarmers.github.io/lel-website/page-4-resources.html</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://jonathanjones-tasfarmers.github.io/lel-website/page-5-data.html</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://jonathanjones-tasfarmers.github.io/lel-website/page-6-wool.html</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jonathanjones-tasfarmers.github.io/lel-website/page-7-calculator.html</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>
