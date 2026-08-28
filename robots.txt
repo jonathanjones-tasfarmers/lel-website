@@ -1,0 +1,15 @@
+# Low Emissions Livestock Project — GitHub Pages content host
+# (jonathanjones-tasfarmers.github.io/lel-website/)
+#
+# This site hosts the raw content files that get embedded via iframe into
+# the public Hub site (lel-indie520d1a051c0.hub.arcgis.com). Nothing here
+# is private, so allow all crawlers.
+#
+# Deploy: add this file to the root of the lel-website GitHub repo
+# (alongside page-1-home.html etc.) and push. GitHub Pages serves it
+# automatically at /robots.txt once it's in the repo root.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://jonathanjones-tasfarmers.github.io/lel-website/sitemap.xml
