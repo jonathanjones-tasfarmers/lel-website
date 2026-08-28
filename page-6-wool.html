@@ -366,7 +366,17 @@
         margin-top: 18px;
       }
 
-      /* --- origin: full-bleed photo band with floating card --- */
+      /* --- origin: full-bleed photo band with floating card ---
+         Brought into line with the Home page's "Why this trial exists"
+         band (.hp-origin-band / .hp-origin-card) 2026-08-26 — the markup
+         and copy here were already correct, but .wp-origin-card was
+         missing the actual card treatment (background/radius/shadow/
+         padding), so the text was sitting directly on the photo instead
+         of floating in a container above it. The old on-dark text-colour
+         overrides below are removed for the same reason: once the card
+         has a near-opaque white background, the default (dark-on-light)
+         .wp-h2/.wp-eyebrow/.wp-body colours are correct again, same as
+         on Home. */
       .wp-origin-band {
         position: relative;
         min-height: 620px;
@@ -387,9 +397,9 @@
           linear-gradient(180deg, var(--surface-page) 0%, transparent 16%),
           linear-gradient(
             100deg,
-            oklch(from var(--tf-navy-900) l c h / 0.6) 0%,
-            oklch(from var(--tf-navy-900) l c h / 0.35) 42%,
-            oklch(from var(--tf-navy-900) l c h / 0.08) 68%
+            oklch(from var(--tf-navy-900) l c h / 0.38) 0%,
+            oklch(from var(--tf-navy-900) l c h / 0.18) 46%,
+            oklch(from var(--tf-navy-900) l c h / 0.08) 72%
           );
       }
       .wp-origin-band::after {
@@ -418,25 +428,23 @@
         box-sizing: border-box;
       }
       .wp-origin-card {
+        background: rgba(255, 255, 255, 0.97);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-md);
+        padding: 48px 52px;
         max-width: 600px;
       }
-      .wp-origin-card .wp-h2,
-      .wp-origin-card .wp-eyebrow {
-        color: var(--tf-white);
-      }
-      .wp-origin-card .wp-eyebrow {
-        color: var(--tf-mint-400);
-      }
-      .wp-origin-card .wp-body {
-        color: var(--tf-slate-200);
-      }
       .wp-precision-box {
-        background: rgba(255, 255, 255, 0.94);
-        border-left: 3px solid var(--tf-mint-500);
+        /* Contrast bumped 2026-08-26 — surface-page was too close to the
+           card's near-white background to read as a distinct callout.
+           Amber ties into the same "pay attention" language used for
+           caution/stale states elsewhere in the project, appropriate
+           here since the box exists specifically to correct an assumption. */
+        background: oklch(from var(--tf-warning) l c h / 0.1);
+        border-left: 3px solid var(--tf-warning);
         border-radius: var(--radius-sm);
         padding: 18px 20px;
         margin: 20px 0;
-        box-shadow: var(--shadow-md);
       }
       .wp-precision-box p {
         margin: 0;
@@ -451,15 +459,11 @@
         .wp-origin-band {
           min-height: auto;
         }
-        .wp-origin-band::before {
-          background: linear-gradient(
-            180deg,
-            oklch(from var(--tf-navy-900) l c h / 0.45) 0%,
-            oklch(from var(--tf-navy-900) l c h / 0.7) 100%
-          );
-        }
         .wp-origin-inner {
           padding: 56px 20px;
+        }
+        .wp-origin-card {
+          padding: 32px 26px;
         }
       }
 
