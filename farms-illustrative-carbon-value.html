@@ -389,6 +389,14 @@
   const ECON_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
   const EMISSIONS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
   const BENCHMARKS_URL = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
+  // 2026-09-02 fix: multiple farms now feed Economics/Emissions — each has
+  // per-farm rows plus one pre-computed, head-count-weighted trial-wide row
+  // per day under this farm_name (see lel_farms.py, Python side). This page
+  // is a public illustrative-value tool, not scoped to one farm, so both
+  // queries below filter to that aggregate row (previously missing, which
+  // would have started blending per-farm and aggregate rows the moment a
+  // second farm joined the public rollup).
+  const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
   // Source: EY "Australian Carbon Market Outlook 2026", see footnote.
   // Update if EY (or an equivalent credible source) publishes a
   // materially different outlook.
@@ -409,7 +417,7 @@
   }
   async function fetchLatestEconomics() {
     const params = new URLSearchParams({
-      where: "treatment='seafeed'",
+      where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`,
       outFields: "cumulative_ch4_abated_kg_per_head,representative_head_count,days_of_data,cost_per_head_aud,calculation_date",
       orderByFields: "calculation_date DESC",
       resultRecordCount: "1",
@@ -423,7 +431,7 @@
   }
   async function fetchLatestEmissions() {
     const params = new URLSearchParams({
-      where: "treatment='seafeed'",
+      where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`,
       outFields: "methane_abated_g_per_hd_day,intake_g_per_hd_day,abatement_rate,record_date",
       orderByFields: "record_date DESC",
       resultRecordCount: "1",
