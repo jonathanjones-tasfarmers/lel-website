@@ -2120,15 +2120,23 @@
               return;
             }
 
+            // 2026-09-02 fix: each mob's own days_of_data for its own
+            // rate, not a shared min() denominator — dividing BOTH mobs'
+            // cumulative totals by whichever mob has fewer days inflates
+            // the longer-running mob's rate whenever the two groups'
+            // start dates differ (they can be weeks apart, and that gap
+            // never closes as the trial goes on). daysOfData/
+            // daysOfDataDiffer are kept below as DISPLAY-only figures
+            // (shortest window currently available, and whether the two
+            // differ) — no longer used as the math denominator.
             daysOfData = Math.min(seafeed.days_of_data, control.days_of_data);
             daysOfDataDiffer = seafeed.days_of_data !== control.days_of_data;
             incrementalCostPerHeadDay =
-              (seafeed.cost_per_head_aud - control.cost_per_head_aud) /
-              daysOfData;
+              seafeed.cost_per_head_aud / seafeed.days_of_data -
+              control.cost_per_head_aud / control.days_of_data;
             adgUpliftKgPerDay =
-              (seafeed.weight_gain_kg_per_head -
-                control.weight_gain_kg_per_head) /
-              daysOfData;
+              seafeed.weight_gain_kg_per_head / seafeed.days_of_data -
+              control.weight_gain_kg_per_head / control.days_of_data;
 
             {
               const headBits = [];
@@ -2145,7 +2153,7 @@
                 note = `This estimate currently draws on ${headBits.join(" and ")}. As more farms and head come online, these figures, and the estimate above, will update automatically.`;
               }
               if (daysOfDataDiffer) {
-                note += ` Note: the lick block and control groups currently have slightly different elapsed monitoring days; the shorter of the two, ${daysOfData} days, is used throughout this estimate.`;
+                note += ` Note: the lick block and control groups currently have different elapsed monitoring days (${seafeed.days_of_data} vs ${control.days_of_data}) — each group's own rate is calculated over its own monitoring period before the two are compared.`;
               }
               if (note) el("sampleSizeNote").textContent = note;
             }

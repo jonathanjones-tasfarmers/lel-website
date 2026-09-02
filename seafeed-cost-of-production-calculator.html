@@ -854,17 +854,22 @@
         return;
       }
 
-      // Audit finding 2 fix: the two treatment groups' elapsed days of data
-      // can genuinely differ (e.g. after a monitoring gap in one group's
-      // emissions readings). Dividing by SeaFeed's day count alone in that
-      // case would understate or overstate the daily uplift figures against
-      // a mismatched time window. Using the shorter (more conservative) of
-      // the two day counts avoids overstating either the cost or growth
-      // differential relative to the data actually available for both arms.
+      // Audit finding 2 fix (superseded 2026-09-02): the original fix here
+      // used a shared min(seafeed.days, control.days) denominator to guard
+      // against a mismatched time window — but dividing BOTH groups'
+      // cumulative totals by whichever group has fewer days still inflates
+      // the longer-running group's rate whenever the two start dates
+      // differ (weeks apart in practice, and that gap never closes as the
+      // trial goes on — confirmed live on Bowood, producing a >100%
+      // "advantage" figure). The mathematically correct fix is each
+      // group's own rate from its own days_of_data, compared directly.
+      // daysOfData/daysOfDataDiffer are kept below as DISPLAY-only figures
+      // (shortest window currently available, whether the two differ) —
+      // no longer used as the math denominator.
       daysOfData = Math.min(seafeed.days_of_data, control.days_of_data);
       daysOfDataDiffer = seafeed.days_of_data !== control.days_of_data;
-      incrementalCostPerHeadDay = (seafeed.cost_per_head_aud - control.cost_per_head_aud) / daysOfData;
-      adgUpliftKgPerDay = (seafeed.weight_gain_kg_per_head - control.weight_gain_kg_per_head) / daysOfData;
+      incrementalCostPerHeadDay = (seafeed.cost_per_head_aud / seafeed.days_of_data) - (control.cost_per_head_aud / control.days_of_data);
+      adgUpliftKgPerDay = (seafeed.weight_gain_kg_per_head / seafeed.days_of_data) - (control.weight_gain_kg_per_head / control.days_of_data);
 
       // Audit finding 3: surface how much head of livestock sits behind the
       // current aggregate, in the "About this estimate" panel, so this
@@ -881,7 +886,7 @@
           note = `This estimate currently draws on ${headBits.join(" and ")}. As more farms and head come online, these figures, and the estimate above, will update automatically.`;
         }
         if (daysOfDataDiffer) {
-          note += ` Note: the SeaFeed and control groups currently have slightly different elapsed monitoring days; the shorter of the two, ${daysOfData} days, is used throughout this estimate.`;
+          note += ` Note: the SeaFeed and control groups currently have different elapsed monitoring days (${seafeed.days_of_data} vs ${control.days_of_data}) — each group's own rate is calculated over its own monitoring period before the two are compared.`;
         }
         if (note) el("sampleSizeNote").textContent = note;
       }
