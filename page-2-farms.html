@@ -217,141 +217,65 @@
         }
       }
 
-      /* --- live stats banner, logic preserved from farm-stats-banner.html --- */
-      .fp-banner-status {
-        font-family: var(--font-display);
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        margin: 0 0 18px 0;
-        color: var(--text-muted);
-      }
-      .fp-stats-grid {
+      /* --- trial snapshot strip ---
+         BUILT 2026-09-02 to fill the gap left when the live stats banner
+         moved to page-5-data.html (see that file's "at a glance" section)
+         — this used to sit on a plain background between the hero photo
+         and the origin band's own photo, breaking the two images up.
+         Without it the hero's fade ran straight into the origin band's
+         background, producing an odd blended seam.
+         All figures here are static (Jono-confirmed farm names/regions/
+         start dates), except the "time in trial" line per farm, which is
+         computed client-side from those fixed start dates so it doesn't
+         go stale — see timeInTrialText() in the script below. No feature
+         service calls needed for this section at all.
+         This is farm-level only (name/region/status), not personal —
+         deliberately kept separate from the farmer-stories cards
+         (page-2-farms-DRAFT-farmer-stories.html) so it can ship now and
+         sit alongside those cards later without overlap. */
+      .fp-triallist-grid {
         display: grid;
-        grid-template-columns: 1.4fr 1fr 1fr;
-        gap: 22px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+        margin-top: 22px;
       }
-      @media (max-width: 780px) {
-        .fp-stats-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-      .fp-stack {
-        display: flex;
-        flex-direction: column;
-        gap: 22px;
-      }
-      .fp-stat-hero {
-        background: var(--tf-navy-900);
-        border-radius: var(--radius-lg);
-        padding: 26px 28px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-      }
-      .fp-stat-hero p:first-child {
-        font-size: 13px;
-        color: var(--tf-slate-200);
-        margin: 0 0 10px 0;
-      }
-      .fp-stat-hero .fp-stat-value {
-        font-family: var(--font-display);
-        font-weight: 700;
-        color: var(--tf-mint-400);
-        font-size: 40px;
-        line-height: 1;
-        margin: 0;
-      }
-      .fp-stat-hero p:last-child:not(.fp-stat-value) {
-        font-size: 12px;
-        color: var(--tf-slate-200);
-        margin: 10px 0 0 0;
-      }
-      .fp-stat-card {
-        border-radius: var(--radius-lg);
-        padding: 18px 20px;
-      }
-      .fp-stat-card.outline {
+      .fp-triallist-card {
         background: var(--surface-card);
-        border: 1px solid var(--tf-mint-500);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 20px 22px;
         box-shadow: var(--shadow-sm);
       }
-      .fp-stat-card.sunken {
+      .fp-triallist-card.pending {
         background: var(--surface-sunken);
-        border: 1px solid var(--border-subtle);
+        border: 1px dashed var(--border-default);
+        box-shadow: none;
       }
-      .fp-stat-card.tall {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 22px 24px;
-      }
-      .fp-stat-card p:first-child {
-        font-size: 13px;
-        color: var(--text-muted);
-        margin: 0 0 8px 0;
-      }
-      .fp-stat-card .fp-stat-value {
+      .fp-triallist-name {
         font-family: var(--font-display);
         font-weight: 700;
         color: var(--text-heading);
-        font-size: 24px;
-        margin: 0;
+        font-size: 16px;
+        margin: 0 0 4px 0;
       }
-      .fp-stat-card.outline .fp-stat-value {
-        color: var(--tf-mint-600);
-      }
-      .fp-stat-card.tall .fp-stat-value {
-        font-size: 29px;
-      }
-      .fp-stat-card p:last-child:not(.fp-stat-value) {
-        font-size: 11.5px;
+      .fp-triallist-region {
+        font-size: 12.5px;
         color: var(--text-muted);
-        margin: 6px 0 0 0;
+        margin: 0 0 14px 0;
       }
-      .fp-adg-meta.stale {
-        color: var(--tf-warning) !important;
-        font-weight: 700;
-      }
-
-      @keyframes fp-shimmer {
-        0% {
-          background-position: 150% 0;
-        }
-        100% {
-          background-position: -50% 0;
-        }
-      }
-      .fp-skel,
-      .fp-skel-dark {
+      .fp-triallist-duration {
         display: inline-block;
-        border-radius: 6px;
-        background-size: 250% 100%;
-        animation: fp-shimmer 1.4s ease-in-out infinite;
-        vertical-align: middle;
+        font-family: var(--font-display);
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--tf-mint-600);
+        background: rgba(58, 169, 137, 0.1);
+        border-radius: 999px;
+        padding: 4px 11px;
       }
-      .fp-skel {
-        background-image: linear-gradient(
-          90deg,
-          rgba(4, 18, 33, 0.08) 25%,
-          rgba(4, 18, 33, 0.16) 37%,
-          rgba(4, 18, 33, 0.08) 63%
-        );
-      }
-      .fp-skel-dark {
-        background-image: linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.1) 25%,
-          rgba(255, 255, 255, 0.22) 37%,
-          rgba(255, 255, 255, 0.1) 63%
-        );
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .fp-skel,
-        .fp-skel-dark {
-          animation: none !important;
-        }
+      .fp-triallist-card.pending .fp-triallist-duration {
+        color: var(--text-muted);
+        background: var(--tf-slate-100, rgba(4, 18, 33, 0.06));
       }
 
       /* --- why producers: numbered cards --- */
@@ -571,7 +495,23 @@
       </div>
     </div>
 
-    <!-- ============ LIVE STATS BANNER ============ -->
+    <!-- ============ TRIAL SNAPSHOT STRIP ============
+         See the CSS comment above .fp-triallist-grid for why this exists.
+
+         DE-IDENTIFIED 2026-09-02: pending confirmation from the
+         participating farms that their trial agreements cover PUBLIC
+         naming (see the NFF Farm Data Code — farm name + region counts
+         as "Identifying Farm Data" under that Code, and publishing it
+         needs express consent covering this specific public use, not
+         just general trial participation). Until that's confirmed, cards
+         below show region only, no farm names or other identifying
+         detail — this applies to comments too, deliberately, not just
+         what renders on screen (HTML/JS comments are visible via "View
+         Page Source", so naming farms even in a code comment here would
+         defeat the point). The real name/region/date mapping behind
+         these cards lives in Jono's chat history with this assistant and
+         in page-2-farms-DRAFT-farmer-stories.html (not a pushed file) —
+         ask Jono rather than adding it back here. -->
     <div
       class="fp-section"
       style="
@@ -581,40 +521,34 @@
       "
     >
       <div class="fp-page">
-        <p class="fp-banner-status fp-reveal" id="banner-status">
-          Loading live data&hellip;
+        <p class="fp-eyebrow fp-reveal">The trial so far</p>
+        <h2 class="fp-h2 fp-narrow fp-reveal">
+          Three Tasmanian farms, <span class="accent">one trial</span>, and
+          more to come
+        </h2>
+        <p class="fp-section-intro fp-reveal">
+          Beef operations from King Island to the North-East, each running
+          KleenGrow blocks alongside their normal feeding program.
         </p>
-        <div class="fp-stats-grid fp-reveal">
-          <div class="fp-stat-hero">
-            <p>Modelled abatement rate</p>
-            <p class="fp-stat-value" id="b-abatement">
-              <span
-                class="fp-skel-dark"
-                style="width: 110px; height: 34px"
-              ></span>
-            </p>
+        <div class="fp-triallist-grid fp-reveal">
+          <div class="fp-triallist-card">
+            <p class="fp-triallist-name">North-East Tasmania</p>
+            <p class="fp-triallist-region">Beef operation</p>
+            <span class="fp-triallist-duration" id="triallist-region-1"
+              >Joined 13 May 2026</span
+            >
           </div>
-          <div class="fp-stack">
-            <div class="fp-stat-card outline">
-              <p>ADG advantage</p>
-              <p class="fp-stat-value" id="b-adg">
-                <span class="fp-skel" style="width: 92px; height: 20px"></span>
-              </p>
-              <p class="fp-adg-meta" id="b-adg-meta">KleenGrow vs Control</p>
-            </div>
-            <div class="fp-stat-card sunken">
-              <p>Total CO2e abated</p>
-              <p class="fp-stat-value" id="b-co2e">
-                <span class="fp-skel" style="width: 76px; height: 20px"></span>
-              </p>
-            </div>
+          <div class="fp-triallist-card">
+            <p class="fp-triallist-name">Northern Tasmania</p>
+            <p class="fp-triallist-region">Beef operation</p>
+            <span class="fp-triallist-duration" id="triallist-region-2"
+              >Joined 14 August 2026</span
+            >
           </div>
-          <div class="fp-stat-card sunken tall">
-            <p>Days of trial data</p>
-            <p class="fp-stat-value" id="b-days">
-              <span class="fp-skel" style="width: 56px; height: 24px"></span>
-            </p>
-            <p>Since first recorded liveweight</p>
+          <div class="fp-triallist-card pending">
+            <p class="fp-triallist-name">King Island</p>
+            <p class="fp-triallist-region">Beef operation</p>
+            <span class="fp-triallist-duration">Coming soon</span>
           </div>
         </div>
       </div>
@@ -800,214 +734,49 @@
         });
       })();
 
-      var EMISSIONS_URL =
-        "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
-      var ECON_URL =
-        "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
-      var BENCHMARKS_URL =
-        "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
-      var PRODUCTIVITY_URL =
-        "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
-      var AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
-      var STALE_AFTER_DAYS = 14;
+      // --- trial snapshot strip: "time in trial" per farm ---
+      // NOTE 2026-09-02: the old "LIVE STATS BANNER" (EMISSIONS_URL/
+      // ECON_URL/etc. through loadBanner()) moved wholesale to
+      // page-5-data.html — see that file's "at a glance" section — so the
+      // Farms and Data pages don't show the same numbers twice. A
+      // "farmer stories" card section (with its own expand/collapse
+      // script) was also drafted for this slot but is held back as a
+      // separate file, page-2-farms-DRAFT-farmer-stories.html, until real
+      // farmer names/photos/quotes are ready.
+      //
+      // This IS a small script of its own: no feature-service calls, just
+      // client-side date math off the fixed start dates in the markup
+      // above, so "X months in the trial" stays accurate without going
+      // back to Jono every few weeks. The third region has no start date
+      // yet (its badge stays static "Coming soon" in the markup) so it's
+      // not included here. Card ids are deliberately generic
+      // (triallist-region-1/2) rather than named after a farm — see the
+      // DE-IDENTIFIED comment on the markup above for why.
+      (function () {
+        function timeInTrialText(startDateStr) {
+          var start = new Date(startDateStr + "T00:00:00");
+          var days = Math.floor((Date.now() - start.getTime()) / 86400000);
+          if (days < 0) return null;
+          if (days < 14) return days <= 1 ? "Just joined" : days + " days in the trial";
+          if (days < 60) {
+            var weeks = Math.round(days / 7);
+            return weeks + (weeks === 1 ? " week" : " weeks") + " in the trial";
+          }
+          var months = Math.round(days / 30.44);
+          return months + (months === 1 ? " month" : " months") + " in the trial";
+        }
 
-      var GWP = 28;
-      function fetchGwp() {
-        return q(BENCHMARKS_URL, {
-          where: "metric_name='METHANE_GWP100_AR5'",
-          outFields: "metric_value",
-          f: "json",
-        })
-          .then(function (data) {
-            if (data.features && data.features.length > 0)
-              GWP = data.features[0].attributes.metric_value;
-          })
-          .catch(function (err) {
-            console.error("GWP lookup failed, using default 28:", err);
-          });
-      }
-
-      function q(url, params) {
-        return fetch(url + "?" + new URLSearchParams(params))
-          .then(function (res) {
-            return res.json();
-          })
-          .then(function (data) {
-            if (data.error)
-              throw new Error(data.error.message || "Query failed");
-            return data;
-          });
-      }
-
-      function fetchLatestSeafeedEmissions() {
-        return q(EMISSIONS_URL, {
-          where: "treatment='seafeed' AND farm_name='" + AGGREGATE_LABEL + "'",
-          outFields: "abatement_rate,record_date",
-          orderByFields: "record_date DESC",
-          resultRecordCount: "1",
-          f: "json",
-        }).then(function (data) {
-          return data.features.length ? data.features[0].attributes : null;
+        var regions = [
+          { id: "triallist-region-1", start: "2026-05-13", joined: "Joined 13 May 2026" },
+          { id: "triallist-region-2", start: "2026-08-14", joined: "Joined 14 August 2026" },
+        ];
+        regions.forEach(function (region) {
+          var el = document.getElementById(region.id);
+          if (!el) return;
+          var text = timeInTrialText(region.start);
+          el.textContent = text ? text : region.joined;
         });
-      }
-
-      function fetchEconLatest() {
-        return q(ECON_URL, {
-          where:
-            "farm_name='" +
-            AGGREGATE_LABEL +
-            "' AND treatment IN ('seafeed','control')",
-          outFields:
-            "treatment,cumulative_ch4_abated_kg_per_head,representative_head_count,cost_per_kg_ch4_abated_aud,cost_per_head_aud,weight_gain_kg_per_head,days_of_data,cost_per_kg_gain_aud,calculation_date",
-          orderByFields: "calculation_date DESC",
-          resultRecordCount: "10",
-          f: "json",
-        }).then(function (data) {
-          var latest = {};
-          data.features.forEach(function (f) {
-            var t = f.attributes.treatment;
-            if (!latest[t]) latest[t] = f.attributes;
-          });
-          return latest;
-        });
-      }
-      function fetchProdHistory(treatment) {
-        return q(PRODUCTIVITY_URL, {
-          where: "treatment_group='" + treatment + "'",
-          outFields: "snapshot_date,rolling_adg",
-          orderByFields: "snapshot_date ASC",
-          resultRecordCount: "2000",
-          f: "json",
-        }).then(function (data) {
-          return data.features.map(function (f) {
-            return f.attributes;
-          });
-        });
-      }
-
-      function daysSinceEpochMs(ms) {
-        return (Date.now() - ms) / 86400000;
-      }
-
-      function loadBanner() {
-        var statusEl = document.getElementById("banner-status");
-        Promise.all([
-          fetchGwp(),
-          fetchLatestSeafeedEmissions(),
-          fetchEconLatest(),
-          fetchProdHistory("seafeed"),
-          fetchProdHistory("control"),
-        ])
-          .then(function (results) {
-            var emissions = results[1],
-              econ = results[2],
-              seafeedProd = results[3],
-              controlProd = results[4];
-
-            var abatement =
-              emissions && emissions.abatement_rate != null
-                ? emissions.abatement_rate.toFixed(1) + "%"
-                : "—";
-
-            var adgMetaEl = document.getElementById("b-adg-meta");
-            var adg = "—";
-            var seafeedEcon = econ["seafeed"],
-              controlEcon = econ["control"];
-            if (
-              seafeedEcon &&
-              controlEcon &&
-              seafeedEcon.weight_gain_kg_per_head != null &&
-              controlEcon.weight_gain_kg_per_head != null &&
-              seafeedEcon.days_of_data &&
-              controlEcon.days_of_data
-            ) {
-              var adgDaysOfData = Math.min(
-                seafeedEcon.days_of_data,
-                controlEcon.days_of_data,
-              );
-              var diffGramsPerDay =
-                ((seafeedEcon.weight_gain_kg_per_head -
-                  controlEcon.weight_gain_kg_per_head) /
-                  adgDaysOfData) *
-                1000;
-              var controlGramsPerDay =
-                (controlEcon.weight_gain_kg_per_head / adgDaysOfData) * 1000;
-              var gDayStr =
-                (diffGramsPerDay >= 0 ? "+" : "") +
-                Math.round(diffGramsPerDay) +
-                " g/day";
-              // % is only meaningful against a positive control baseline —
-              // falls back to the g/day figure if control ADG is zero or
-              // negative, since dividing by that would be misleading.
-              if (controlGramsPerDay > 0) {
-                var pctAdvantage = (diffGramsPerDay / controlGramsPerDay) * 100;
-                adg =
-                  (pctAdvantage >= 0 ? "+" : "") + pctAdvantage.toFixed(1) + "%";
-              } else {
-                adg = gDayStr;
-              }
-              var stale =
-                daysSinceEpochMs(seafeedEcon.calculation_date) >
-                  STALE_AFTER_DAYS ||
-                daysSinceEpochMs(controlEcon.calculation_date) >
-                  STALE_AFTER_DAYS;
-              var meta = "KleenGrow vs Control";
-              if (stale) meta += ", reading may be out of date";
-              adgMetaEl.textContent = meta;
-              adgMetaEl.classList.toggle("stale", stale);
-            } else {
-              adgMetaEl.textContent = "KleenGrow vs Control";
-              adgMetaEl.classList.remove("stale");
-            }
-
-            var co2e = "—";
-            if (
-              seafeedEcon &&
-              seafeedEcon.cumulative_ch4_abated_kg_per_head != null &&
-              seafeedEcon.representative_head_count != null
-            ) {
-              var totalKgCh4 =
-                seafeedEcon.cumulative_ch4_abated_kg_per_head *
-                seafeedEcon.representative_head_count;
-              var totalTonnesCo2e = (totalKgCh4 * GWP) / 1000;
-              co2e =
-                totalTonnesCo2e >= 1
-                  ? totalTonnesCo2e.toFixed(2) + " t"
-                  : Math.round(totalTonnesCo2e * 1000).toLocaleString() + " kg";
-            }
-            var allDates = seafeedProd
-              .concat(controlProd)
-              .map(function (r) {
-                return r.snapshot_date;
-              })
-              .filter(function (d) {
-                return d != null;
-              });
-            var days = allDates.length
-              ? Math.round(
-                  (Date.now() - Math.min.apply(null, allDates)) / 86400000,
-                ).toLocaleString()
-              : "—";
-
-            document.getElementById("b-abatement").textContent = abatement;
-            document.getElementById("b-adg").textContent = adg;
-            document.getElementById("b-co2e").textContent = co2e;
-            document.getElementById("b-days").textContent = days;
-            statusEl.textContent =
-              "Live data, updated " + new Date().toLocaleDateString();
-            statusEl.style.color = "var(--tf-mint-600)";
-          })
-          .catch(function (err) {
-            document.getElementById("b-abatement").textContent = "—";
-            document.getElementById("b-adg").textContent = "—";
-            document.getElementById("b-co2e").textContent = "—";
-            document.getElementById("b-days").textContent = "—";
-            statusEl.textContent = "Live data unavailable right now";
-            statusEl.style.color = "var(--tf-warning)";
-            console.error(err);
-          });
-      }
-      loadBanner();
+      })();
     </script>
   </body>
 </html>
