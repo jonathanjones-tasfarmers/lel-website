@@ -1456,7 +1456,14 @@
 
         async function latestCostOfProduction(treatment) {
           const data = await q(ECON_URL, {
-            where: `treatment='${treatment}' AND cost_per_kg_gain_aud IS NOT NULL`,
+            // 2026-09-02 fix: scope to the trial-wide aggregate row — without
+            // this, once a second farm joins the public rollup, this pulls
+            // whichever row (per-farm or aggregate) happens to sort first on
+            // a given date, silently mixing single-farm and trial-wide
+            // figures. Currently invisible since Bowood is the only
+            // public-ready farm (its own rows and the aggregate are
+            // identical), but not once Eastbourne clears its own buffer.
+            where: `treatment='${treatment}' AND farm_name='${AGGREGATE_LABEL}' AND cost_per_kg_gain_aud IS NOT NULL`,
             outFields:
               "treatment,cost_per_kg_gain_aud,cost_per_head_aud,weight_gain_kg_per_head,calculation_date",
             orderByFields: "calculation_date DESC",
@@ -1541,16 +1548,21 @@
 
         async function loadCostOfProductionTrend() {
           try {
+            // 2026-09-02 fix: scope both queries to the trial-wide aggregate
+            // row — see latestCostOfProduction()'s comment above for why
+            // (currently invisible with Bowood as the sole public-ready
+            // farm, but blends per-farm and aggregate rows on the same line
+            // once a second farm joins).
             const [seafeed, control] = await Promise.all([
               q(ECON_URL, {
-                where: `treatment='seafeed' AND cost_per_kg_gain_aud IS NOT NULL`,
+                where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND cost_per_kg_gain_aud IS NOT NULL`,
                 outFields: "calculation_date,cost_per_kg_gain_aud",
                 orderByFields: "calculation_date ASC",
                 resultRecordCount: "2000",
                 f: "json",
               }),
               q(ECON_URL, {
-                where: `treatment='control' AND cost_per_kg_gain_aud IS NOT NULL`,
+                where: `treatment='control' AND farm_name='${AGGREGATE_LABEL}' AND cost_per_kg_gain_aud IS NOT NULL`,
                 outFields: "calculation_date,cost_per_kg_gain_aud",
                 orderByFields: "calculation_date ASC",
                 resultRecordCount: "2000",
