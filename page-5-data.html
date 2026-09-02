@@ -225,6 +225,112 @@
         }
       }
 
+      /* --- at a glance banner — moved here from the Farms page 2026-09-02
+         (Jono's call: it's a results snapshot, more at home next to the
+         full charts than above the new farmer-stories section on Farms).
+         Markup/logic ported as-is from page-2-farms.html's old
+         "LIVE STATS BANNER"; only the class prefix changed fp- -> dp- to
+         match this file's convention. Skeleton loading state reuses this
+         file's own .dp-skel / .dp-skel-white (already identical to the
+         fp-skel / fp-skel-dark it replaces), so no shimmer/keyframe
+         duplication was needed. */
+      .dp-banner-status {
+        font-family: var(--font-display);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        margin: 0 0 18px 0;
+        color: var(--text-muted);
+      }
+      .dp-stats-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr 1fr;
+        gap: 22px;
+      }
+      @media (max-width: 780px) {
+        .dp-stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .dp-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+      .dp-stat-hero {
+        background: var(--tf-navy-900);
+        border-radius: var(--radius-lg);
+        padding: 26px 28px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .dp-stat-hero p:first-child {
+        font-size: 13px;
+        color: var(--tf-slate-200);
+        margin: 0 0 10px 0;
+      }
+      .dp-stat-hero .dp-stat-value {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--tf-mint-400);
+        font-size: 40px;
+        line-height: 1;
+        margin: 0;
+      }
+      .dp-stat-hero p:last-child:not(.dp-stat-value) {
+        font-size: 12px;
+        color: var(--tf-slate-200);
+        margin: 10px 0 0 0;
+      }
+      .dp-stat-card {
+        border-radius: var(--radius-lg);
+        padding: 18px 20px;
+      }
+      .dp-stat-card.outline {
+        background: var(--surface-card);
+        border: 1px solid var(--tf-mint-500);
+        box-shadow: var(--shadow-sm);
+      }
+      .dp-stat-card.sunken {
+        background: var(--surface-sunken);
+        border: 1px solid var(--border-subtle);
+      }
+      .dp-stat-card.tall {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 22px 24px;
+      }
+      .dp-stat-card p:first-child {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0 0 8px 0;
+      }
+      .dp-stat-card .dp-stat-value {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--text-heading);
+        font-size: 24px;
+        margin: 0;
+      }
+      .dp-stat-card.outline .dp-stat-value {
+        color: var(--tf-mint-600);
+      }
+      .dp-stat-card.tall .dp-stat-value {
+        font-size: 29px;
+      }
+      .dp-stat-card p:last-child:not(.dp-stat-value) {
+        font-size: 11.5px;
+        color: var(--text-muted);
+        margin: 6px 0 0 0;
+      }
+      .dp-adg-meta.stale {
+        color: var(--tf-warning) !important;
+        font-weight: 700;
+      }
+
       /* --- charts --- */
       .dp-chart-section {
         padding: 34px 0;
@@ -715,10 +821,52 @@
       </div>
     </div>
 
+    <!-- ============ AT A GLANCE (live stats banner, moved from Farms page 2026-09-02) ============ -->
+    <div
+      class="dp-section"
+      style="background: var(--surface-page); padding-top: 56px; padding-bottom: 8px"
+    >
+      <div class="dp-page">
+        <p class="dp-banner-status dp-reveal" id="banner-status">
+          Loading live data&hellip;
+        </p>
+        <div class="dp-stats-grid dp-reveal">
+          <div class="dp-stat-hero">
+            <p>Modelled abatement rate</p>
+            <p class="dp-stat-value" id="b-abatement">
+              <span class="dp-skel-white" style="width: 110px; height: 34px"></span>
+            </p>
+          </div>
+          <div class="dp-stack">
+            <div class="dp-stat-card outline">
+              <p>ADG advantage</p>
+              <p class="dp-stat-value" id="b-adg">
+                <span class="dp-skel" style="width: 92px; height: 20px"></span>
+              </p>
+              <p class="dp-adg-meta" id="b-adg-meta">KleenGrow vs Control</p>
+            </div>
+            <div class="dp-stat-card sunken">
+              <p>Total CO2e abated</p>
+              <p class="dp-stat-value" id="b-co2e">
+                <span class="dp-skel" style="width: 76px; height: 20px"></span>
+              </p>
+            </div>
+          </div>
+          <div class="dp-stat-card sunken tall">
+            <p>Days of trial data</p>
+            <p class="dp-stat-value" id="b-days">
+              <span class="dp-skel" style="width: 56px; height: 24px"></span>
+            </p>
+            <p>Since first recorded liveweight</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ============ CHARTS + COST OF PRODUCTION ============ -->
     <div
       class="dp-section"
-      style="background: var(--surface-page); padding-bottom: 56px"
+      style="background: var(--surface-page); padding-top: 32px; padding-bottom: 56px"
     >
       <div class="dp-page">
         <h2 class="dp-h2 dp-narrow dp-reveal">
@@ -1665,6 +1813,222 @@
           updateHerdCalculator();
         }
         init();
+      })();
+
+      // --- at a glance banner — ported as-is from page-2-farms.html's old
+      // "LIVE STATS BANNER" script block (own IIFE scope, so its var
+      // names don't collide with the const EMISSIONS_URL/ECON_URL/etc.
+      // declared in the IIFEs above). ---
+      (function () {
+        var EMISSIONS_URL =
+          "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
+        var ECON_URL =
+          "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
+        var BENCHMARKS_URL =
+          "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
+        var PRODUCTIVITY_URL =
+          "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
+        var AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
+        var STALE_AFTER_DAYS = 14;
+
+        var GWP = 28;
+        function fetchGwp() {
+          return q(BENCHMARKS_URL, {
+            where: "metric_name='METHANE_GWP100_AR5'",
+            outFields: "metric_value",
+            f: "json",
+          })
+            .then(function (data) {
+              if (data.features && data.features.length > 0)
+                GWP = data.features[0].attributes.metric_value;
+            })
+            .catch(function (err) {
+              console.error("GWP lookup failed, using default 28:", err);
+            });
+        }
+
+        function q(url, params) {
+          return fetch(url + "?" + new URLSearchParams(params))
+            .then(function (res) {
+              return res.json();
+            })
+            .then(function (data) {
+              if (data.error)
+                throw new Error(data.error.message || "Query failed");
+              return data;
+            });
+        }
+
+        function fetchLatestSeafeedEmissions() {
+          return q(EMISSIONS_URL, {
+            where: "treatment='seafeed' AND farm_name='" + AGGREGATE_LABEL + "'",
+            outFields: "abatement_rate,record_date",
+            orderByFields: "record_date DESC",
+            resultRecordCount: "1",
+            f: "json",
+          }).then(function (data) {
+            return data.features.length ? data.features[0].attributes : null;
+          });
+        }
+
+        function fetchEconLatest() {
+          return q(ECON_URL, {
+            where:
+              "farm_name='" +
+              AGGREGATE_LABEL +
+              "' AND treatment IN ('seafeed','control')",
+            outFields:
+              "treatment,cumulative_ch4_abated_kg_per_head,representative_head_count,cost_per_kg_ch4_abated_aud,cost_per_head_aud,weight_gain_kg_per_head,days_of_data,cost_per_kg_gain_aud,calculation_date",
+            orderByFields: "calculation_date DESC",
+            resultRecordCount: "10",
+            f: "json",
+          }).then(function (data) {
+            var latest = {};
+            data.features.forEach(function (f) {
+              var t = f.attributes.treatment;
+              if (!latest[t]) latest[t] = f.attributes;
+            });
+            return latest;
+          });
+        }
+        function fetchProdHistory(treatment) {
+          return q(PRODUCTIVITY_URL, {
+            where: "treatment_group='" + treatment + "'",
+            outFields: "snapshot_date,rolling_adg",
+            orderByFields: "snapshot_date ASC",
+            resultRecordCount: "2000",
+            f: "json",
+          }).then(function (data) {
+            return data.features.map(function (f) {
+              return f.attributes;
+            });
+          });
+        }
+
+        function daysSinceEpochMs(ms) {
+          return (Date.now() - ms) / 86400000;
+        }
+
+        function loadBanner() {
+          var statusEl = document.getElementById("banner-status");
+          Promise.all([
+            fetchGwp(),
+            fetchLatestSeafeedEmissions(),
+            fetchEconLatest(),
+            fetchProdHistory("seafeed"),
+            fetchProdHistory("control"),
+          ])
+            .then(function (results) {
+              var emissions = results[1],
+                econ = results[2],
+                seafeedProd = results[3],
+                controlProd = results[4];
+
+              var abatement =
+                emissions && emissions.abatement_rate != null
+                  ? emissions.abatement_rate.toFixed(1) + "%"
+                  : "—";
+
+              var adgMetaEl = document.getElementById("b-adg-meta");
+              var adg = "—";
+              var seafeedEcon = econ["seafeed"],
+                controlEcon = econ["control"];
+              if (
+                seafeedEcon &&
+                controlEcon &&
+                seafeedEcon.weight_gain_kg_per_head != null &&
+                controlEcon.weight_gain_kg_per_head != null &&
+                seafeedEcon.days_of_data &&
+                controlEcon.days_of_data
+              ) {
+                var adgDaysOfData = Math.min(
+                  seafeedEcon.days_of_data,
+                  controlEcon.days_of_data,
+                );
+                var diffGramsPerDay =
+                  ((seafeedEcon.weight_gain_kg_per_head -
+                    controlEcon.weight_gain_kg_per_head) /
+                    adgDaysOfData) *
+                  1000;
+                var controlGramsPerDay =
+                  (controlEcon.weight_gain_kg_per_head / adgDaysOfData) * 1000;
+                var gDayStr =
+                  (diffGramsPerDay >= 0 ? "+" : "") +
+                  Math.round(diffGramsPerDay) +
+                  " g/day";
+                // % is only meaningful against a positive control baseline —
+                // falls back to the g/day figure if control ADG is zero or
+                // negative, since dividing by that would be misleading.
+                if (controlGramsPerDay > 0) {
+                  var pctAdvantage = (diffGramsPerDay / controlGramsPerDay) * 100;
+                  adg =
+                    (pctAdvantage >= 0 ? "+" : "") + pctAdvantage.toFixed(1) + "%";
+                } else {
+                  adg = gDayStr;
+                }
+                var stale =
+                  daysSinceEpochMs(seafeedEcon.calculation_date) >
+                    STALE_AFTER_DAYS ||
+                  daysSinceEpochMs(controlEcon.calculation_date) >
+                    STALE_AFTER_DAYS;
+                var meta = "KleenGrow vs Control";
+                if (stale) meta += ", reading may be out of date";
+                adgMetaEl.textContent = meta;
+                adgMetaEl.classList.toggle("stale", stale);
+              } else {
+                adgMetaEl.textContent = "KleenGrow vs Control";
+                adgMetaEl.classList.remove("stale");
+              }
+
+              var co2e = "—";
+              if (
+                seafeedEcon &&
+                seafeedEcon.cumulative_ch4_abated_kg_per_head != null &&
+                seafeedEcon.representative_head_count != null
+              ) {
+                var totalKgCh4 =
+                  seafeedEcon.cumulative_ch4_abated_kg_per_head *
+                  seafeedEcon.representative_head_count;
+                var totalTonnesCo2e = (totalKgCh4 * GWP) / 1000;
+                co2e =
+                  totalTonnesCo2e >= 1
+                    ? totalTonnesCo2e.toFixed(2) + " t"
+                    : Math.round(totalTonnesCo2e * 1000).toLocaleString() + " kg";
+              }
+              var allDates = seafeedProd
+                .concat(controlProd)
+                .map(function (r) {
+                  return r.snapshot_date;
+                })
+                .filter(function (d) {
+                  return d != null;
+                });
+              var days = allDates.length
+                ? Math.round(
+                    (Date.now() - Math.min.apply(null, allDates)) / 86400000,
+                  ).toLocaleString()
+                : "—";
+
+              document.getElementById("b-abatement").textContent = abatement;
+              document.getElementById("b-adg").textContent = adg;
+              document.getElementById("b-co2e").textContent = co2e;
+              document.getElementById("b-days").textContent = days;
+              statusEl.textContent =
+                "Live data, updated " + new Date().toLocaleDateString();
+              statusEl.style.color = "var(--tf-mint-600)";
+            })
+            .catch(function (err) {
+              document.getElementById("b-abatement").textContent = "—";
+              document.getElementById("b-adg").textContent = "—";
+              document.getElementById("b-co2e").textContent = "—";
+              document.getElementById("b-days").textContent = "—";
+              statusEl.textContent = "Live data unavailable right now";
+              statusEl.style.color = "var(--tf-warning)";
+              console.error(err);
+            });
+        }
+
+        loadBanner();
       })();
 
       // --- scroll reveal, restrained: fade + rise, once per element ---
