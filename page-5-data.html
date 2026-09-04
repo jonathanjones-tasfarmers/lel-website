@@ -279,10 +279,32 @@
         line-height: 1;
         margin: 0;
       }
-      .dp-stat-hero p:last-child:not(.dp-stat-value) {
+      .dp-stat-hero > p:last-child:not(.dp-stat-value) {
         font-size: 12px;
         color: var(--tf-slate-200);
         margin: 10px 0 0 0;
+      }
+      .dp-hero-substat {
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      .dp-hero-substat-label {
+        font-size: 13px;
+        color: var(--tf-slate-200);
+        margin: 0 0 8px 0;
+      }
+      .dp-hero-substat-sub {
+        font-size: 12px;
+        color: var(--tf-slate-200);
+        margin: -4px 0 8px 0;
+      }
+      .dp-hero-substat-value {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--tf-white);
+        font-size: 24px;
+        margin: 0;
       }
       .dp-stat-card {
         border-radius: var(--radius-lg);
@@ -611,6 +633,58 @@
         margin: 12px 0 0 0;
       }
 
+      /* --- how we calculate baseline methane (added 2026-09-03) ---
+         Reuses .dp-skel for loading state and the same amber caveat
+         treatment as .dp-disclosure-box above, scoped to its own class
+         names so it doesn't collide with that toggle's JS wiring. */
+      .dp-methodology-card {
+        background: var(--surface-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-lg);
+        padding: 22px 26px;
+        margin: 20px 0 0 0;
+        box-shadow: var(--shadow-sm);
+      }
+      .dp-methodology-text {
+        font-size: 14px;
+        color: var(--text-body);
+        line-height: 1.75;
+        margin: 0 0 16px 0;
+      }
+      .dp-methodology-text b {
+        color: var(--text-heading);
+      }
+      .dp-methodology-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px 20px;
+        padding: 14px 0;
+        border-top: 1px solid var(--border-subtle);
+        border-bottom: 1px solid var(--border-subtle);
+        margin-bottom: 14px;
+      }
+      .dp-methodology-label {
+        font-family: var(--font-display);
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        margin: 0 0 4px 0;
+      }
+      .dp-methodology-value {
+        font-family: var(--font-display);
+        font-size: 17px;
+        font-weight: 700;
+        color: var(--text-heading);
+        margin: 0;
+      }
+      .dp-methodology-meta {
+        font-size: 11.5px;
+        color: var(--text-muted);
+        margin: 0;
+      }
+
       .dp-value-box {
         background: var(--tf-navy-900);
         border-radius: var(--radius-lg);
@@ -836,6 +910,13 @@
             <p class="dp-stat-value" id="b-abatement">
               <span class="dp-skel-white" style="width: 110px; height: 34px"></span>
             </p>
+            <div class="dp-hero-substat">
+              <p class="dp-hero-substat-label">Average KleenGrow consumption</p>
+              <p class="dp-hero-substat-sub">Per head/day</p>
+              <p class="dp-hero-substat-value" id="b-intake">
+                <span class="dp-skel-white" style="width: 64px; height: 24px"></span>
+              </p>
+            </div>
           </div>
           <div class="dp-stack">
             <div class="dp-stat-card outline">
@@ -901,6 +982,45 @@
           >
             No emissions readings recorded yet.
           </p>
+
+          <div class="dp-methodology-card dp-reveal">
+            <p class="dp-methodology-text" id="methodology-text">
+              We estimate each animal's baseline methane output, before any
+              SeaFeed effect is applied, using the equation now adopted for
+              Australia's national greenhouse gas inventory: dry matter
+              intake &times; a fixed methane-yield coefficient, derived
+              from over a thousand respiration-chamber measurements on
+              Australian forage-fed cattle
+              (<a
+                href="https://doi.org/10.1071/AN15365"
+                target="_blank"
+                rel="noopener"
+                style="color: inherit"
+                >Charmley&nbsp;et&nbsp;al. 2016</a
+              >).
+            </p>
+            <div class="dp-methodology-grid" id="methodology-grid">
+              <div>
+                <p class="dp-methodology-label">Dry matter intake</p>
+                <p class="dp-methodology-value" id="m-dmi">
+                  <span class="dp-skel" style="width: 46px; height: 17px"></span>
+                </p>
+              </div>
+              <div>
+                <p class="dp-methodology-label">Methane yield coefficient</p>
+                <p class="dp-methodology-value" id="m-my">
+                  <span class="dp-skel" style="width: 68px; height: 17px"></span>
+                </p>
+              </div>
+              <div>
+                <p class="dp-methodology-label">Today's Control baseline</p>
+                <p class="dp-methodology-value" id="m-baseline">
+                  <span class="dp-skel" style="width: 68px; height: 17px"></span>
+                </p>
+              </div>
+            </div>
+            <p class="dp-methodology-meta" id="methodology-meta">Loading&hellip;</p>
+          </div>
         </div>
 
         <div class="dp-chart-section dp-reveal">
@@ -1885,7 +2005,7 @@
         function fetchLatestSeafeedEmissions() {
           return q(EMISSIONS_URL, {
             where: "treatment='seafeed' AND farm_name='" + AGGREGATE_LABEL + "'",
-            outFields: "abatement_rate,record_date",
+            outFields: "abatement_rate,intake_g_per_hd_day,record_date",
             orderByFields: "record_date DESC",
             resultRecordCount: "1",
             f: "json",
@@ -2034,10 +2154,16 @@
                   ).toLocaleString()
                 : "—";
 
+              var intake =
+                emissions && emissions.intake_g_per_hd_day != null
+                  ? Math.round(emissions.intake_g_per_hd_day) + " g"
+                  : "—";
+
               document.getElementById("b-abatement").textContent = abatement;
               document.getElementById("b-adg").textContent = adg;
               document.getElementById("b-co2e").textContent = co2e;
               document.getElementById("b-days").textContent = days;
+              document.getElementById("b-intake").textContent = intake;
               statusEl.textContent =
                 "Live data, updated " + new Date().toLocaleDateString();
               statusEl.style.color = "var(--tf-mint-600)";
@@ -2047,6 +2173,7 @@
               document.getElementById("b-adg").textContent = "—";
               document.getElementById("b-co2e").textContent = "—";
               document.getElementById("b-days").textContent = "—";
+              document.getElementById("b-intake").textContent = "—";
               statusEl.textContent = "Live data unavailable right now";
               statusEl.style.color = "var(--tf-warning)";
               console.error(err);
@@ -2054,6 +2181,119 @@
         }
 
         loadBanner();
+      })();
+
+      // --- "how we calculate baseline methane" explainer panel (added
+      //     2026-09-03). Own IIFE scope, same pattern as the banner above.
+      //     Reads a small public single-row table (LEL_Model_Assumptions_
+      //     Public) that 03. Emissions_Live_Pipeline_v2.py refreshes every
+      //     run from the same live LEL_Model_Config values it actually
+      //     uses — this page can't authenticate to read LEL_Model_Config
+      //     directly (confirmed: an unauthenticated query against it
+      //     returns "Token Required"), so this small public mirror is the
+      //     only honest way to show farmers live, never-stale assumptions
+      //     rather than hand-typed numbers that could silently drift from
+      //     what the pipeline is really using. See that script's own
+      //     comment for the full reasoning and the table's schema. ---
+      (function () {
+        // NEW table — Jono creates this once in ArcGIS Online (see 03.
+        // Emissions_Live_Pipeline_v2.py's setup comment for the schema),
+        // then replaces this placeholder with its real REST endpoint and
+        // sets MODEL_ASSUMPTIONS_ITEM_ID in that script to match. Until
+        // then this panel degrades gracefully to a labelled fallback
+        // rather than a broken fetch.
+        var ASSUMPTIONS_URL =
+          "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Model_Assumptions_Public/FeatureServer/0/query";
+        var EMISSIONS_URL =
+          "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
+        var AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
+
+        function q(url, params) {
+          return fetch(url + "?" + new URLSearchParams(params)).then(
+            function (res) {
+              return res.json();
+            },
+          ).then(function (data) {
+            if (data.error) throw new Error(data.error.message || "Query failed");
+            return data;
+          });
+        }
+
+        function fetchAssumptions() {
+          if (ASSUMPTIONS_URL.indexOf("REPLACE_WITH") === 0) {
+            return Promise.resolve(null);
+          }
+          return q(ASSUMPTIONS_URL, {
+            where: "1=1",
+            outFields:
+              "dmi_pct_of_bodyweight,charmley_my_g_per_kg_dmi,ym_source_note,last_updated",
+            orderByFields: "last_updated DESC",
+            resultRecordCount: "1",
+            f: "json",
+          }).then(function (data) {
+            return data.features.length ? data.features[0].attributes : null;
+          }).catch(function (err) {
+            console.error("Model assumptions fetch failed:", err);
+            return null;
+          });
+        }
+
+        function fetchControlBaseline() {
+          return q(EMISSIONS_URL, {
+            where:
+              "treatment='control' AND farm_name='" + AGGREGATE_LABEL + "'",
+            outFields: "baseline_ch4_g_per_hd_day,record_date",
+            orderByFields: "record_date DESC",
+            resultRecordCount: "1",
+            f: "json",
+          }).then(function (data) {
+            return data.features.length ? data.features[0].attributes : null;
+          }).catch(function (err) {
+            console.error("Baseline fetch failed:", err);
+            return null;
+          });
+        }
+
+        function fmtPct(v) {
+          return (v * 100).toFixed(1) + "%";
+        }
+
+        Promise.all([fetchAssumptions(), fetchControlBaseline()]).then(
+          function (results) {
+            var a = results[0];
+            var baseline = results[1];
+
+            if (a) {
+              document.getElementById("m-dmi").textContent = fmtPct(
+                a.dmi_pct_of_bodyweight,
+              ) + " of liveweight";
+              document.getElementById("m-my").textContent =
+                a.charmley_my_g_per_kg_dmi + " g CH4/kg DMI";
+              document.getElementById("methodology-meta").textContent =
+                "Assumptions last verified " +
+                new Date(a.last_updated).toLocaleDateString("en-AU", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                });
+            } else {
+              // Table not set up yet, or fetch failed — show the formula
+              // itself (which doesn't change) without fabricating numbers.
+              document.getElementById("m-dmi").textContent = "—";
+              document.getElementById("m-my").textContent = "—";
+              document.getElementById("methodology-meta").textContent =
+                "Live assumption values aren't available right now — the underlying method is Charmley et al. (2016) regardless.";
+            }
+
+            if (baseline && baseline.baseline_ch4_g_per_hd_day != null) {
+              document.getElementById("m-baseline").textContent =
+                Math.round(baseline.baseline_ch4_g_per_hd_day) +
+                "g CH4/head/day";
+            } else {
+              document.getElementById("m-baseline").textContent = "—";
+            }
+          },
+        );
       })();
 
       // --- scroll reveal, restrained: fade + rise, once per element ---
