@@ -1032,9 +1032,11 @@
             <div class="wp-disclosure-details" id="scale-details">
               <p class="wp-disclosure-text">
                 This project's own wool breakeven calculator (in development)
-                works out what premium would actually be needed at the farm
-                gate, this section is about where in the chain that value is
-                easiest to find, not a promise of what it's worth.
+                works out what premium a garment's wool content would
+                actually need to carry to cover SeaFeed's cost, and what
+                that comes to as a share of the garment's retail price, this
+                section is about where in the chain that value is easiest to
+                find, not a promise of what it's worth.
               </p>
             </div>
           </div>
@@ -1185,16 +1187,16 @@
     </div>
 
     <!-- ============ DUAL TRACK ============ -->
+    <!-- Bottom-of-page gradient into --tf-navy-900 removed 2026-09-08, per
+         Jono's request — this was the last section before the footer, and
+         the fade to dark navy meant the page didn't hand off to the Hub
+         footer as plain white. Now flat var(--surface-page) all the way
+         down. The two dark cards inside this section (.wp-track-card.brands,
+         .wp-faq-panel is light) are untouched, this only affects the
+         section's own background, not their content. -->
     <div
       class="wp-section"
-      style="
-        background: linear-gradient(
-          180deg,
-          var(--surface-page) 0%,
-          var(--surface-page) calc(100% - 240px),
-          var(--tf-navy-900) 100%
-        );
-      "
+      style="background: var(--surface-page)"
     >
       <div class="wp-page">
         <p class="wp-eyebrow wp-reveal">What this could mean</p>
