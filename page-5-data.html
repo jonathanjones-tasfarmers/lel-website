@@ -29,6 +29,10 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <!-- Vertical "farm joined the aggregate" markers on the 3 trend charts
+         below (chart-abatement / chart-adg / chart-cop) — added 2026-09-14.
+         Self-registers against the Chart global above once loaded. -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
     <style>
       :root {
         --tf-navy-900: #041221;
@@ -1317,6 +1321,79 @@
 
         const AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
 
+        // ============================================================
+        // FARM JOIN MARKERS — added 2026-09-14, per Jono's request, to
+        // show on the three trend charts below exactly when a new farm's
+        // data started counting in the trial-wide aggregate they plot.
+        // The date here is that farm's public-display-ready date (see
+        // get_farm_public_ready_date() in lel_farms.py) — the day its
+        // rows first appear in the AGGREGATE_LABEL rollup these charts
+        // query. Hand-maintained: add a row here whenever a new farm
+        // clears its own buffer in lel_farms.py, using the same date.
+        // Bowood isn't listed — it was the trial's original farm, never
+        // buffer-gated, so there's no "join" moment to mark for it.
+        // ============================================================
+        const FARM_MILESTONES = [
+          { farm: "Eastbourne Farm", date: "2026-09-11" },
+        ];
+
+        function milestoneEpoch(dateStr) {
+          const [y, m, d] = dateStr.split("-").map(Number);
+          return Date.UTC(y, m - 1, d);
+        }
+
+        // Builds a chartjs-plugin-annotation config for whichever
+        // FARM_MILESTONES fall inside this particular chart's own date
+        // range (each of the 3 charts queries its own date window, so a
+        // milestone can legitimately be missing from one chart's labels
+        // and present in another's). A faint dashed line marks the date;
+        // a small mint dot sits on it; hovering the line reveals a label
+        // naming the farm and date, matching the site's minimal-chrome
+        // charts (nothing permanent competing with the data line).
+        function buildJoinAnnotations(labels) {
+          const annotations = {};
+          FARM_MILESTONES.forEach((m, i) => {
+            const label = fmtDate(milestoneEpoch(m.date));
+            if (!labels.includes(label)) return; // outside this chart's range
+            annotations["joinLine" + i] = {
+              type: "line",
+              xMin: label,
+              xMax: label,
+              borderColor: "rgba(169,184,196,0.7)",
+              borderWidth: 1,
+              borderDash: [4, 4],
+              label: {
+                display: false,
+                content: [m.farm + " joined", label],
+                backgroundColor: "#041221",
+                color: "#ffffff",
+                font: { family: "Verdana,Tahoma,sans-serif", size: 11 },
+                padding: 6,
+                borderRadius: 4,
+                position: "start",
+              },
+              enter({ element }) {
+                element.label.options.display = true;
+                return true;
+              },
+              leave({ element }) {
+                element.label.options.display = false;
+                return true;
+              },
+            };
+            annotations["joinDot" + i] = {
+              type: "point",
+              xValue: label,
+              yValue: (ctx) => ctx.chart.scales.y.max,
+              backgroundColor: MINT,
+              borderColor: "#ffffff",
+              borderWidth: 1.5,
+              radius: 4,
+            };
+          });
+          return annotations;
+        }
+
         async function q(url, params) {
           const res = await fetch(url + "?" + new URLSearchParams(params));
           const data = await res.json();
@@ -1423,10 +1500,15 @@
               d,
             ),
           );
+          const options = baseLineOptions(yAxisLabel, yAxisOverrides);
+          const joinAnnotations = buildJoinAnnotations(labels);
+          if (Object.keys(joinAnnotations).length) {
+            options.plugins.annotation = { annotations: joinAnnotations };
+          }
           new Chart(document.getElementById(canvasId), {
             type: "line",
             data: { labels, datasets: styledDatasets },
-            options: baseLineOptions(yAxisLabel, yAxisOverrides),
+            options,
           });
         }
 
