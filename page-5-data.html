@@ -1031,7 +1031,8 @@
           <h3 class="dp-h3">Average daily gain over time</h3>
           <p class="dp-chart-caption">
             The ADG of the KleenGrow group compared to the control group,
-            expressed as a percentage advantage.
+            expressed as a percentage advantage. Both groups are measured
+            over the same dates.
           </p>
           <div class="dp-chart-box">
             <div class="dp-skel dp-skel-chart" id="chart-adg-skeleton"></div>
@@ -1548,7 +1549,12 @@
           }
         }
 
-        const ADG_CHART_START_MS = Date.UTC(2026, 5, 25); // month is 0-indexed: 5 = June
+        // The old hardcoded chart start (25 Jun 2026) was removed 2026-09-23.
+        // The Economics pipeline now decides when a fair SeaFeed-vs-Control
+        // figure exists (both groups measured over the same calendar window,
+        // see lel_comparison_window.py) and leaves weight_gain_kg_per_head
+        // null until it does, so the IS NOT NULL filters below are what set
+        // where this chart starts, for every farm, not a manual date.
 
         function sqlTimestamp(epochMs) {
           return new Date(epochMs).toISOString().slice(0, 19).replace("T", " ");
@@ -1558,7 +1564,7 @@
           try {
             const [seafeed, control] = await Promise.all([
               q(ECON_URL, {
-                where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL AND calculation_date >= TIMESTAMP '${sqlTimestamp(ADG_CHART_START_MS)}'`,
+                where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL`,
                 outFields:
                   "calculation_date,weight_gain_kg_per_head,days_of_data",
                 orderByFields: "calculation_date ASC",
@@ -1566,7 +1572,7 @@
                 f: "json",
               }),
               q(ECON_URL, {
-                where: `treatment='control' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL AND calculation_date >= TIMESTAMP '${sqlTimestamp(ADG_CHART_START_MS)}'`,
+                where: `treatment='control' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL`,
                 outFields:
                   "calculation_date,weight_gain_kg_per_head,days_of_data",
                 orderByFields: "calculation_date ASC",
