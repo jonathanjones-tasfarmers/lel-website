@@ -1121,6 +1121,30 @@
               >KleenGrow vs Control</span
             >
           </div>
+          <div class="dp-indicator-row" style="margin-top: 20px">
+            <div class="dp-indicator-card">
+              <p class="dp-indicator-label" style="color: var(--tf-mint-600)">
+                30-day ADG advantage
+              </p>
+              <div class="dp-indicator-value" id="adgw-30">
+                <span class="dp-skel" style="width: 96px; height: 30px"></span>
+              </div>
+              <p class="dp-indicator-meta" id="adgw-30-meta">
+                <span class="dp-skel" style="width: 170px; height: 12px"></span>
+              </p>
+            </div>
+            <div class="dp-indicator-card">
+              <p class="dp-indicator-label" style="color: var(--tf-mint-600)">
+                90-day ADG advantage
+              </p>
+              <div class="dp-indicator-value" id="adgw-90">
+                <span class="dp-skel" style="width: 96px; height: 30px"></span>
+              </div>
+              <p class="dp-indicator-meta" id="adgw-90-meta">
+                <span class="dp-skel" style="width: 170px; height: 12px"></span>
+              </p>
+            </div>
+          </div>
         </div>
 
         <div class="dp-chart-section dp-reveal">
@@ -1935,8 +1959,54 @@
           }
         }
 
+        // 30- and 90-day trial-wide ADG advantage cards, from OptiWeigh's own
+        // windows (aggregate row of LEL_ADG_Comparison, so no farm names).
+        async function loadAdgWindows() {
+          const ids = { 30: "adgw-30", 90: "adgw-90" };
+          try {
+            const data = await q(
+              "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_ADG_Comparison/FeatureServer/0/query",
+              {
+                where: `farm_name='${AGGREGATE_LABEL}' AND window_days IN (30,90)`,
+                outFields:
+                  "comparison_date,window_days,diff_pct,seafeed_adg,control_adg,seafeed_animals,control_animals,eligible",
+                orderByFields: "comparison_date DESC",
+                resultRecordCount: "20",
+                f: "json",
+              },
+            );
+            const rows = data.features.map((f) => f.attributes);
+            const newest = rows.length ? rows[0].comparison_date : null;
+            [30, 90].forEach((w) => {
+              const valEl = document.getElementById(ids[w]);
+              const metaEl = document.getElementById(ids[w] + "-meta");
+              const r = rows.find(
+                (x) => x.window_days === w && x.comparison_date === newest,
+              );
+              if (!r || r.eligible !== "Y" || r.diff_pct == null) {
+                valEl.textContent = "Not enough data yet";
+                valEl.style.fontSize = "18px";
+                metaEl.textContent =
+                  "Appears once the trial has " + w + " days of readings.";
+                return;
+              }
+              valEl.textContent =
+                (r.diff_pct >= 0 ? "+" : "") + r.diff_pct.toFixed(1) + "%";
+              metaEl.style.display = "none";
+            });
+          } catch (err) {
+            console.error("ADG window cards failed:", err);
+            [30, 90].forEach((w) => {
+              document.getElementById(ids[w]).textContent = "\u2014";
+              document.getElementById(ids[w] + "-meta").textContent =
+                "Unavailable right now.";
+            });
+          }
+        }
+
         async function loadAll() {
           const statusEl = document.getElementById("tf-status");
+          loadAdgWindows();
           try {
             const [, , , , latest] = await Promise.all([
               loadAbatement(),
