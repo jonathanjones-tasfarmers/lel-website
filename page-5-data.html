@@ -1448,11 +1448,15 @@
         // rows first appear in the AGGREGATE_LABEL rollup these charts
         // query. Hand-maintained: add a row here whenever a new farm
         // clears its own buffer in lel_farms.py, using the same date.
+        // Updated 2026-10-05: the buffer is now 30 days (was 21), so the
+        // Northern Tasmania (Eastbourne) farm, which started 14 Aug 2026 and
+        // whose control unit began logging 21 Aug, enters the trial-wide
+        // figures on 20 Sep (21 Aug + 30 days), not 11 Sep.
         // Bowood isn't listed — it was the trial's original farm, never
         // buffer-gated, so there's no "join" moment to mark for it.
         // ============================================================
         const FARM_MILESTONES = [
-          { farm: "Northern Tas Farm", date: "2026-09-11" },
+          { farm: "Northern Tasmania farm", date: "2026-09-20" },
         ];
 
         function milestoneEpoch(dateStr) {
@@ -1482,7 +1486,7 @@
               borderDash: [4, 4],
               label: {
                 display: false,
-                content: [m.farm + " joined", label],
+                content: [m.farm + " added to trial-wide figures", label],
                 backgroundColor: "#041221",
                 color: "#ffffff",
                 font: { family: "Verdana,Tahoma,sans-serif", size: 11 },
