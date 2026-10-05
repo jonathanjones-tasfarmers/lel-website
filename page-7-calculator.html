@@ -2096,6 +2096,56 @@
           }
         }
 
+
+        // Matched-window inputs (2026-10-05, ADG measurement plan): the default ADG uplift is OptiWeigh's
+        // trial-wide 90-day SeaFeed minus control difference in g/day (30-day if the 90-day one is not
+        // available), and the incremental cost is the difference in daily cost per head since each group
+        // started. The older figures divided cost since the first block by the (shorter) weight-gain
+        // window, which overstated the cost, and compared groups measured over different periods. Both
+        // reads are non-fatal: if either is unavailable the older calculation below is used unchanged.
+        async function fetchTrialAdgOw() {
+          try {
+            const params = new URLSearchParams({
+              where: `farm_name='${AGGREGATE_LABEL}' AND window_days IN (90,30)`,
+              outFields: "comparison_date,window_days,diff_g,eligible",
+              orderByFields: "comparison_date DESC",
+              resultRecordCount: "20",
+              f: "json",
+            });
+            const res = await fetch("https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_ADG_Comparison/FeatureServer/0/query?" + params);
+            const data = await res.json();
+            if (data.error) return null;
+            const rows = data.features.map((f) => f.attributes).filter((r) => r.eligible === "Y" && r.diff_g != null);
+            if (!rows.length) return null;
+            const sameDay = rows.filter((r) => r.comparison_date === rows[0].comparison_date);
+            return sameDay.find((r) => r.window_days === 90) || sameDay.find((r) => r.window_days === 30) || null;
+          } catch (e) {
+            return null;
+          }
+        }
+        async function fetchTrialCostDayOw() {
+          try {
+            const params = new URLSearchParams({
+              where: `farm_name='${AGGREGATE_LABEL}' AND treatment IN ('seafeed','control') AND cost_per_head_day_aud IS NOT NULL`,
+              outFields: "treatment,cost_per_head_day_aud,calculation_date",
+              orderByFields: "calculation_date DESC",
+              resultRecordCount: "10",
+              f: "json",
+            });
+            const res = await fetch(ECON_URL + "?" + params);
+            const data = await res.json();
+            if (data.error) return {};
+            const latest = {};
+            for (const feat of data.features) {
+              const t = feat.attributes.treatment;
+              if (!latest[t]) latest[t] = feat.attributes;
+            }
+            return latest;
+          } catch (e) {
+            return {};
+          }
+        }
+
         async function init() {
           loadIndicativePrice(); // runs independently, a failure here shouldn't block the Economics data below
           try {
@@ -2137,6 +2187,20 @@
             adgUpliftKgPerDay =
               seafeed.weight_gain_kg_per_head / seafeed.days_of_data -
               control.weight_gain_kg_per_head / control.days_of_data;
+
+
+            // Matched-window override (see fetchTrialAdgOw above): replaces the older uplift and cost figures
+            // when the trial-wide OptiWeigh figure and daily cost are available.
+            const owAdg = await fetchTrialAdgOw();
+            const owCost = await fetchTrialCostDayOw();
+            if (owAdg) {
+              adgUpliftKgPerDay = owAdg.diff_g / 1000;
+              daysOfData = owAdg.window_days;
+              daysOfDataDiffer = false;
+            }
+            if (owCost.seafeed && owCost.control) {
+              incrementalCostPerHeadDay = owCost.seafeed.cost_per_head_day_aud - owCost.control.cost_per_head_day_aud;
+            }
 
             {
               const headBits = [];

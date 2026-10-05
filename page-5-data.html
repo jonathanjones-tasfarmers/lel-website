@@ -689,6 +689,31 @@
         margin: 0;
       }
 
+      .dp-glossary summary {
+        cursor: pointer;
+        list-style: none;
+        font-family: var(--font-display);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--tf-mint-600);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .dp-glossary summary::-webkit-details-marker {
+        display: none;
+      }
+      .dp-glossary summary::after {
+        content: "\25BE";
+        transition: transform 0.2s;
+      }
+      .dp-glossary[open] summary::after {
+        transform: rotate(180deg);
+      }
+      .dp-glossary[open] summary {
+        margin-bottom: 14px;
+      }
+
       .dp-value-box {
         background: var(--tf-navy-900);
         border-radius: var(--radius-lg);
@@ -960,11 +985,56 @@
         <p class="dp-section-intro dp-reveal">
           Every chart below is built from the same live trial data used across
           the rest of this website, and is updated as new readings are recorded.
+          As more data becomes available, this live page will change, and
+          earlier figures may be refined.
         </p>
         <div class="dp-status-row dp-reveal">
           <span class="dp-status" id="tf-status"
             >Loading live data&hellip;</span
           >
+        </div>
+
+        <div class="dp-methodology-card dp-reveal" style="margin: 0 0 32px 0">
+          <p class="dp-methodology-label" style="margin-bottom: 10px">
+            How to read these charts
+          </p>
+          <div class="dp-methodology-grid" style="border-top: 0; padding-top: 0">
+            <div>
+              <p class="dp-methodology-label">KleenGrow animals</p>
+              <p class="dp-methodology-value" id="htr-sf">&mdash;</p>
+            </div>
+            <div>
+              <p class="dp-methodology-label">Control animals</p>
+              <p class="dp-methodology-value" id="htr-ct">&mdash;</p>
+            </div>
+            <div>
+              <p class="dp-methodology-label">Days of trial data</p>
+              <p class="dp-methodology-value" id="htr-days">&mdash;</p>
+            </div>
+          </div>
+          <details class="dp-glossary">
+            <summary>What do these terms mean?</summary>
+            <p class="dp-methodology-text">
+            <b>ADG advantage</b> is how much faster KleenGrow cattle gained
+            weight than Control cattle, as a percentage of the Control gain.
+            ADG is average daily gain in kg per head per day, taken from
+            OptiWeigh&rsquo;s own figures.
+          </p>
+          <p class="dp-methodology-text">
+            <b>Cost per kg of gain</b> is what it cost to produce each kg of
+            liveweight, so it accounts for what each group actually produced.
+          </p>
+          <p class="dp-methodology-text">
+            <b>Modelled abatement</b> is an estimate, not a direct
+            measurement. It applies a methane-yield equation to each
+            animal&rsquo;s feed intake.
+          </p>
+          <p class="dp-methodology-text" style="margin-bottom: 0">
+            <b>Why lines start on different dates:</b> a group only appears
+            once it has 30 days of data, and the Control group began later than
+            the KleenGrow group.
+          </p>
+          </details>
         </div>
 
         <div class="dp-chart-section dp-reveal">
@@ -1030,9 +1100,10 @@
         <div class="dp-chart-section dp-reveal">
           <h3 class="dp-h3">Average daily gain over time</h3>
           <p class="dp-chart-caption">
-            The ADG of the KleenGrow group compared to the control group,
-            expressed as a percentage advantage. Both groups are measured
-            over the same dates.
+            The 30-day average daily gain (ADG) of the KleenGrow group compared
+            to the control group, expressed as a percentage advantage, from
+            OptiWeigh&rsquo;s own figures. Both groups are measured over the same
+            dates, and each farm is only counted once it has 30 days of data. A dashed grey line links periods with no readings.
           </p>
           <div class="dp-chart-box">
             <div class="dp-skel dp-skel-chart" id="chart-adg-skeleton"></div>
@@ -1105,7 +1176,10 @@
           <h3 class="dp-h3">Cost of production over time</h3>
           <p class="dp-chart-caption">
             Cost per kg of liveweight gain for the KleenGrow and Control
-            groups.
+            groups. Within each group, cost and weight gain are measured over
+            the same period. Each line starts once that group has 30 days of
+            data, so the Control line starts later because the control group
+            began later.
           </p>
           <div class="dp-chart-box">
             <div class="dp-skel dp-skel-chart" id="chart-cop-skeleton"></div>
@@ -1139,15 +1213,17 @@
         <div class="dp-origin-card dp-reveal">
           <p class="dp-eyebrow">How this data is collected</p>
           <h2 class="dp-h2">
-            Every reading traced back to a
-            <span class="accent">real paddock, not a model</span>
+            Weights from <span class="accent">real paddocks</span>, with the
+            method stated
           </h2>
           <p class="body">
-            These charts update directly from the same ArcGIS feature services
-            used by the field team to enter data following each weigh day,
-            methane test and cost calculation. There is no smoothing step
-            between data collection and the data as presented here, what is
-            recorded is what is shown.
+            Liveweights come from OptiWeigh&rsquo;s walk-over scales, and these
+            charts read from the same ArcGIS feature services the field team
+            use, updated after each weigh day, methane test and cost
+            calculation. Results are pooled across trial sites and recalculated
+            as new readings arrive, so earlier figures can be refined.
+            Methane abatement is modelled from feed intake rather than measured
+            directly.
           </p>
           <p class="body">
             Producer identities and individual farm results remain confidential.
@@ -1308,12 +1384,29 @@
     </div>
 
     <script>
+      // Date of the latest data point, shown as "last updated" (not the
+      // visitor's own date). Tasmanian time so the day is the same for all.
+      function dpFormatDataDate(ms) {
+        if (ms == null) return null;
+        return new Date(ms).toLocaleDateString("en-AU", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          timeZone: "Australia/Hobart",
+        });
+      }
+    </script>
+    <script>
       // ================= CHARTS + COST OF PRODUCTION =================
       (function () {
         const EMISSIONS_URL =
           "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Emissions_Data_view/FeatureServer/0/query";
         const ECON_URL =
           "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Economics_Data/FeatureServer/0/query";
+        // OptiWeigh's own 30-day ADG pooled across farms, on the AGGREGATE rows only
+        // (no farm names): see lel_ow_adg.pooled_paired_adg and 17. Aggregate_ADG_History_Backfill.py.
+        const WEIGHTS_URL =
+          "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
         const MINT = "#3aa989",
           SLATE = "#a9b8c4",
           WARNING = "#c98a2e",
@@ -1409,6 +1502,13 @@
           });
         }
 
+        // True for a chart segment that touches an empty day, i.e. the line linking
+        // across a gap in the data (the ADG chart adds an empty point for every
+        // missing day inside a gap, so this is exactly the linked stretch).
+        function isGapSegment(ctx) {
+          const d = ctx.chart.data.datasets[ctx.datasetIndex].data;
+          return d[ctx.p0DataIndex] == null || d[ctx.p1DataIndex] == null;
+        }
         function segmentColorBySign(ctx, positiveColor, negativeColor) {
           const y0 = ctx.p0.parsed.y,
             y1 = ctx.p1.parsed.y;
@@ -1560,80 +1660,66 @@
           return new Date(epochMs).toISOString().slice(0, 19).replace("T", " ");
         }
 
+        // ADG advantage chart (2026-10-05): OptiWeigh's own 30-day ADG, pooled across the
+        // farms past the public display buffer that have both groups and 30+ days of
+        // history, read from the trial-wide aggregate rows only. The older chart was
+        // built from weight gain divided by days, which smoothed the mob average twice.
         async function loadAdg() {
           try {
-            const [seafeed, control] = await Promise.all([
-              q(ECON_URL, {
-                where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL`,
-                outFields:
-                  "calculation_date,weight_gain_kg_per_head,days_of_data",
-                orderByFields: "calculation_date ASC",
-                resultRecordCount: "2000",
-                f: "json",
-              }),
-              q(ECON_URL, {
-                where: `treatment='control' AND farm_name='${AGGREGATE_LABEL}' AND weight_gain_kg_per_head IS NOT NULL AND days_of_data IS NOT NULL`,
-                outFields:
-                  "calculation_date,weight_gain_kg_per_head,days_of_data",
-                orderByFields: "calculation_date ASC",
-                resultRecordCount: "2000",
-                f: "json",
-              }),
-            ]);
-            const sfRows = seafeed.features
+            const data = await q(WEIGHTS_URL, {
+              where: `farm_name='${AGGREGATE_LABEL}' AND treatment_group IN ('seafeed','control') AND adg IS NOT NULL`,
+              outFields: "snapshot_date,treatment_group,adg",
+              orderByFields: "snapshot_date ASC",
+              resultRecordCount: "2000",
+              f: "json",
+            });
+            const sfByDate = new Map(),
+              ctByDate = new Map();
+            data.features
               .map((f) => f.attributes)
-              .filter((a) => a.calculation_date != null);
-            const ctRows = control.features
-              .map((f) => f.attributes)
-              .filter((a) => a.calculation_date != null);
-            const sfByDate = new Map(
-              sfRows.map((r) => [r.calculation_date, r]),
-            );
-            const ctByDate = new Map(
-              ctRows.map((r) => [r.calculation_date, r]),
-            );
-            const allDates = Array.from(
-              new Set([...sfByDate.keys(), ...ctByDate.keys()]),
-            )
-              .filter((d) => sfByDate.has(d) && ctByDate.has(d))
+              .forEach((a) => {
+                if (a.snapshot_date == null || a.adg == null) return;
+                (a.treatment_group === "seafeed" ? sfByDate : ctByDate).set(
+                  a.snapshot_date,
+                  a.adg,
+                );
+              });
+            const allDates = Array.from(sfByDate.keys())
+              .filter((d) => ctByDate.has(d))
               .sort((a, b) => a - b);
-            const diffs = allDates.map((d) => {
+            // Gaps in the data (a unit offline for more than a week) are LINKED by a
+            // line across them (per Jono, 2026-10-05). Every missing day inside such a
+            // gap is still added as an empty point, so the date axis stays true to the
+            // calendar and the gap takes up its real width, and spanGaps joins the
+            // points either side.
+            const GAP_BREAK_DAYS = 7,
+              DAY_MS = 86400000;
+            const axisDates = [],
+              diffs = [];
+            allDates.forEach((d, i) => {
+              if (i > 0) {
+                const gapDays = Math.round((d - allDates[i - 1]) / DAY_MS);
+                if (gapDays > GAP_BREAK_DAYS) {
+                  for (let g = 1; g < gapDays; g++) {
+                    axisDates.push(allDates[i - 1] + g * DAY_MS);
+                    diffs.push(null);
+                  }
+                }
+              }
               const sf = sfByDate.get(d),
                 ct = ctByDate.get(d);
-              // 2026-09-02 fix: each mob's weight_gain_kg_per_head is a
-              // CUMULATIVE total over ITS OWN days_of_data, not a shared
-              // window — dividing both by a shared min(sf.days, ct.days)
-              // (the previous "audit finding" fix) still inflates the
-              // longer-running mob's rate whenever the two mobs' start
-              // dates differ, e.g. Bowood: SeaFeed ~mid-May, Control 15
-              // Jun, a permanent ~33-day gap that was producing >100%
-              // "advantage" figures. Each mob's own rate, from its own
-              // days_of_data, is the only mathematically correct
-              // comparison — a display buffer wouldn't have fixed this,
-              // since the gap never closes.
-              if (!sf.days_of_data || !ct.days_of_data) return null;
-              const sfGramsPerDay =
-                (sf.weight_gain_kg_per_head / sf.days_of_data) * 1000;
-              const ctGramsPerDay =
-                (ct.weight_gain_kg_per_head / ct.days_of_data) * 1000;
-              // % is only meaningful against a positive control baseline —
-              // plotted as a gap otherwise, since dividing by that would be
-              // misleading (matches the Farms page card's guard).
-              if (ctGramsPerDay <= 0) return null;
-              return (
-                Math.round(
-                  ((sfGramsPerDay - ctGramsPerDay) / ctGramsPerDay) * 1000,
-                ) / 10
-              );
+              axisDates.push(d);
+              // % is only meaningful against a positive control baseline.
+              diffs.push(ct <= 0 ? null : Math.round(((sf - ct) / ct) * 1000) / 10);
             });
 
             renderLineChart(
               "chart-adg",
               "chart-adg-empty",
-              allDates.map((d) => fmtDate(d)),
+              axisDates.map((d) => fmtDate(d)),
               [
                 {
-                  label: "KleenGrow vs Control (ADG advantage, %)",
+                  label: "KleenGrow vs Control (30-day ADG advantage, %)",
                   data: diffs,
                   borderColor: MINT,
                   backgroundColor: "rgba(58,169,137,0.12)",
@@ -1641,16 +1727,25 @@
                   tension: 0.35,
                   spanGaps: true,
                   pointRadius: 2,
-                  // Shade red below zero (KleenGrow behind Control), green above
-                  // zero (KleenGrow ahead) - kept from the 2/8 pass.
+                  // Shade red below zero (KleenGrow behind Control), green above.
+                  // A segment that jumps over empty days is a link across a gap in
+                  // the data (a unit offline): drawn grey and dashed with no fill, so
+                  // it reads as "no readings here" rather than as a measured trend.
                   segment: {
-                    borderColor: (ctx) => segmentColorBySign(ctx, MINT, RED),
+                    borderColor: (ctx) =>
+                      isGapSegment(ctx)
+                        ? SLATE
+                        : segmentColorBySign(ctx, MINT, RED),
+                    borderDash: (ctx) =>
+                      isGapSegment(ctx) ? [6, 5] : undefined,
                     backgroundColor: (ctx) =>
-                      segmentColorBySign(
-                        ctx,
-                        "rgba(58,169,137,0.12)",
-                        "rgba(192,57,43,0.12)",
-                      ),
+                      isGapSegment(ctx)
+                        ? "rgba(169,184,196,0)"
+                        : segmentColorBySign(
+                            ctx,
+                            "rgba(58,169,137,0.12)",
+                            "rgba(192,57,43,0.12)",
+                          ),
                   },
                 },
               ],
@@ -1662,31 +1757,36 @@
           }
         }
 
+        // Cost per kg gain (2026-10-05): the MATCHED-WINDOW figure, where cost and
+        // OptiWeigh ADG cover the same period (cost_per_kg_gain_ow_aud, from
+        // 04. Economics_Pipeline.py). The older cost_per_kg_gain_aud divided cost
+        // since the first block by gain since a later start, which overstated
+        // KleenGrow. Falls back to the older figure only if no matched-window
+        // reading exists yet. Scoped to the trial-wide aggregate row.
         async function latestCostOfProduction(treatment) {
-          const data = await q(ECON_URL, {
-            // 2026-09-02 fix: scope to the trial-wide aggregate row — without
-            // this, once a second farm joins the public rollup, this pulls
-            // whichever row (per-farm or aggregate) happens to sort first on
-            // a given date, silently mixing single-farm and trial-wide
-            // figures. Currently invisible since Bowood is the only
-            // public-ready farm (its own rows and the aggregate are
-            // identical), but not once Eastbourne clears its own buffer.
-            where: `treatment='${treatment}' AND farm_name='${AGGREGATE_LABEL}' AND cost_per_kg_gain_aud IS NOT NULL`,
-            outFields:
-              "treatment,cost_per_kg_gain_aud,cost_per_head_aud,weight_gain_kg_per_head,calculation_date",
-            orderByFields: "calculation_date DESC",
-            resultRecordCount: "1",
-            f: "json",
-          });
-          const row = data.features[0]?.attributes;
-          return row
-            ? {
-                date: row.calculation_date,
-                costPerKgGain: row.cost_per_kg_gain_aud,
-                costPerHead: row.cost_per_head_aud,
-                weightGainKg: row.weight_gain_kg_per_head,
-              }
-            : null;
+          async function fetchLatest(field, extra) {
+            const data = await q(ECON_URL, {
+              where: `treatment='${treatment}' AND farm_name='${AGGREGATE_LABEL}' AND ${field} IS NOT NULL`,
+              outFields: `treatment,${field},cost_per_head_aud,weight_gain_kg_per_head,calculation_date`,
+              orderByFields: "calculation_date DESC",
+              resultRecordCount: "1",
+              f: "json",
+            });
+            const row = data.features[0]?.attributes;
+            return row
+              ? {
+                  date: row.calculation_date,
+                  costPerKgGain: row[field],
+                  costPerHead: row.cost_per_head_aud,
+                  weightGainKg: row.weight_gain_kg_per_head,
+                  matched: field === "cost_per_kg_gain_ow_aud",
+                }
+              : null;
+          }
+          return (
+            (await fetchLatest("cost_per_kg_gain_ow_aud")) ||
+            (await fetchLatest("cost_per_kg_gain_aud"))
+          );
         }
 
         function renderCopCard(valueId, metaId, reading) {
@@ -1703,8 +1803,9 @@
             reading.costPerKgGain.toFixed(2) +
             '<span class="unit">/kg gain</span>';
           const stale = daysSinceEpoch(reading.date) > STALE_AFTER_DAYS;
-          const basis =
-            reading.costPerHead != null && reading.weightGainKg != null
+          const basis = reading.matched
+            ? "cost and weight gain over the same period: "
+            : reading.costPerHead != null && reading.weightGainKg != null
               ? `$${reading.costPerHead.toFixed(2)}/head spend over ${reading.weightGainKg.toFixed(1)}kg gain: `
               : "";
           metaEl.textContent =
@@ -1763,15 +1864,15 @@
             // once a second farm joins).
             const [seafeed, control] = await Promise.all([
               q(ECON_URL, {
-                where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND cost_per_kg_gain_aud IS NOT NULL`,
-                outFields: "calculation_date,cost_per_kg_gain_aud",
+                where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND cost_per_kg_gain_ow_aud IS NOT NULL`,
+                outFields: "calculation_date,cost_per_kg_gain_ow_aud",
                 orderByFields: "calculation_date ASC",
                 resultRecordCount: "2000",
                 f: "json",
               }),
               q(ECON_URL, {
-                where: `treatment='control' AND farm_name='${AGGREGATE_LABEL}' AND cost_per_kg_gain_aud IS NOT NULL`,
-                outFields: "calculation_date,cost_per_kg_gain_aud",
+                where: `treatment='control' AND farm_name='${AGGREGATE_LABEL}' AND cost_per_kg_gain_ow_aud IS NOT NULL`,
+                outFields: "calculation_date,cost_per_kg_gain_ow_aud",
                 orderByFields: "calculation_date ASC",
                 resultRecordCount: "2000",
                 f: "json",
@@ -1781,19 +1882,19 @@
               .map((f) => f.attributes)
               .filter(
                 (a) =>
-                  a.calculation_date != null && a.cost_per_kg_gain_aud != null,
+                  a.calculation_date != null && a.cost_per_kg_gain_ow_aud != null,
               );
             const ctRows = control.features
               .map((f) => f.attributes)
               .filter(
                 (a) =>
-                  a.calculation_date != null && a.cost_per_kg_gain_aud != null,
+                  a.calculation_date != null && a.cost_per_kg_gain_ow_aud != null,
               );
             const sfByDate = new Map(
-              sfRows.map((r) => [r.calculation_date, r.cost_per_kg_gain_aud]),
+              sfRows.map((r) => [r.calculation_date, r.cost_per_kg_gain_ow_aud]),
             );
             const ctByDate = new Map(
-              ctRows.map((r) => [r.calculation_date, r.cost_per_kg_gain_aud]),
+              ctRows.map((r) => [r.calculation_date, r.cost_per_kg_gain_ow_aud]),
             );
             const allDates = Array.from(
               new Set([...sfByDate.keys(), ...ctByDate.keys()]),
@@ -1837,14 +1938,25 @@
         async function loadAll() {
           const statusEl = document.getElementById("tf-status");
           try {
-            await Promise.all([
+            const [, , , , latest] = await Promise.all([
               loadAbatement(),
               loadAdg(),
               loadCostOfProduction(),
               loadCostOfProductionTrend(),
+              q(WEIGHTS_URL, {
+                where: `farm_name='${AGGREGATE_LABEL}'`,
+                outFields: "snapshot_date",
+                orderByFields: "snapshot_date DESC",
+                resultRecordCount: "1",
+                f: "json",
+              }).catch(() => null),
             ]);
-            statusEl.textContent =
-              "Live data, updated " + new Date().toLocaleDateString();
+            const lastDate = dpFormatDataDate(
+              latest?.features?.[0]?.attributes?.snapshot_date,
+            );
+            statusEl.textContent = lastDate
+              ? "Live data, last reading " + lastDate
+              : "Live data";
             statusEl.style.color = MINT;
           } catch (err) {
             statusEl.textContent = "Live data unavailable right now";
@@ -2033,8 +2145,10 @@
             priceOut.textContent = "$" + REFERENCE_PRICE_AUD_PER_TONNE + "/t";
             daysOut.textContent =
               econ.days_of_data != null ? econ.days_of_data : "—";
-            statusEl.textContent =
-              "Live data, updated " + new Date().toLocaleDateString();
+            const econDate = dpFormatDataDate(econ.calculation_date);
+            statusEl.textContent = econDate
+              ? "Live data, last calculated " + econDate
+              : "Live data";
             statusEl.style.color = "#3aa989";
           } catch (err) {
             statusEl.textContent = "Live data unavailable right now";
@@ -2059,6 +2173,8 @@
           "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Industry_Benchmarks/FeatureServer/0/query";
         var PRODUCTIVITY_URL =
           "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/OptiWeigh_Cattle_Weights/FeatureServer/0/query";
+        var ADG_COMPARISON_URL =
+          "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_ADG_Comparison/FeatureServer/0/query";
         var AGGREGATE_LABEL = "All Farms (Trial Aggregate)";
         var STALE_AFTER_DAYS = 14;
 
@@ -2100,6 +2216,33 @@
           }).then(function (data) {
             return data.features.length ? data.features[0].attributes : null;
           });
+        }
+
+        // ADG advantage headline (2026-10-05): OptiWeigh's trial-wide figure over the
+        // 90-day window, or the 30-day window if the 90-day one is not available.
+        // Trial-wide never uses a window under 30 days. Read from the aggregate
+        // row of LEL_ADG_Comparison, so no farm names are involved. Resolves to
+        // null if unavailable, in which case the older calculation below is used.
+        function fetchAdgHeadline() {
+          return q(ADG_COMPARISON_URL, {
+            where: "farm_name='" + AGGREGATE_LABEL + "' AND window_days IN (90,30)",
+            outFields: "comparison_date,window_days,diff_pct,eligible",
+            orderByFields: "comparison_date DESC",
+            resultRecordCount: "20",
+            f: "json",
+          })
+            .then(function (data) {
+              var rows = data.features
+                .map(function (f) { return f.attributes; })
+                .filter(function (r) { return r.eligible === "Y" && r.diff_pct != null; });
+              if (!rows.length) return null;
+              var newest = rows[0].comparison_date;
+              var sameDay = rows.filter(function (r) { return r.comparison_date === newest; });
+              var pick = sameDay.filter(function (r) { return r.window_days === 90; })[0] ||
+                sameDay.filter(function (r) { return r.window_days === 30; })[0];
+              return pick || null;
+            })
+            .catch(function () { return null; });
         }
 
         function fetchEconLatest() {
@@ -2148,12 +2291,14 @@
             fetchEconLatest(),
             fetchProdHistory("seafeed"),
             fetchProdHistory("control"),
+            fetchAdgHeadline(),
           ])
             .then(function (results) {
               var emissions = results[1],
                 econ = results[2],
                 seafeedProd = results[3],
-                controlProd = results[4];
+                controlProd = results[4],
+                adgHeadline = results[5];
 
               var abatement =
                 emissions && emissions.abatement_rate != null
@@ -2164,7 +2309,21 @@
               var adg = "—";
               var seafeedEcon = econ["seafeed"],
                 controlEcon = econ["control"];
-              if (
+              if (adgHeadline) {
+                // OptiWeigh's own 90-day (or 30-day) trial-wide figure.
+                adg =
+                  (adgHeadline.diff_pct >= 0 ? "+" : "") +
+                  adgHeadline.diff_pct.toFixed(1) +
+                  "%";
+                var headlineStale =
+                  daysSinceEpochMs(adgHeadline.comparison_date) > STALE_AFTER_DAYS;
+                adgMetaEl.textContent =
+                  "KleenGrow vs Control, " +
+                  adgHeadline.window_days +
+                  "-day average" +
+                  (headlineStale ? ", reading may be out of date" : "");
+                adgMetaEl.classList.toggle("stale", headlineStale);
+              } else if (
                 seafeedEcon &&
                 controlEcon &&
                 seafeedEcon.weight_gain_kg_per_head != null &&
@@ -2252,8 +2411,34 @@
               document.getElementById("b-co2e").textContent = co2e;
               document.getElementById("b-days").textContent = days;
               document.getElementById("b-intake").textContent = intake;
-              statusEl.textContent =
-                "Live data, updated " + new Date().toLocaleDateString();
+              var htrSf = document.getElementById("htr-sf"),
+                htrCt = document.getElementById("htr-ct"),
+                htrDays = document.getElementById("htr-days");
+              if (htrSf)
+                htrSf.textContent =
+                  seafeedEcon && seafeedEcon.representative_head_count != null
+                    ? Math.round(seafeedEcon.representative_head_count).toLocaleString()
+                    : "—";
+              if (htrCt)
+                htrCt.textContent =
+                  controlEcon && controlEcon.representative_head_count != null
+                    ? Math.round(controlEcon.representative_head_count).toLocaleString()
+                    : "—";
+              if (htrDays) htrDays.textContent = days;
+              var latestMs = allDates
+                .concat([
+                  seafeedEcon && seafeedEcon.calculation_date,
+                  controlEcon && controlEcon.calculation_date,
+                ])
+                .filter(function (d) {
+                  return d != null;
+                });
+              var lastDate = latestMs.length
+                ? dpFormatDataDate(Math.max.apply(null, latestMs))
+                : null;
+              statusEl.textContent = lastDate
+                ? "Live data, last reading " + lastDate
+                : "Live data";
               statusEl.style.color = "var(--tf-mint-600)";
             })
             .catch(function (err) {
