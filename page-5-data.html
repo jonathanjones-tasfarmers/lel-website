@@ -1017,8 +1017,9 @@
             <p class="dp-methodology-text">
             <b>ADG advantage</b> is how much faster KleenGrow cattle gained
             weight than Control cattle, as a percentage of the Control gain.
-            ADG is average daily gain in kg per head per day, taken from
-            OptiWeigh&rsquo;s own figures.
+            ADG is average daily gain: each group&rsquo;s average weight gain
+            from the start of the trial to date, divided by the days elapsed,
+            using OptiWeigh weights and combined across trial sites.
           </p>
           <p class="dp-methodology-text">
             <b>Cost per kg of gain</b> is what it cost to produce each kg of
@@ -1103,7 +1104,7 @@
             The 30-day average daily gain (ADG) of the KleenGrow group compared
             to the control group, expressed as a percentage advantage, from
             OptiWeigh&rsquo;s own figures. Both groups are measured over the same
-            dates, and each farm is only counted once it has 30 days of data. A dashed grey line links periods with no readings.
+            dates, and each farm is only counted once it has 30 days of data. Today&rsquo;s partial readings are left out until the day is complete. A dashed grey line links periods with no readings.
           </p>
           <div class="dp-chart-box">
             <div class="dp-skel dp-skel-chart" id="chart-adg-skeleton"></div>
@@ -1120,30 +1121,6 @@
               ></span
               >KleenGrow vs Control</span
             >
-          </div>
-          <div class="dp-indicator-row" style="margin-top: 20px">
-            <div class="dp-indicator-card">
-              <p class="dp-indicator-label" style="color: var(--tf-mint-600)">
-                30-day ADG advantage
-              </p>
-              <div class="dp-indicator-value" id="adgw-30">
-                <span class="dp-skel" style="width: 96px; height: 30px"></span>
-              </div>
-              <p class="dp-indicator-meta" id="adgw-30-meta">
-                <span class="dp-skel" style="width: 170px; height: 12px"></span>
-              </p>
-            </div>
-            <div class="dp-indicator-card">
-              <p class="dp-indicator-label" style="color: var(--tf-mint-600)">
-                90-day ADG advantage
-              </p>
-              <div class="dp-indicator-value" id="adgw-90">
-                <span class="dp-skel" style="width: 96px; height: 30px"></span>
-              </div>
-              <p class="dp-indicator-meta" id="adgw-90-meta">
-                <span class="dp-skel" style="width: 170px; height: 12px"></span>
-              </p>
-            </div>
           </div>
         </div>
 
@@ -1712,8 +1689,18 @@
                   a.adg,
                 );
               });
+            // Today's row is a part-day sample (a few readings so far), so it is
+            // left off until tomorrow's sync completes it (per Jono, 2026-10-07).
+            // snapshot_date is UTC midnight of the farm's local (Hobart) date.
+            const [ty, tm, td] = new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Australia/Hobart",
+            })
+              .format(new Date())
+              .split("-")
+              .map(Number);
+            const todayMs = Date.UTC(ty, tm - 1, td);
             const allDates = Array.from(sfByDate.keys())
-              .filter((d) => ctByDate.has(d))
+              .filter((d) => ctByDate.has(d) && d < todayMs)
               .sort((a, b) => a - b);
             // Gaps in the data (a unit offline for more than a week) are LINKED by a
             // line across them (per Jono, 2026-10-05). Every missing day inside such a
@@ -1963,54 +1950,8 @@
           }
         }
 
-        // 30- and 90-day trial-wide ADG advantage cards, from OptiWeigh's own
-        // windows (aggregate row of LEL_ADG_Comparison, so no farm names).
-        async function loadAdgWindows() {
-          const ids = { 30: "adgw-30", 90: "adgw-90" };
-          try {
-            const data = await q(
-              "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_ADG_Comparison/FeatureServer/0/query",
-              {
-                where: `farm_name='${AGGREGATE_LABEL}' AND window_days IN (30,90)`,
-                outFields:
-                  "comparison_date,window_days,diff_pct,seafeed_adg,control_adg,seafeed_animals,control_animals,eligible",
-                orderByFields: "comparison_date DESC",
-                resultRecordCount: "20",
-                f: "json",
-              },
-            );
-            const rows = data.features.map((f) => f.attributes);
-            const newest = rows.length ? rows[0].comparison_date : null;
-            [30, 90].forEach((w) => {
-              const valEl = document.getElementById(ids[w]);
-              const metaEl = document.getElementById(ids[w] + "-meta");
-              const r = rows.find(
-                (x) => x.window_days === w && x.comparison_date === newest,
-              );
-              if (!r || r.eligible !== "Y" || r.diff_pct == null) {
-                valEl.textContent = "Not enough data yet";
-                valEl.style.fontSize = "18px";
-                metaEl.textContent =
-                  "Appears once the trial has " + w + " days of readings.";
-                return;
-              }
-              valEl.textContent =
-                (r.diff_pct >= 0 ? "+" : "") + r.diff_pct.toFixed(1) + "%";
-              metaEl.style.display = "none";
-            });
-          } catch (err) {
-            console.error("ADG window cards failed:", err);
-            [30, 90].forEach((w) => {
-              document.getElementById(ids[w]).textContent = "\u2014";
-              document.getElementById(ids[w] + "-meta").textContent =
-                "Unavailable right now.";
-            });
-          }
-        }
-
         async function loadAll() {
           const statusEl = document.getElementById("tf-status");
-          loadAdgWindows();
           try {
             const [, , , , latest] = await Promise.all([
               loadAbatement(),
@@ -2297,7 +2238,30 @@
         // Trial-wide never uses a window under 30 days. Read from the aggregate
         // row of LEL_ADG_Comparison, so no farm names are involved. Resolves to
         // null if unavailable, in which case the older calculation below is used.
+        // 2026-10-07: the headline is now the trial-wide start-to-date figure (window_days
+        // 9999, written by 04. Economics_Pipeline.py): each group's weight gain from the
+        // shared start divided by days, farms combined by animal count. Until that row
+        // exists it falls back to the 90/30-day logic below.
+        function fetchStartToDate() {
+          return q(ADG_COMPARISON_URL, {
+            where: "farm_name='" + AGGREGATE_LABEL + "' AND window_days=9999 AND eligible='Y'",
+            outFields: "comparison_date,window_days,diff_pct,seafeed_adg,control_adg,eligible",
+            orderByFields: "comparison_date DESC",
+            resultRecordCount: "1",
+            f: "json",
+          })
+            .then(function (data) {
+              var r = data.features[0] && data.features[0].attributes;
+              return r && r.diff_pct != null ? r : null;
+            })
+            .catch(function () { return null; });
+        }
         function fetchAdgHeadline() {
+          return fetchStartToDate().then(function (start) {
+            return start || fetchWindowHeadline();
+          });
+        }
+        function fetchWindowHeadline() {
           return q(ADG_COMPARISON_URL, {
             where: "farm_name='" + AGGREGATE_LABEL + "' AND window_days IN (90,30)",
             outFields: "comparison_date,window_days,diff_pct,eligible",
@@ -2392,9 +2356,15 @@
                 var headlineStale =
                   daysSinceEpochMs(adgHeadline.comparison_date) > STALE_AFTER_DAYS;
                 adgMetaEl.textContent =
-                  "KleenGrow vs Control, " +
-                  adgHeadline.window_days +
-                  "-day average" +
+                  (adgHeadline.window_days === 9999
+                    ? "KleenGrow vs Control, start of trial to date: " +
+                      Math.round(adgHeadline.seafeed_adg).toLocaleString("en-AU") +
+                      " vs " +
+                      Math.round(adgHeadline.control_adg).toLocaleString("en-AU") +
+                      " g/day"
+                    : "KleenGrow vs Control, " +
+                      adgHeadline.window_days +
+                      "-day average") +
                   (headlineStale ? ", reading may be out of date" : "");
                 adgMetaEl.classList.toggle("stale", headlineStale);
               } else if (
