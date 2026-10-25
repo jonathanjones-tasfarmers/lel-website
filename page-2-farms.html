@@ -401,13 +401,6 @@
         font-size: 10.5px;
         color: var(--text-muted);
       }
-      .fp-map-caption {
-        text-align: center;
-        font-size: 12px;
-        color: var(--text-muted);
-        max-width: 46ch;
-        margin: 18px auto 0;
-      }
       @media (max-width: 480px) {
         .fp-map-label {
           padding: 3px 7px;
@@ -692,10 +685,12 @@
               >Joined 14 August 2026</span
             >
           </div>
-          <div class="fp-triallist-card pending">
+          <div class="fp-triallist-card">
             <p class="fp-triallist-name">King Island</p>
             <p class="fp-triallist-region">Beef operation</p>
-            <span class="fp-triallist-duration">Coming soon</span>
+            <span class="fp-triallist-duration" id="triallist-region-3"
+              >Joined 11 October 2026</span
+            >
           </div>
         </div>
       </div>
@@ -718,9 +713,11 @@
         background: linear-gradient(
           180deg,
           var(--surface-sunken) 0%,
-          var(--surface-sunken) calc(100% - 220px),
+          var(--surface-sunken) calc(100% - 90px),
           var(--surface-page) 100%
         );
+        padding-top: 72px;
+        padding-bottom: 72px;
       "
     >
       <div class="fp-page">
@@ -770,9 +767,6 @@
           </svg>
           <div id="fp-map-markers"></div>
         </div>
-        <p class="fp-map-caption fp-reveal">
-          Hover or tap a marker for that region's head count.
-        </p>
       </div>
     </div>
 
@@ -969,10 +963,9 @@
       // This IS a small script of its own: no feature-service calls, just
       // client-side date math off the fixed start dates in the markup
       // above, so "X months in the trial" stays accurate without going
-      // back to Jono every few weeks. The third region has no start date
-      // yet (its badge stays static "Coming soon" in the markup) so it's
-      // not included here. Card ids are deliberately generic
-      // (triallist-region-1/2) rather than named after a farm — see the
+      // back to Jono every few weeks. The third region (King Island) joined
+      // 2026-10-11 and is included below. Card ids are deliberately generic
+      // (triallist-region-1/2/3) rather than named after a farm — see the
       // DE-IDENTIFIED comment on the markup above for why.
       (function () {
         function timeInTrialText(startDateStr) {
@@ -991,6 +984,7 @@
         var regions = [
           { id: "triallist-region-1", start: "2026-05-13", joined: "Joined 13 May 2026" },
           { id: "triallist-region-2", start: "2026-08-14", joined: "Joined 14 August 2026" },
+          { id: "triallist-region-3", start: "2026-10-11", joined: "Joined 11 October 2026" },
         ];
         regions.forEach(function (region) {
           var el = document.getElementById(region.id);
