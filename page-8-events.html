@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Events | Low Emissions Livestock Tasmania</title>
+    <meta name="description" content="Workshops, on-farm field days and webinars from the Tasmanian Low Emissions Livestock Project. See what's coming up and register." />
+    <!-- Sharing preview (update the canonical/og:url with the Hub page URL once the page is created) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Low Emissions Livestock Project" />
+    <meta property="og:title" content="Events | Low Emissions Livestock Tasmania" />
+    <meta property="og:description" content="Field days, workshops and webinars from the Tasmanian Low Emissions Livestock Project. Free to attend." />
+    <meta property="og:image" content="https://jonathanjones-tasfarmers.github.io/lel-website/hero-events.webp" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!--
+      LEL Events page (embed in the Hub as an iframe, like the other page-N files).
+      Events come from the LEL_Events hosted table in ArcGIS: set EVENTS_SERVICE in the script at the bottom.
+      Until then, add events by hand to MANUAL_EVENTS (field names documented there).
+      TODO once the Hub page exists: add <link rel="canonical">, og:url and a BreadcrumbList (see page-4-resources.html) with the new Hub page ID.
+    -->
+    <style>
+      :root {
+        --tf-navy-900: #041221;
+        --tf-navy-800: oklch(from var(--tf-navy-900) calc(l + 0.08) c h);
+        --tf-slate-400: #a9b8c4;
+        --tf-slate-300: oklch(from var(--tf-slate-400) calc(l + 0.08) c h);
+        --tf-slate-200: oklch(from var(--tf-slate-400) calc(l + 0.14) c h);
+        --tf-slate-100: oklch(from var(--tf-slate-400) calc(l + 0.19) c h);
+        --tf-slate-600: oklch(from var(--tf-slate-400) calc(l - 0.18) c h);
+        --tf-mint-500: #5ec9a8;
+        --tf-mint-600: oklch(from var(--tf-mint-500) calc(l - 0.1) c h);
+        --tf-mint-400: oklch(from var(--tf-mint-500) calc(l + 0.08) c h);
+        --tf-mint-100: oklch(from var(--tf-mint-500) calc(l + 0.32) calc(c - 0.06) h);
+        --tf-white: #ffffff;
+        --tf-warning: #c98a2e;
+        --surface-page: var(--tf-white);
+        --surface-sunken: var(--tf-slate-100);
+        --surface-card: var(--tf-white);
+        --text-heading: var(--tf-navy-900);
+        --text-body: oklch(from var(--tf-navy-900) calc(l + 0.06) calc(c - 0.005) h);
+        --text-muted: var(--tf-slate-600);
+        --border-subtle: var(--tf-slate-200);
+        --border-default: var(--tf-slate-300);
+        --radius-lg: 12px;
+        --radius-md: 10px;
+        --radius-sm: 6px;
+        --shadow-sm: 0 1px 2px rgba(4, 18, 33, 0.08);
+        --shadow-md: 0 6px 20px rgba(4, 18, 33, 0.1);
+        --font-display: Tahoma, Verdana, sans-serif;
+        --font-body: Verdana, Tahoma, sans-serif;
+      }
+      html, body { margin: 0; background: var(--surface-page); }
+      body { font-family: var(--font-body); color: var(--text-body); -webkit-font-smoothing: antialiased; }
+      * { box-sizing: border-box; }
+
+      .rp-page { max-width: 1180px; margin: 0 auto; }
+      .rp-section { padding: 96px 28px; }
+      .rp-narrow { max-width: 760px; }
+      @media (max-width: 720px) { .rp-section { padding: 60px 20px; } }
+
+      .rp-eyebrow { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-600); margin: 0 0 16px; }
+      .rp-eyebrow.on-dark { color: var(--tf-mint-400); }
+      .rp-h1 { font-family: var(--font-display); font-weight: 700; color: var(--tf-white); font-size: clamp(32px, 4.4vw, 50px); line-height: 1.1; letter-spacing: -0.01em; margin: 0 0 20px; max-width: 20ch; }
+      .rp-h1 .accent { color: var(--tf-mint-400); }
+      .rp-h2 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 27px; line-height: 1.2; margin: 0 0 12px; }
+      .rp-h2 .accent { color: var(--tf-mint-600); }
+      .rp-h3 { font-family: var(--font-display); font-weight: 700; color: var(--text-heading); font-size: 18px; line-height: 1.3; margin: 0 0 8px; }
+      .rp-lede { color: var(--tf-slate-300); font-size: 17px; line-height: 1.6; max-width: 58ch; margin: 0; }
+      .rp-section-intro { color: var(--text-muted); font-size: 15.5px; line-height: 1.7; max-width: 66ch; margin: 0 0 32px; }
+      @media (max-width: 720px) { .rp-h2 { font-size: 22px; } }
+
+      /* hero: text panel + portrait photo (lick block centred in the photo panel) */
+      .rp-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); min-height: 600px; background: var(--tf-navy-900); }
+      .rp-hero-inner { position: relative; align-self: center; width: 100%; box-sizing: border-box; padding: 72px 40px 120px max(28px, calc((100vw - 1180px) / 2 + 28px)); }
+      .rp-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+      .rp-hero-photo { position: relative; min-height: 600px; background: url("https://jonathanjones-tasfarmers.github.io/lel-website/hero-events.webp") 43% 70% / cover no-repeat; }
+      .rp-hero-photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--tf-navy-900) 0%, rgba(4, 18, 33, 0) 16%); }
+      .rp-hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 120px; pointer-events: none; background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, var(--surface-page) 100%); z-index: 2; }
+      .rp-hero-inner { z-index: 3; }
+      .rp-page .ev-feature { margin-top: -64px; z-index: 4; }
+      @media (max-width: 720px) {
+        .rp-hero { grid-template-columns: 1fr; min-height: 0; }
+        .rp-hero-photo { order: -1; min-height: 280px; background-position: 43% 70%; }
+        .rp-hero-photo::before { background: linear-gradient(0deg, var(--tf-navy-900) 0%, rgba(4, 18, 33, 0) 18%); }
+        .rp-hero-inner { padding: 28px 20px 96px; }
+      }
+
+      /* buttons */
+      .rp-btn { display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 14px; padding: 11px 22px; border-radius: var(--radius-md); text-decoration: none; cursor: pointer; border: 2px solid transparent; white-space: nowrap; transition: background 0.15s, border-color 0.15s; }
+      .rp-btn-solid { background: var(--tf-navy-900); color: var(--tf-white); }
+      .rp-btn-solid:hover { background: var(--tf-navy-800); }
+      .rp-btn-mint { background: var(--tf-mint-500); color: var(--tf-navy-900); }
+      .rp-btn-mint:hover { background: var(--tf-mint-400); }
+      .rp-btn-ghost { background: transparent; color: var(--tf-white); border-color: oklch(from var(--tf-white) l c h / 0.55); }
+      .rp-btn-ghost:hover { border-color: var(--tf-white); }
+      .rp-btn-outline { background: transparent; color: var(--tf-navy-900); border-color: var(--border-default); }
+      .rp-btn-outline:hover { border-color: var(--tf-navy-900); }
+      .rp-btn[aria-disabled="true"] { background: var(--surface-sunken); color: var(--text-muted); border-color: var(--border-subtle); cursor: default; }
+      .rp-btn:focus-visible, .ev-chip:focus-visible, input:focus-visible { outline: 3px solid var(--tf-mint-500); outline-offset: 2px; }
+
+      /* next-up feature */
+      .ev-feature { background: var(--tf-navy-900); border-radius: var(--radius-lg); display: grid; grid-template-columns: 1.1fr 1fr; overflow: hidden; box-shadow: var(--shadow-md); margin-top: -64px; position: relative; }
+      .ev-feature-body { padding: 40px; color: var(--tf-slate-200); }
+      .ev-feature-body .rp-h2 { color: var(--tf-white); }
+      .ev-feature-body p { line-height: 1.7; font-size: 15px; margin: 0 0 20px; }
+      .ev-feature-meta { background: oklch(from var(--tf-navy-900) calc(l + 0.05) c h); padding: 40px; display: flex; flex-direction: column; gap: 20px; justify-content: center; }
+      .ev-feature-meta dt { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tf-mint-400); margin-bottom: 4px; }
+      .ev-feature-meta dd { margin: 0; color: var(--tf-white); font-size: 15px; line-height: 1.5; }
+      .ev-feature-meta dl { margin: 0; display: grid; gap: 18px; }
+      @media (max-width: 860px) { .ev-feature { grid-template-columns: 1fr; margin-top: -40px; } .ev-feature-body, .ev-feature-meta { padding: 28px 22px; } }
+
+      /* filters */
+      .ev-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; }
+      .ev-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+      .ev-chip { font-family: var(--font-display); font-size: 13px; font-weight: 700; padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--border-default); background: var(--surface-card); color: var(--text-heading); cursor: pointer; }
+      .ev-chip:hover { border-color: var(--tf-navy-900); }
+      .ev-chip[aria-pressed="true"] { background: var(--tf-navy-900); border-color: var(--tf-navy-900); color: var(--tf-white); }
+      .ev-count { font-size: 13px; color: var(--text-muted); }
+
+      /* event cards */
+      .ev-list { display: grid; gap: 16px; }
+      .ev-card { display: grid; grid-template-columns: 96px 1fr auto; gap: 24px; align-items: center; background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 22px 26px; box-shadow: var(--shadow-sm); transition: box-shadow 0.15s, border-color 0.15s; }
+      .ev-card:hover { box-shadow: var(--shadow-md); border-color: var(--border-default); }
+      .ev-date { text-align: center; border-right: 1px solid var(--border-subtle); padding-right: 24px; }
+      .ev-date .d { font-family: var(--font-display); font-size: 34px; font-weight: 700; line-height: 1; color: var(--text-heading); }
+      .ev-date .m { font-family: var(--font-display); font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tf-mint-600); margin-top: 6px; }
+      .ev-date .y { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+      .ev-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+      .ev-tag { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--tf-mint-100); color: var(--tf-navy-900); }
+      .ev-tag.t-webinar { background: oklch(from var(--tf-slate-400) calc(l + 0.17) c h); }
+      .ev-tag.t-workshop { background: oklch(from var(--tf-warning) calc(l + 0.3) calc(c - 0.05) h); }
+      .ev-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13.5px; color: var(--text-muted); margin: 6px 0 0; }
+      .ev-desc { font-size: 14px; line-height: 1.6; margin: 8px 0 0; max-width: 62ch; }
+      .ev-action { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+      .ev-seats { font-size: 12px; color: var(--text-muted); }
+      .ev-ics { background: none; border: 0; padding: 4px 0; font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--tf-mint-600); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+      .ev-ics:hover { color: var(--text-heading); }
+      .ev-ics:focus-visible { outline: 3px solid var(--tf-mint-500); outline-offset: 2px; }
+      .ev-feature-body .ev-ics { color: var(--tf-mint-400); margin-left: 14px; }
+      .ev-feature-body .ev-ics:hover { color: var(--tf-white); }
+      .ev-card.is-past { background: var(--surface-sunken); box-shadow: none; }
+      .ev-card.is-past .ev-date .d { color: var(--text-muted); }
+      @media (max-width: 760px) {
+        .ev-card { grid-template-columns: 1fr; gap: 14px; padding: 20px; }
+        .ev-date { display: flex; align-items: baseline; gap: 8px; text-align: left; border-right: none; border-bottom: 1px solid var(--border-subtle); padding: 0 0 12px; }
+        .ev-date .d { font-size: 26px; } .ev-date .y { margin: 0; }
+        .ev-action { align-items: stretch; } .ev-action .rp-btn { width: 100%; }
+      }
+      .ev-empty { text-align: center; padding: 48px 20px; color: var(--text-muted); border: 1.5px dashed var(--border-default); border-radius: var(--radius-lg); }
+
+      /* event details, notices, contact */
+      .ev-more { margin-top: 10px; }
+      .ev-more summary { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--tf-mint-600); cursor: pointer; padding: 4px 0; }
+      .ev-more summary:focus-visible { outline: 3px solid var(--tf-mint-500); outline-offset: 2px; }
+      .ev-more dl { margin: 8px 0 0; display: grid; grid-template-columns: 130px 1fr; gap: 6px 16px; font-size: 13.5px; line-height: 1.55; }
+      .ev-more dt { font-weight: 700; color: var(--text-heading); }
+      .ev-more dd { margin: 0; }
+      @media (max-width: 560px) { .ev-more dl { grid-template-columns: 1fr; gap: 0; } .ev-more dd { margin-bottom: 8px; } }
+      .ev-contact { font-size: 14.5px; color: var(--text-muted); margin: -12px 0 28px; }
+      .ev-contact a, .ev-allics { color: var(--tf-mint-600); font-weight: 700; }
+      .ev-allics { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+      .ev-allics:focus-visible { outline: 3px solid var(--tf-mint-500); outline-offset: 2px; }
+      .ev-foot { margin: 20px 0 0; font-size: 13.5px; color: var(--text-muted); }
+      .ev-notice { margin-top: 28px; padding: 20px 24px; border-radius: var(--radius-lg); border-left: 4px solid var(--tf-warning); background: var(--surface-card); border-top: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); font-size: 14.5px; line-height: 1.65; }
+      .ev-notice strong { font-family: var(--font-display); color: var(--text-heading); }
+      @media (max-width: 720px) { .rp-hero { min-height: 340px; } .rp-hero-inner { padding: 40px 20px 44px; } .rp-lede { font-size: 15.5px; } .ev-feature { display: none; } #upcoming.rp-section { padding-top: 36px; } }
+
+      /* view toggle */
+      .ev-right { display: flex; align-items: center; gap: 16px; }
+      .ev-views { display: inline-flex; border: 1.5px solid var(--border-default); border-radius: var(--radius-md); overflow: hidden; }
+      .ev-view { font-family: var(--font-display); font-size: 13px; font-weight: 700; padding: 8px 16px; background: var(--surface-card); color: var(--text-heading); border: 0; cursor: pointer; }
+      .ev-view + .ev-view { border-left: 1.5px solid var(--border-default); }
+      .ev-view[aria-pressed="true"] { background: var(--tf-navy-900); color: var(--tf-white); }
+      .ev-view:focus-visible { outline: 3px solid var(--tf-mint-500); outline-offset: -3px; }
+
+      /* calendar */
+      .cal { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 22px; box-shadow: var(--shadow-sm); }
+      .cal[hidden] { display: none; }
+      .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+      .cal-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text-heading); margin: 0; }
+      .cal-nav { display: flex; gap: 8px; }
+      .cal-nav button { width: 38px; height: 38px; border-radius: var(--radius-md); border: 1.5px solid var(--border-default); background: var(--surface-card); color: var(--text-heading); font-size: 18px; cursor: pointer; line-height: 1; }
+      .cal-nav button:hover { border-color: var(--tf-navy-900); }
+      .cal-nav button:focus-visible { outline: 3px solid var(--tf-mint-500); outline-offset: 2px; }
+      .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+      .cal-dow { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); text-align: center; padding: 6px 0; }
+      .cal-cell { min-height: 92px; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); padding: 6px; background: var(--surface-card); text-align: left; font: inherit; color: inherit; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+      .cal-cell.blank { border: 0; background: transparent; }
+      .cal-cell.has { cursor: pointer; background: var(--surface-sunken); }
+      .cal-cell.has:hover { border-color: var(--tf-navy-900); }
+      .cal-cell.sel { border-color: var(--tf-navy-900); box-shadow: inset 0 0 0 1.5px var(--tf-navy-900); }
+      .cal-cell:focus-visible { outline: 3px solid var(--tf-mint-500); outline-offset: 1px; }
+      .cal-num { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--text-heading); }
+      .cal-cell.today .cal-num { background: var(--tf-navy-900); color: var(--tf-white); border-radius: 999px; min-width: 24px; height: 24px; display: inline-grid; place-items: center; padding: 0 6px; align-self: flex-start; }
+      .cal-pill { font-size: 11px; font-weight: 700; line-height: 1.25; padding: 3px 6px; border-radius: 4px; background: var(--tf-mint-100); color: var(--tf-navy-900); border-left: 3px solid var(--tf-mint-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .cal-pill.t-webinar { background: oklch(from var(--tf-slate-400) calc(l + 0.17) c h); border-left-color: var(--tf-slate-600); }
+      .cal-pill.t-workshop { background: oklch(from var(--tf-warning) calc(l + 0.3) calc(c - 0.05) h); border-left-color: var(--tf-warning); }
+      .cal-pill.past { opacity: 0.55; }
+      .cal-dots { display: none; gap: 4px; flex-wrap: wrap; }
+      .cal-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--tf-mint-600); }
+      .cal-dot.t-webinar { background: var(--tf-slate-600); }
+      .cal-dot.t-workshop { background: var(--tf-warning); }
+      .cal-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; font-size: 12.5px; color: var(--text-muted); }
+      .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+      .cal-day-panel { margin-top: 24px; display: grid; gap: 16px; }
+      .cal-day-panel h3 { margin: 0; }
+      @media (max-width: 760px) {
+        .cal { padding: 14px; }
+        .cal-cell { min-height: 54px; padding: 4px; align-items: center; }
+        .cal-pill { display: none; }
+        .cal-dots { display: flex; justify-content: center; }
+        .ev-right { width: 100%; justify-content: space-between; }
+      }
+
+      /* what to expect */
+      .ev-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+      .ev-type { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 28px; }
+      .ev-type .icon { width: 44px; height: 44px; border-radius: 12px; background: var(--tf-mint-100); display: grid; place-items: center; margin-bottom: 16px; }
+      .ev-type .icon svg { width: 24px; height: 24px; stroke: var(--tf-navy-900); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+      .ev-type p { font-size: 14.5px; line-height: 1.65; color: var(--text-muted); margin: 0; }
+      @media (max-width: 860px) { .ev-types { grid-template-columns: 1fr; } }
+
+      /* notify band */
+      .ev-notify { background: var(--tf-navy-900); border-radius: var(--radius-lg); padding: 48px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+      .ev-notify .rp-h2 { color: var(--tf-white); }
+      .ev-notify p { color: var(--tf-slate-300); line-height: 1.7; font-size: 15px; margin: 0; }
+      .ev-form { display: grid; gap: 12px; }
+      .ev-form label { font-size: 12px; font-weight: 700; font-family: var(--font-display); color: var(--tf-slate-200); letter-spacing: 0.04em; }
+      .ev-form input[type="text"], .ev-form input[type="email"] { width: 100%; padding: 12px 14px; border-radius: var(--radius-sm); border: 1.5px solid var(--tf-slate-600); background: oklch(from var(--tf-navy-900) calc(l + 0.05) c h); color: var(--tf-white); font: inherit; font-size: 14px; }
+      .ev-form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .ev-form .checks { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--tf-slate-200); }
+      .ev-form .checks label { font-weight: 400; font-family: var(--font-body); letter-spacing: 0; display: flex; align-items: center; gap: 6px; }
+      .ev-form .fine { font-size: 12px; color: var(--tf-slate-400); }
+      .ev-form-msg { color: var(--tf-mint-400); font-size: 14px; display: none; }
+      @media (max-width: 860px) { .ev-notify { grid-template-columns: 1fr; padding: 32px 22px; gap: 24px; } .ev-form .row { grid-template-columns: 1fr; } }
+
+      /* reveal */
+      .rp-reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+      .rp-reveal.is-visible { opacity: 1; transform: none; }
+      @media (prefers-reduced-motion: reduce) { .rp-reveal { opacity: 1; transform: none; transition: none; } }
+    </style>
+  </head>
+
+  <body>
+
+    <!-- ============ HERO ============ -->
+    <div class="rp-hero">
+      <div class="rp-hero-inner">
+        <p class="rp-eyebrow on-dark">Events &amp; field days</p>
+        <h1 class="rp-h1">See the trial for yourself, <span class="accent">on farm</span>.</h1>
+        <p class="rp-lede">
+          Field days, workshops and webinars from the Tasmanian Low Emissions Livestock Project. Meet the farmers, see the data and ask the team your questions.
+        </p>
+        <div class="rp-hero-actions">
+          <a href="#upcoming" class="rp-btn rp-btn-mint">See upcoming events</a>
+          <a href="#notify" class="rp-btn rp-btn-ghost">Get notified</a>
+        </div>
+      </div>
+      <div class="rp-hero-photo" role="img" aria-label="Young black cattle wearing collars investigating a lick block in a Tasmanian paddock"></div>
+    </div>
+
+    <!-- ============ NEXT UP FEATURE ============ -->
+    <div class="rp-section" id="feature-wrap" style="padding-top: 0; padding-bottom: 0">
+      <div class="rp-page">
+        <div class="ev-feature rp-reveal" id="feature"></div>
+      </div>
+    </div>
+
+    <!-- ============ UPCOMING / PAST ============ -->
+    <div class="rp-section" id="upcoming" style="background: linear-gradient(180deg, var(--surface-page) 0%, var(--surface-page) calc(100% - 220px), var(--surface-sunken) 100%)">
+      <div class="rp-page">
+        <p class="rp-eyebrow">What's on</p>
+        <h2 class="rp-h2 rp-narrow">Upcoming <span class="accent">events</span></h2>
+        <p class="rp-section-intro">
+          Free to attend unless noted. Registration is handled through Humanitix so we can keep you updated about any changes.
+        </p>
+        <p class="ev-contact">
+          Prefer to register by phone or have a question about access or what to bring?
+          <a href="https://arcg.is/CiTXn" target="_blank" rel="noopener">Contact the project team</a>.
+        </p>
+
+        <div class="ev-toolbar">
+          <div class="ev-chips" role="group" aria-label="Filter events by type">
+            <button type="button" class="ev-chip" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="ev-chip" data-filter="Field day" aria-pressed="false">Field days</button>
+            <button type="button" class="ev-chip" data-filter="Workshop" aria-pressed="false">Workshops</button>
+            <button type="button" class="ev-chip" data-filter="Webinar" aria-pressed="false">Webinars</button>
+          </div>
+          <div class="ev-right">
+            <span class="ev-count" id="count" aria-live="polite"></span>
+            <div class="ev-views" role="group" aria-label="Choose view">
+              <button type="button" class="ev-view" data-view="list" aria-pressed="true">List</button>
+              <button type="button" class="ev-view" data-view="calendar" aria-pressed="false">Calendar</button>
+            </div>
+          </div>
+        </div>
+
+        <noscript><div class="ev-empty">This page needs JavaScript to list events. Please <a href="https://arcg.is/CiTXn">contact the project team</a> for upcoming dates.</div></noscript>
+        <div class="ev-list" id="upcoming-list"></div>
+
+        <div class="cal" id="cal" hidden>
+          <div class="cal-head">
+            <h3 class="cal-title" id="cal-title" aria-live="polite"></h3>
+            <div class="cal-nav">
+              <button type="button" id="cal-prev" aria-label="Previous month">&#8249;</button>
+              <button type="button" id="cal-next" aria-label="Next month">&#8250;</button>
+            </div>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+          <div class="cal-legend" aria-hidden="true">
+            <span><i class="cal-dot"></i> Field day</span>
+            <span><i class="cal-dot t-workshop"></i> Workshop</span>
+            <span><i class="cal-dot t-webinar"></i> Webinar</span>
+          </div>
+          <div class="cal-day-panel" id="cal-panel"></div>
+        </div>
+
+        <p class="ev-foot">
+          <button type="button" class="ev-allics" data-ics="all">Add all upcoming events to your calendar (.ics)</button>
+        </p>
+      </div>
+    </div>
+
+    <!-- ============ WHAT TO EXPECT ============ -->
+    <div class="rp-section" style="background: linear-gradient(180deg, var(--surface-sunken) 0%, var(--surface-sunken) calc(100% - 220px), var(--surface-page) 100%)">
+      <div class="rp-page">
+        <p class="rp-eyebrow">Ways to get involved</p>
+        <h2 class="rp-h2 rp-narrow rp-reveal">What to expect</h2>
+        <p class="rp-section-intro rp-reveal">Three formats, so you can join in whichever suits your season and your questions.</p>
+        <div class="ev-types">
+          <div class="ev-type rp-reveal">
+            <div class="icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V10l7-6 7 6v11M10 21v-6h4v6"/></svg></div>
+            <h3 class="rp-h3">On-farm field days</h3>
+            <p>Walk the paddock with the host farmer and project team, see the OptiWeigh units in action and talk through what the trial is finding.</p>
+          </div>
+          <div class="ev-type rp-reveal">
+            <div class="icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.5 6 5.5"/></svg></div>
+            <h3 class="rp-h3">Workshops</h3>
+            <p>Hands-on sessions on the economics, feeding and management of low emissions feed supplements, using your own herd numbers.</p>
+          </div>
+          <div class="ev-type rp-reveal">
+            <div class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+            <h3 class="rp-h3">Webinars</h3>
+            <p>Short online updates on results to date, with time for questions. Join from the farm or the office; recordings shared afterwards.</p>
+          </div>
+        </div>
+        <div class="ev-notice rp-reveal">
+          <strong>Visiting a farm?</strong> Field days are held on working farms. Please arrive with clean boots and a clean vehicle, follow the host's biosecurity and safety instructions on the day, and let us know about any access needs when you register. Venue details and parking are sent with your registration.
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PAST EVENTS ============ -->
+    <div class="rp-section">
+      <div class="rp-page">
+        <p class="rp-eyebrow">Missed one?</p>
+        <h2 class="rp-h2 rp-narrow rp-reveal">Past events</h2>
+        <p class="rp-section-intro rp-reveal">Recaps, slides and recordings from earlier sessions.</p>
+        <div class="ev-list" id="past-list"></div>
+      </div>
+    </div>
+
+    <!-- ============ NOTIFY ============ -->
+    <div class="rp-section" id="notify" style="padding-top: 0">
+      <div class="rp-page">
+        <div class="ev-notify rp-reveal">
+          <div>
+            <p class="rp-eyebrow on-dark">Stay in the loop</p>
+            <h2 class="rp-h2">Hear about events <span style="color: var(--tf-mint-400)">first</span></h2>
+            <p>Leave your details and we'll let you know when new field days, workshops and webinars open for registration. No spam, only project events.</p>
+          </div>
+          <form class="ev-form" id="notify-form" novalidate>
+            <div class="row">
+              <div><label for="nf-name">NAME</label><input type="text" id="nf-name" autocomplete="name" /></div>
+              <div><label for="nf-email">EMAIL</label><input type="email" id="nf-email" autocomplete="email" required /></div>
+            </div>
+            <div class="checks" role="group" aria-label="Interested in">
+              <label><input type="checkbox" value="Field days" checked /> Field days</label>
+              <label><input type="checkbox" value="Workshops" checked /> Workshops</label>
+              <label><input type="checkbox" value="Webinars" checked /> Webinars</label>
+            </div>
+            <button type="submit" class="rp-btn rp-btn-mint">Notify me</button>
+            <p class="ev-form-msg" id="nf-msg" role="status">Thanks, we'll let you know when new events open.</p>
+            <p class="fine">We use your details only to tell you about Low Emissions Livestock Project events, and you can unsubscribe at any time. We don't share your details with other organisations.</p>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ---------- CONFIG ----------
+         EVENTS_SERVICE: URL of the LEL_Events hosted table/view layer in ArcGIS, ending in /FeatureServer/0
+           (e.g. https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Events_View/FeatureServer/0).
+           Leave "" to use MANUAL_EVENTS below instead.
+         NOTIFY_ENDPOINT: optional HTTPS endpoint (e.g. a Power Automate flow) that receives {name, email, interests}.
+           Leave "" and the notify box links to the enquiry form instead.
+         MANUAL_EVENTS item: { id, title, type: "Field day" | "Workshop" | "Webinar", date: "YYYY-MM-DD",
+           time: "10:00 am – 1:00 pm", location, travel, desc, audience, bring, with, access, free: true,
+           seats, humanitix: "https://…", recap: "https://…", attended, cancelled }                                   */
+      var EVENTS_SERVICE = "";
+      var NOTIFY_ENDPOINT = "";
+      var ENQUIRE_URL = "https://arcg.is/CiTXn";
+      var MANUAL_EVENTS = [];
+      var EVENTS = [];
+      var loadFailed = false;
+
+      var TYPES = ["Field day", "Workshop", "Webinar"];
+      function safeUrl(u) { return typeof u === "string" && /^https:\/\/[^\s"'<>]+$/i.test(u.trim()) ? u.trim() : ""; }
+      function normalise(r) {
+        if (!r || !r.title || !/^\d{4}-\d{2}-\d{2}$/.test(r.date || "")) return null;
+        r.id = String(r.id);
+        r.type = TYPES.indexOf(r.type) > -1 ? r.type : "Event";
+        r.time = r.time || ""; r.location = r.location || ""; r.desc = r.desc || "";
+        r.humanitix = safeUrl(r.humanitix); r.recap = safeUrl(r.recap);
+        r.free = r.free !== false; r.seats = +r.seats || null; r.attended = +r.attended || null; r.cancelled = !!r.cancelled;
+        return r;
+      }
+      function fromService(a) {
+        return { id: a.GlobalID || a.OBJECTID, title: a.Title, type: a.EventType, date: a.EventDate, time: a.TimeText, location: a.Location,
+          travel: a.Travel, desc: a.Description, audience: a.Audience, bring: a.Bring, with: a.PresentedWith, access: a.Access,
+          free: a.Free !== "No", seats: a.Seats, humanitix: a.HumanitixURL, recap: a.RecapURL, attended: a.Attended, cancelled: a.Status === "Cancelled" };
+      }
+      function loadEvents(done) {
+        var manual = function () { EVENTS = MANUAL_EVENTS.map(normalise).filter(Boolean); };
+        if (!EVENTS_SERVICE) { manual(); return done(); }
+        var q = EVENTS_SERVICE + "/query?where=" + encodeURIComponent("Status IN ('Published','Cancelled')") + "&outFields=*&orderByFields=EventDate&f=json";
+        fetch(q).then(function (r) { return r.json(); }).then(function (j) {
+          if (!j.features) throw new Error("no features");
+          EVENTS = j.features.map(function (f) { return normalise(fromService(f.attributes)); }).filter(Boolean); done();
+        }).catch(function () { manual(); loadFailed = true; done(); });
+      }
+
+      var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      var TODAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Hobart", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+      var filter = "all";
+      var LABELS = { "Field day": "field days", "Workshop": "workshops", "Webinar": "webinars" };
+
+      function pd(s) { var p = s.split("-"); return { y: p[0], m: MONTHS[+p[1] - 1], d: +p[2] }; }
+      function tagClass(t) { return t === "Webinar" ? "t-webinar" : t === "Workshop" ? "t-workshop" : ""; }
+      function esc(s) { var e = document.createElement("div"); e.textContent = s; return e.innerHTML; }
+
+      function action(ev, past) {
+        if (past) return ev.recap ? '<a class="rp-btn rp-btn-outline" href="' + ev.recap + '" target="_blank" rel="noopener">View recap</a>' : "";
+        if (ev.cancelled) return '<span class="rp-btn" aria-disabled="true">Cancelled</span>';
+        var ics = '<button type="button" class="ev-ics" data-ics="' + ev.id + '">Add to calendar</button>';
+        if (ev.humanitix) return '<a class="rp-btn rp-btn-solid" href="' + ev.humanitix + '" target="_blank" rel="noopener">Register on Humanitix</a>' + (ev.seats ? '<span class="ev-seats">' + ev.seats + ' places</span>' : "") + ics;
+        return '<span class="rp-btn" aria-disabled="true">Registration opening soon</span>' + ics;
+      }
+
+      function more(ev) {
+        var rows = [];
+        if (ev.audience) rows.push(["Who it's for", ev.audience]);
+        if (ev.bring) rows.push(["What to bring", ev.bring]);
+        if (ev.with) rows.push(["Presented with", ev.with]);
+        if (ev.access) rows.push(["Access", ev.access]);
+        if (ev.attended) rows.push(["Attended", ev.attended + " people"]);
+        if (!rows.length) return "";
+        return '<details class="ev-more"><summary>Event details</summary><dl>' +
+          rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + esc(r[1]) + "</dd>"; }).join("") + "</dl></details>";
+      }
+
+      function card(ev, past) {
+        var d = pd(ev.date);
+        return '<article class="ev-card' + (past ? " is-past" : "") + ' rp-reveal">' +
+          '<div class="ev-date"><div class="d">' + d.d + '</div><div class="m">' + d.m + '</div><div class="y">' + d.y + '</div></div>' +
+          '<div><div class="ev-tags"><span class="ev-tag ' + tagClass(ev.type) + '">' + ev.type + '</span>' + (ev.cancelled ? '<span class="ev-tag">Cancelled</span>' : "") + (past ? '<span class="ev-tag">Past event</span>' : "") + '</div>' +
+          '<h3 class="rp-h3">' + esc(ev.title) + '</h3>' +
+          '<div class="ev-meta"><span>' + esc(ev.time) + '</span><span>' + esc(ev.location) + '</span>' + (ev.travel ? '<span>' + esc(ev.travel) + '</span>' : "") + '<span>' + (ev.free ? "Free" : "Paid") + '</span></div>' +
+          '<p class="ev-desc">' + esc(ev.desc) + '</p>' + more(ev) + '</div>' +
+          '<div class="ev-action">' + action(ev, past) + '</div></article>';
+      }
+
+      function render() {
+        var upcoming = EVENTS.filter(function (e) { return e.date >= TODAY; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+        var past = EVENTS.filter(function (e) { return e.date < TODAY; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+        var shown = upcoming.filter(function (e) { return filter === "all" || e.type === filter; });
+
+        document.getElementById("upcoming-list").innerHTML = shown.length
+          ? shown.map(function (e) { return card(e, false); }).join("")
+          : '<div class="ev-empty">' + (loadFailed ? "We couldn't load events just now. Please try again shortly or <a href=\"" + ENQUIRE_URL + "\">contact the project team</a>." : "No " + (filter === "all" ? "events" : LABELS[filter]) + " scheduled yet. <a href=\"#notify\">Get notified</a> when new ones open.") + '</div>';
+        document.getElementById("upcoming-list").hidden = view !== "list";
+        document.getElementById("cal").hidden = view !== "calendar";
+        if (calY === undefined) { var f = (upcoming[0] ? upcoming[0].date : TODAY).split("-"); calY = +f[0]; calM = +f[1] - 1; selDay = upcoming[0] ? upcoming[0].date : null; }
+        if (view === "calendar") renderCal(); else document.getElementById("count").textContent = shown.length + " upcoming";
+        document.getElementById("past-list").innerHTML = past.length ? past.map(function (e) { return card(e, true); }).join("") : '<div class="ev-empty">Past events will appear here.</div>';
+
+        var n = upcoming.filter(function (e) { return !e.cancelled; })[0];
+        document.getElementById("feature-wrap").style.display = n ? "" : "none";
+        if (n) {
+          var d = pd(n.date);
+          document.getElementById("feature").innerHTML =
+            '<div class="ev-feature-body"><p class="rp-eyebrow on-dark">Next up</p><h2 class="rp-h2">' + esc(n.title) + '</h2><p>' + esc(n.desc) + '</p>' +
+            (n.humanitix ? '<a class="rp-btn rp-btn-mint" href="' + n.humanitix + '" target="_blank" rel="noopener">Register on Humanitix</a>' : '<span class="rp-btn" aria-disabled="true">Registration opening soon</span>') +
+            '<button type="button" class="ev-ics" data-ics="' + n.id + '">Add to calendar</button></div>' +
+            '<div class="ev-feature-meta"><dl><div><dt>Date</dt><dd>' + d.d + ' ' + d.m + ' ' + d.y + '</dd></div><div><dt>Time</dt><dd>' + esc(n.time) + '</dd></div><div><dt>Where</dt><dd>' + esc(n.location) + '</dd></div><div><dt>Cost</dt><dd>' + (n.free ? "Free" : "Paid") + '</dd></div></dl></div>';
+        }
+        injectSchema();
+        observe();
+      }
+
+      /* Search-engine event markup (schema.org) for upcoming, non-cancelled events. */
+      function injectSchema() {
+        var real = EVENTS.filter(function (e) { return e.date >= TODAY && !e.cancelled; });
+        var old = document.getElementById("ld-events");
+        if (old) old.remove();
+        if (!real.length) return;
+        var s = document.createElement("script");
+        s.type = "application/ld+json"; s.id = "ld-events";
+        s.textContent = JSON.stringify(real.map(function (e) {
+          var t = parseTimes(e.time) || { start: 540, end: 600 };
+          var online = e.type === "Webinar";
+          return { "@context": "https://schema.org", "@type": "Event", name: e.title, description: e.desc,
+            startDate: e.date + "T" + pad(Math.floor(t.start / 60)) + ":" + pad(t.start % 60) + ":00", endDate: e.date + "T" + pad(Math.floor(t.end / 60)) + ":" + pad(t.end % 60) + ":00",
+            eventAttendanceMode: online ? "https://schema.org/OnlineEventAttendanceMode" : "https://schema.org/OfflineEventAttendanceMode",
+            eventStatus: "https://schema.org/EventScheduled",
+            location: online ? { "@type": "VirtualLocation", url: e.humanitix || "https://lel-indie520d1a051c0.hub.arcgis.com/" } : { "@type": "Place", name: e.location },
+            isAccessibleForFree: !!e.free, organizer: { "@type": "Organization", name: "TasFarmers", url: "https://tasfarmers.com.au" },
+            offers: e.humanitix ? { "@type": "Offer", url: e.humanitix, price: "0", priceCurrency: "AUD" } : undefined };
+        }));
+        document.head.appendChild(s);
+      }
+
+      /* ---------- calendar view ---------- */
+      var view = "list", calY, calM, selDay = null;
+
+      /* ---------- Add to calendar (.ics) ----------
+         Start/end are parsed from the event's `time` text, e.g. "10:00 am – 1:00 pm" or "12:30 – 1:15 pm".
+         Times are Tasmanian local time (Australia/Hobart, with daylight saving rules included). */
+      function parseTimes(t) {
+        var m = /(\d{1,2}):(\d{2})\s*(am|pm)?\s*[–-]\s*(\d{1,2}):(\d{2})\s*(am|pm)/i.exec(t);
+        if (!m) return null;
+        function mins(h, mi, ap) { h = +h % 12; if (ap && ap.toLowerCase() === "pm") h += 12; return h * 60 + +mi; }
+        var end = mins(m[4], m[5], m[6]);
+        var start = mins(m[1], m[2], m[3] || m[6]);
+        if (!m[3] && start > end) start -= 12 * 60;
+        return { start: start, end: end };
+      }
+      function icsText(s) { return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n"); }
+      function stamp(dateStr, m) { return dateStr.replace(/-/g, "") + "T" + pad(Math.floor(m / 60)) + pad(m % 60) + "00"; }
+      function vevent(ev, now) {
+        var t = parseTimes(ev.time) || { start: 9 * 60, end: 10 * 60 };
+        var desc = ev.desc + (ev.humanitix ? "\n\nRegister: " + ev.humanitix : "\n\nRegistration link to follow on the LEL project website.");
+        return ["BEGIN:VEVENT", "UID:lel-event-" + String(ev.id).replace(/[^A-Za-z0-9]/g, "") + "@tasfarmers.com.au", "DTSTAMP:" + now + "Z",
+          "DTSTART;TZID=Australia/Hobart:" + stamp(ev.date, t.start), "DTEND;TZID=Australia/Hobart:" + stamp(ev.date, t.end),
+          "SUMMARY:" + icsText(ev.title), "LOCATION:" + icsText(ev.location), "DESCRIPTION:" + icsText(desc),
+          "END:VEVENT"];
+      }
+      function downloadIcs(evs, filename) {
+        var now = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+        var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//TasFarmers//LEL Events//EN", "CALSCALE:GREGORIAN",
+          "BEGIN:VTIMEZONE", "TZID:Australia/Hobart",
+          "BEGIN:STANDARD", "DTSTART:19700405T030000", "TZOFFSETFROM:+1100", "TZOFFSETTO:+1000", "RRULE:FREQ=YEARLY;BYMONTH=4;BYDAY=1SU", "TZNAME:AEST", "END:STANDARD",
+          "BEGIN:DAYLIGHT", "DTSTART:19701004T020000", "TZOFFSETFROM:+1000", "TZOFFSETTO:+1100", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=1SU", "TZNAME:AEDT", "END:DAYLIGHT",
+          "END:VTIMEZONE"];
+        evs.forEach(function (e) { lines = lines.concat(vevent(e, now)); });
+        lines.push("END:VCALENDAR");
+        var blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+      }
+      document.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-ics]");
+        if (!b) return;
+        if (b.dataset.ics === "all") {
+          var up = EVENTS.filter(function (x) { return x.date >= TODAY && !x.cancelled; });
+          if (up.length) downloadIcs(up, "LEL-upcoming-events.ics");
+          return;
+        }
+        var ev = EVENTS.filter(function (x) { return String(x.id) === b.dataset.ics; })[0];
+        if (ev) downloadIcs([ev], "LEL-" + ev.date + "-" + ev.type.toLowerCase().replace(/\s+/g, "-") + ".ics");
+      });
+      var FULL_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      var DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+      function pad(n) { return (n < 10 ? "0" : "") + n; }
+      function fmtLong(s) { var p = pd(s); return p.d + " " + FULL_MONTHS[MONTHS.indexOf(p.m)] + " " + p.y; }
+
+      function renderCal() {
+        var evs = EVENTS.filter(function (e) { return filter === "all" || e.type === filter; });
+        var offset = (new Date(calY, calM, 1).getDay() + 6) % 7; /* Monday start */
+        var days = new Date(calY, calM + 1, 0).getDate();
+        var html = DOW.map(function (d) { return '<div class="cal-dow">' + d + '</div>'; }).join("");
+        var monthCount = 0, firstEv = null;
+        for (var i = 0; i < offset; i++) html += '<div class="cal-cell blank"></div>';
+        for (var d = 1; d <= days; d++) {
+          var key = calY + "-" + pad(calM + 1) + "-" + pad(d);
+          var day = evs.filter(function (e) { return e.date === key; });
+          monthCount += day.length;
+          if (day.length && !firstEv) firstEv = key;
+          var cls = "cal-cell" + (day.length ? " has" : "") + (key === TODAY ? " today" : "") + (key === selDay ? " sel" : "");
+          var inner = '<span class="cal-num">' + d + '</span>' +
+            day.map(function (e) { return '<span class="cal-pill ' + tagClass(e.type) + (key < TODAY ? " past" : "") + '">' + esc(e.title) + '</span>'; }).join("") +
+            '<span class="cal-dots">' + day.map(function (e) { return '<i class="cal-dot ' + tagClass(e.type) + '"></i>'; }).join("") + '</span>';
+          html += day.length
+            ? '<button type="button" class="' + cls + '" data-day="' + key + '" aria-label="' + fmtLong(key) + ', ' + day.length + (day.length > 1 ? " events" : " event") + '">' + inner + '</button>'
+            : '<div class="' + cls + '">' + inner + '</div>';
+        }
+        document.getElementById("cal-grid").innerHTML = html;
+        document.getElementById("cal-title").textContent = FULL_MONTHS[calM] + " " + calY;
+        document.getElementById("count").textContent = monthCount + (monthCount === 1 ? " event this month" : " events this month");
+
+        var selEvs = selDay ? evs.filter(function (e) { return e.date === selDay; }) : [];
+        document.getElementById("cal-panel").innerHTML = selEvs.length
+          ? '<h3 class="rp-h3">' + fmtLong(selDay) + '</h3>' + selEvs.map(function (e) { return card(e, e.date < TODAY); }).join("")
+          : (monthCount ? '<p class="ev-count">Select a highlighted day to see event details.</p>' : '<div class="ev-empty">No events this month. <a href="#notify">Get notified</a> when new ones open.</div>');
+        document.querySelectorAll("#cal-panel .rp-reveal").forEach(function (el) { el.classList.add("is-visible"); });
+      }
+
+      function shiftMonth(n) {
+        calM += n;
+        if (calM < 0) { calM = 11; calY--; } else if (calM > 11) { calM = 0; calY++; }
+        var prefix = calY + "-" + pad(calM + 1);
+        var first = EVENTS.filter(function (e) { return e.date.indexOf(prefix) === 0 && (filter === "all" || e.type === filter); }).sort(function (a, b) { return a.date < b.date ? -1 : 1; })[0];
+        selDay = first ? first.date : null;
+        renderCal();
+      }
+      document.getElementById("cal-prev").addEventListener("click", function () { shiftMonth(-1); });
+      document.getElementById("cal-next").addEventListener("click", function () { shiftMonth(1); });
+      document.getElementById("cal-grid").addEventListener("click", function (e) {
+        var b = e.target.closest("[data-day]");
+        if (b) { selDay = b.dataset.day; renderCal(); }
+      });
+      document.querySelectorAll(".ev-view").forEach(function (b) {
+        b.addEventListener("click", function () {
+          view = b.dataset.view;
+          document.querySelectorAll(".ev-view").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+          render();
+        });
+      });
+
+      document.querySelectorAll(".ev-chip").forEach(function (b) {
+        b.addEventListener("click", function () {
+          filter = b.dataset.filter;
+          document.querySelectorAll(".ev-chip").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+          render();
+        });
+      });
+
+      (function () {
+        var form = document.getElementById("notify-form");
+        if (!NOTIFY_ENDPOINT) {
+          form.innerHTML = '<a class="rp-btn rp-btn-mint" href="' + ENQUIRE_URL + '" target="_blank" rel="noopener">Ask to be notified</a>' +
+            '<p class="fine">Send your details through the enquiry form and tell us which events you are interested in. We use your details only to tell you about Low Emissions Livestock Project events, and you can unsubscribe at any time.</p>';
+          return;
+        }
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          var em = document.getElementById("nf-email"), msg = document.getElementById("nf-msg"), btn = form.querySelector("button[type=submit]");
+          if (!em.value || em.value.indexOf("@") < 1) { em.focus(); return; }
+          var interests = [].slice.call(form.querySelectorAll("input[type=checkbox]:checked")).map(function (c) { return c.value; });
+          btn.disabled = true;
+          fetch(NOTIFY_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: document.getElementById("nf-name").value, email: em.value, interests: interests, source: "LEL events page" }) })
+            .then(function (r) { if (!r.ok) throw new Error(r.status); msg.textContent = "Thanks, we'll let you know when new events open."; form.reset(); })
+            .catch(function () { msg.textContent = "Sorry, that didn't go through. Please try again or use the enquiry form."; })
+            .then(function () { msg.style.display = "block"; btn.disabled = false; });
+        });
+      })();
+
+      var io = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
+        es.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add("is-visible"); io.unobserve(x.target); } });
+      }, { threshold: 0.1 }) : null;
+      function observe() {
+        document.querySelectorAll(".rp-reveal:not(.is-visible)").forEach(function (el) { io ? io.observe(el) : el.classList.add("is-visible"); });
+      }
+      loadEvents(render);
+    </script>
+  </body>
+</html>
