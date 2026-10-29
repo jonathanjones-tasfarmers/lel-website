@@ -72,7 +72,6 @@
       /* hero: text panel + portrait photo (lick block centred in the photo panel) */
       .rp-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); min-height: 600px; background: var(--tf-navy-900); }
       .rp-hero-inner { position: relative; align-self: center; width: 100%; box-sizing: border-box; padding: 72px 40px 120px max(28px, calc((100vw - 1180px) / 2 + 28px)); }
-      .rp-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
       .rp-hero-photo { position: relative; min-height: 600px; background: url("https://jonathanjones-tasfarmers.github.io/lel-website/hero-events.webp") 43% 70% / cover no-repeat; }
       .rp-hero-photo::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--tf-navy-900) 0%, rgba(4, 18, 33, 0) 16%); }
       .rp-hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 120px; pointer-events: none; background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, var(--surface-page) 100%); z-index: 2; }
@@ -156,8 +155,7 @@
       .ev-more dt { font-weight: 700; color: var(--text-heading); }
       .ev-more dd { margin: 0; }
       @media (max-width: 560px) { .ev-more dl { grid-template-columns: 1fr; gap: 0; } .ev-more dd { margin-bottom: 8px; } }
-      .ev-contact { font-size: 14.5px; color: var(--text-muted); margin: -12px 0 28px; }
-      .ev-contact a, .ev-allics { color: var(--tf-mint-600); font-weight: 700; }
+      .ev-allics { color: var(--tf-mint-600); font-weight: 700; }
       .ev-allics { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
       .ev-allics:focus-visible { outline: 3px solid var(--tf-mint-500); outline-offset: 2px; }
       .ev-foot { margin: 20px 0 0; font-size: 13.5px; color: var(--text-muted); }
@@ -234,6 +232,7 @@
       .ev-form-msg { color: var(--tf-mint-400); font-size: 14px; display: none; }
       @media (max-width: 860px) { .ev-notify { grid-template-columns: 1fr; padding: 32px 22px; gap: 24px; } .ev-form .row { grid-template-columns: 1fr; } }
 
+
       /* reveal */
       .rp-reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
       .rp-reveal.is-visible { opacity: 1; transform: none; }
@@ -251,10 +250,6 @@
         <p class="rp-lede">
           Field days, workshops and webinars from the Tasmanian Low Emissions Livestock Project. Meet the farmers, see the data and ask the team your questions.
         </p>
-        <div class="rp-hero-actions">
-          <a href="#upcoming" class="rp-btn rp-btn-mint">See upcoming events</a>
-          <a href="#notify" class="rp-btn rp-btn-ghost">Get notified</a>
-        </div>
       </div>
       <div class="rp-hero-photo" role="img" aria-label="Young black cattle wearing collars investigating a lick block in a Tasmanian paddock"></div>
     </div>
@@ -273,10 +268,6 @@
         <h2 class="rp-h2 rp-narrow">Upcoming <span class="accent">events</span></h2>
         <p class="rp-section-intro">
           Free to attend unless noted. Registration is handled through Humanitix so we can keep you updated about any changes.
-        </p>
-        <p class="ev-contact">
-          Prefer to register by phone or have a question about access or what to bring?
-          <a href="https://arcg.is/CiTXn" target="_blank" rel="noopener">Contact the project team</a>.
         </p>
 
         <div class="ev-toolbar">
@@ -369,20 +360,10 @@
             <h2 class="rp-h2">Hear about events <span style="color: var(--tf-mint-400)">first</span></h2>
             <p>Leave your details and we'll let you know when new field days, workshops and webinars open for registration. No spam, only project events.</p>
           </div>
-          <form class="ev-form" id="notify-form" novalidate>
-            <div class="row">
-              <div><label for="nf-name">NAME</label><input type="text" id="nf-name" autocomplete="name" /></div>
-              <div><label for="nf-email">EMAIL</label><input type="email" id="nf-email" autocomplete="email" required /></div>
-            </div>
-            <div class="checks" role="group" aria-label="Interested in">
-              <label><input type="checkbox" value="Field days" checked /> Field days</label>
-              <label><input type="checkbox" value="Workshops" checked /> Workshops</label>
-              <label><input type="checkbox" value="Webinars" checked /> Webinars</label>
-            </div>
-            <button type="submit" class="rp-btn rp-btn-mint">Notify me</button>
-            <p class="ev-form-msg" id="nf-msg" role="status">Thanks, we'll let you know when new events open.</p>
+          <div class="ev-form" id="notify-form">
+            <a class="rp-btn rp-btn-mint" href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=npTwzbVyuEOXdeBOUzwFV0cmg3gYLUZFn5pPiUnYgUJUNlc5Qk80OTFJTUVDTlRRU1E2OFROSFoyVi4u" target="_blank" rel="noopener">Ask to be notified</a>
             <p class="fine">We use your details only to tell you about Low Emissions Livestock Project events, and you can unsubscribe at any time. We don't share your details with other organisations.</p>
-          </form>
+          </div>
         </div>
       </div>
     </div>
@@ -392,13 +373,10 @@
          EVENTS_SERVICE: URL of the public LEL_Events_View layer in ArcGIS (shows Published events only), ending in /FeatureServer/0
            (expected: https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Events_View/FeatureServer/0).
            Leave "" to use MANUAL_EVENTS below instead.
-         NOTIFY_ENDPOINT: optional HTTPS endpoint (e.g. a Power Automate flow) that receives {name, email, interests}.
-           Leave "" and the notify box links to the enquiry form instead.
          MANUAL_EVENTS item: { id, title, type: "Field day" | "Workshop" | "Webinar", date: "YYYY-MM-DD",
            time: "10:00 am – 1:00 pm", location, travel, desc, audience, bring, with, access, free: true,
            seats, humanitix: "https://…", recap: "https://…", attended, cancelled }                                   */
       var EVENTS_SERVICE = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Events_View/FeatureServer/0";
-      var NOTIFY_ENDPOINT = "";
       var ENQUIRE_URL = "https://arcg.is/CiTXn";
       var MANUAL_EVENTS = [];
       var EVENTS = [];
@@ -653,26 +631,6 @@
         });
       });
 
-      (function () {
-        var form = document.getElementById("notify-form");
-        if (!NOTIFY_ENDPOINT) {
-          form.innerHTML = '<a class="rp-btn rp-btn-mint" href="' + ENQUIRE_URL + '" target="_blank" rel="noopener">Ask to be notified</a>' +
-            '<p class="fine">Send your details through the enquiry form and tell us which events you are interested in. We use your details only to tell you about Low Emissions Livestock Project events, and you can unsubscribe at any time.</p>';
-          return;
-        }
-        form.addEventListener("submit", function (e) {
-          e.preventDefault();
-          var em = document.getElementById("nf-email"), msg = document.getElementById("nf-msg"), btn = form.querySelector("button[type=submit]");
-          if (!em.value || em.value.indexOf("@") < 1) { em.focus(); return; }
-          var interests = [].slice.call(form.querySelectorAll("input[type=checkbox]:checked")).map(function (c) { return c.value; });
-          btn.disabled = true;
-          fetch(NOTIFY_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: document.getElementById("nf-name").value, email: em.value, interests: interests, source: "LEL events page" }) })
-            .then(function (r) { if (!r.ok) throw new Error(r.status); msg.textContent = "Thanks, we'll let you know when new events open."; form.reset(); })
-            .catch(function () { msg.textContent = "Sorry, that didn't go through. Please try again or use the enquiry form."; })
-            .then(function () { msg.style.display = "block"; btn.disabled = false; });
-        });
-      })();
 
       var io = "IntersectionObserver" in window ? new IntersectionObserver(function (es) {
         es.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add("is-visible"); io.unobserve(x.target); } });
