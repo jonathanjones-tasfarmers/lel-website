@@ -470,7 +470,7 @@
 
         document.getElementById("upcoming-list").innerHTML = shown.length
           ? shown.map(function (e) { return card(e, false); }).join("")
-          : '<div class="ev-empty">' + (loadFailed ? "We couldn't load events just now. Please try again shortly or <a href=\"" + ENQUIRE_URL + "\">contact the project team</a>." : "No " + (filter === "all" ? "events" : LABELS[filter]) + " scheduled yet. <a href=\"#notify\">Get notified</a> when new ones open.") + '</div>';
+          : '<div class="ev-empty">' + (loadFailed ? "We couldn't load events just now. Please try again shortly or <a href=\"" + ENQUIRE_URL + "\">contact the project team</a>." : "No " + (filter === "all" ? "events" : LABELS[filter]) + " scheduled yet.") + '</div>';
         document.getElementById("upcoming-list").hidden = view !== "list";
         document.getElementById("cal").hidden = view !== "calendar";
         if (calY === undefined) { var f = (upcoming[0] ? upcoming[0].date : TODAY).split("-"); calY = +f[0]; calM = +f[1] - 1; selDay = upcoming[0] ? upcoming[0].date : null; }
@@ -597,7 +597,7 @@
         var selEvs = selDay ? evs.filter(function (e) { return e.date === selDay; }) : [];
         document.getElementById("cal-panel").innerHTML = selEvs.length
           ? '<h3 class="rp-h3">' + fmtLong(selDay) + '</h3>' + selEvs.map(function (e) { return card(e, e.date < TODAY); }).join("")
-          : (monthCount ? '<p class="ev-count">Select a highlighted day to see event details.</p>' : '<div class="ev-empty">No events this month. <a href="#notify">Get notified</a> when new ones open.</div>');
+          : (monthCount ? '<p class="ev-count">Select a highlighted day to see event details.</p>' : '<div class="ev-empty">No events this month.</div>');
         document.querySelectorAll("#cal-panel .rp-reveal").forEach(function (el) { el.classList.add("is-visible"); });
       }
 
