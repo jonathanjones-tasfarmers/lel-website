@@ -389,15 +389,15 @@
 
     <script>
       /* ---------- CONFIG ----------
-         EVENTS_SERVICE: URL of the LEL_Events hosted table/view layer in ArcGIS, ending in /FeatureServer/0
-           (e.g. https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Events_View/FeatureServer/0).
+         EVENTS_SERVICE: URL of the public LEL_Events_View layer in ArcGIS (shows Published events only), ending in /FeatureServer/0
+           (expected: https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Events_View/FeatureServer/0).
            Leave "" to use MANUAL_EVENTS below instead.
          NOTIFY_ENDPOINT: optional HTTPS endpoint (e.g. a Power Automate flow) that receives {name, email, interests}.
            Leave "" and the notify box links to the enquiry form instead.
          MANUAL_EVENTS item: { id, title, type: "Field day" | "Workshop" | "Webinar", date: "YYYY-MM-DD",
            time: "10:00 am – 1:00 pm", location, travel, desc, audience, bring, with, access, free: true,
            seats, humanitix: "https://…", recap: "https://…", attended, cancelled }                                   */
-      var EVENTS_SERVICE = "";
+      var EVENTS_SERVICE = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Events_View/FeatureServer/0";
       var NOTIFY_ENDPOINT = "";
       var ENQUIRE_URL = "https://arcg.is/CiTXn";
       var MANUAL_EVENTS = [];
@@ -415,15 +415,30 @@
         r.free = r.free !== false; r.seats = +r.seats || null; r.attended = +r.attended || null; r.cancelled = !!r.cancelled;
         return r;
       }
+      /* Field names created by the Survey123 "Add an LEL event" form (check Data > Fields on the layer if the form is rebuilt). */
+      var FIELDS = { title: "untitled_question_1", type: "type_of_event", date: "_date", time: "untitled_question_4", location: "untitled_question_5",
+        travel: "untitled_question_6", desc: "untitled_question_7", audience: "untitled_question_8", bring: "untitled_question_9",
+        with: "untitled_question_10", access: "untitled_question_11", free: "is_it_free", seats: "number_of_places", status: "untitled_question_14",
+        humanitix: "humanitix_link", recap: "recap_link", attended: "attended" };
+      function plain(v) { return String(v == null ? "" : v).toLowerCase().replace(/[_-]+/g, " ").trim(); }
+      function serviceDate(v) {
+        if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10);
+        if (typeof v !== "number") return "";
+        var d = new Date(v);
+        if (d.getUTCHours() === 0 && d.getUTCMinutes() === 0) return d.toISOString().slice(0, 10);
+        return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Hobart", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
+      }
       function fromService(a) {
-        return { id: a.GlobalID || a.OBJECTID, title: a.Title, type: a.EventType, date: a.EventDate, time: a.TimeText, location: a.Location,
-          travel: a.Travel, desc: a.Description, audience: a.Audience, bring: a.Bring, with: a.PresentedWith, access: a.Access,
-          free: a.Free !== "No", seats: a.Seats, humanitix: a.HumanitixURL, recap: a.RecapURL, attended: a.Attended, cancelled: a.Status === "Cancelled" };
+        var t = plain(a[FIELDS.type]), type = t.indexOf("field") === 0 ? "Field day" : t.indexOf("work") === 0 ? "Workshop" : t.indexOf("web") === 0 ? "Webinar" : "";
+        return { id: a.globalid || a.GlobalID || a.objectid || a.OBJECTID, title: a[FIELDS.title], type: type, date: serviceDate(a[FIELDS.date]), time: a[FIELDS.time], location: a[FIELDS.location],
+          travel: a[FIELDS.travel], desc: a[FIELDS.desc], audience: a[FIELDS.audience], bring: a[FIELDS.bring], with: a[FIELDS.with], access: a[FIELDS.access],
+          free: !/^(no|n|false|paid)\b/.test(plain(a[FIELDS.free])), seats: a[FIELDS.seats], humanitix: a[FIELDS.humanitix], recap: a[FIELDS.recap], attended: a[FIELDS.attended],
+          cancelled: plain(a[FIELDS.status]) === "cancelled" };
       }
       function loadEvents(done) {
         var manual = function () { EVENTS = MANUAL_EVENTS.map(normalise).filter(Boolean); };
         if (!EVENTS_SERVICE) { manual(); return done(); }
-        var q = EVENTS_SERVICE + "/query?where=" + encodeURIComponent("Status IN ('Published','Cancelled')") + "&outFields=*&orderByFields=EventDate&f=json";
+        var q = EVENTS_SERVICE + "/query?where=" + "1%3D1&outFields=*&f=json";
         fetch(q).then(function (r) { return r.json(); }).then(function (j) {
           if (!j.features) throw new Error("no features");
           EVENTS = j.features.map(function (f) { return normalise(fromService(f.attributes)); }).filter(Boolean); done();
