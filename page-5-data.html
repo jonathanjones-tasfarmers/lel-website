@@ -1227,6 +1227,13 @@
             directly.
           </p>
           <p class="body">
+            Trial farms may run successive cohorts of animals. When a cohort
+            ends or a new one joins, the trial-wide figures are recalculated
+            from the cohorts then reporting, and the trend charts mark the
+            date, so a step in a line can reflect a change in which animals are
+            counted rather than a change in the treatment effect.
+          </p>
+          <p class="body">
             Producer identities and individual farm results remain confidential.
             The results you see here are aggregated across trial sites, and are
             consistent with the same data-sharing protocol used across every
@@ -1304,7 +1311,7 @@
               <p class="dp-detail-value" id="price-out">&mdash;</p>
             </div>
             <div class="dp-detail-card">
-              <p class="dp-detail-label">Days of data</p>
+              <p class="dp-detail-label">Days of abatement data</p>
               <p class="dp-detail-value" id="days-out">&mdash;</p>
             </div>
           </div>
@@ -1432,8 +1439,33 @@
         // Bowood isn't listed — it was the trial's original farm, never
         // buffer-gated, so there's no "join" moment to mark for it.
         // ============================================================
+        //
+        // Updated 2026-10-29: entries can now carry their own `text` (and
+        // optional `persist: true`, `xAdjust`, `yAdjust`; persistent labels
+        // covered the data, so all labels are hover-only), used
+        // for COHORT CHANGES, which step the trial-wide lines because the set
+        // of animals behind them changes, not because the effect did:
+        //   - 2026-10-28: the Northern Tasmania farm's first cohort ended.
+        //     From this date the trial-wide figures are the cohorts still
+        //     reporting (the farm's finished cohort stops contributing).
+        //   - 2026-11-27: its second cohort clears the 30-day display buffer
+        //     (lel_farms.py: live_since 2026-10-28 + 30 days) and joins.
+        // Keep the 2026-11-27 date in step with get_farm_public_ready_date()
+        // for "Eastbourne Farm - Cohort 2" if live_since ever changes.
+        // Wording stays anonymous, as everywhere on this page.
         const FARM_MILESTONES = [
           { farm: "Northern Tasmania farm", date: "2026-09-20" },
+          {
+            farm: "Northern Tasmania farm",
+            date: "2026-10-28",
+            text: ["A trial farm's first cohort ended", "Figures now reflect cohorts still reporting"],
+            xAdjust: -110, // keeps the hover label inside the chart, as this date sits near the right edge
+          },
+          {
+            farm: "Northern Tasmania farm",
+            date: "2026-11-27",
+            text: ["A new cohort joins the trial-wide figures"],
+          },
         ];
 
         function milestoneEpoch(dateStr) {
@@ -1462,8 +1494,10 @@
               borderWidth: 1,
               borderDash: [4, 4],
               label: {
-                display: false,
-                content: [m.farm + " added to trial-wide figures", label],
+                display: !!m.persist,
+                content: m.text ? [...m.text, label] : [m.farm + " added to trial-wide figures", label],
+                xAdjust: m.xAdjust || 0,
+                yAdjust: m.yAdjust || 0,
                 backgroundColor: "#041221",
                 color: "#ffffff",
                 font: { family: "Verdana,Tahoma,sans-serif", size: 11 },
@@ -1476,7 +1510,7 @@
                 return true;
               },
               leave({ element }) {
-                element.label.options.display = false;
+                element.label.options.display = !!m.persist;
                 return true;
               },
             };
@@ -2041,6 +2075,24 @@
           return data.features[0].attributes;
         }
 
+        // Date of the trial's first abatement figure on the trial-wide row, so
+        // the card's "Days of abatement data" counts elapsed trial days (first
+        // day to latest day, inclusive) rather than Economics' days_of_data,
+        // which is the weight-gain window averaged across farms (2026-10-29).
+        async function fetchFirstAbatementDate() {
+          const params = new URLSearchParams({
+            where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}' AND methane_abated_g_per_hd_day IS NOT NULL`,
+            outStatistics: JSON.stringify([
+              { statisticType: "min", onStatisticField: "record_date", outStatisticFieldName: "first_date" },
+            ]),
+            f: "json",
+          });
+          const res = await fetch(EMISSIONS_URL + "?" + params);
+          const data = await res.json();
+          if (data.error || !data.features || !data.features.length) return null;
+          return data.features[0].attributes.first_date;
+        }
+
         const disclosureToggleRow = document.getElementById(
           "disclosure-toggle-row",
         );
@@ -2135,10 +2187,13 @@
             console.error("GWP fetch failed, using default 28:", err);
           });
           try {
-            const [, econ, emissions] = await Promise.all([
+            const [, econ, emissions, firstAbatementMs] = await Promise.all([
               gwpPromise,
               fetchLatestEconomics(),
               fetchLatestEmissions(),
+              fetchFirstAbatementDate().catch(function () {
+                return null;
+              }),
             ]);
             latestEmissions = emissions;
             const abatedPerHead = econ.cumulative_ch4_abated_kg_per_head || 0;
@@ -2158,8 +2213,14 @@
                 ? totalTonnesCo2e.toFixed(2) + " t"
                 : Math.round(totalKgCo2e).toLocaleString() + " kg";
             priceOut.textContent = "$" + REFERENCE_PRICE_AUD_PER_TONNE + "/t";
+            // Elapsed trial days, first abatement day to latest day, inclusive.
+            // Falls back to Economics' days_of_data if the first date can't be read.
             daysOut.textContent =
-              econ.days_of_data != null ? econ.days_of_data : "—";
+              firstAbatementMs != null && emissions.record_date != null
+                ? Math.round((emissions.record_date - firstAbatementMs) / 86400000) + 1
+                : econ.days_of_data != null
+                  ? econ.days_of_data
+                  : "—";
             const econDate = dpFormatDataDate(econ.calculation_date);
             statusEl.textContent = econDate
               ? "Live data, last calculated " + econDate
