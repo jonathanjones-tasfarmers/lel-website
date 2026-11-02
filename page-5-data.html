@@ -47,6 +47,7 @@
         --tf-mint-400: oklch(from var(--tf-mint-500) calc(l + 0.08) c h);
         --tf-white: #ffffff;
         --tf-warning: #c98a2e;
+        --tf-negative: #b4402f;
         --surface-page: var(--tf-white);
         --surface-sunken: var(--tf-slate-100);
         --surface-card: var(--tf-white);
@@ -351,6 +352,9 @@
         font-size: 11.5px;
         color: var(--text-muted);
         margin: 6px 0 0 0;
+      }
+      .dp-stat-card.outline .dp-stat-value.negative {
+        color: var(--tf-negative);
       }
       .dp-adg-meta.stale {
         color: var(--tf-warning) !important;
@@ -949,7 +953,7 @@
           </div>
           <div class="dp-stack">
             <div class="dp-stat-card outline">
-              <p>ADG advantage</p>
+              <p>ADG difference</p>
               <p class="dp-stat-value" id="b-adg">
                 <span class="dp-skel" style="width: 92px; height: 20px"></span>
               </p>
@@ -1015,8 +1019,8 @@
           <details class="dp-glossary">
             <summary>What do these terms mean?</summary>
             <p class="dp-methodology-text">
-            <b>ADG advantage</b> is how much faster KleenGrow cattle gained
-            weight than Control cattle, as a percentage of the Control gain.
+            <b>ADG difference</b> is how much faster (+) or slower (&minus;) KleenGrow
+            cattle gained weight than Control cattle, as a percentage of the Control gain.
             ADG is average daily gain: each group&rsquo;s average weight gain
             from the start of the trial to date, divided by the days elapsed,
             using OptiWeigh weights and combined across trial sites.
@@ -2512,7 +2516,10 @@
                   : "—";
 
               document.getElementById("b-abatement").textContent = abatement;
-              document.getElementById("b-adg").textContent = adg;
+              var adgValEl = document.getElementById("b-adg");
+              adgValEl.textContent = adg;
+              // Negative = KleenGrow gained more slowly than Control: don't show it in the positive green.
+              adgValEl.classList.toggle("negative", adg.charAt(0) === "-");
               document.getElementById("b-co2e").textContent = co2e;
               document.getElementById("b-days").textContent = days;
               document.getElementById("b-intake").textContent = intake;
@@ -2549,6 +2556,7 @@
             .catch(function (err) {
               document.getElementById("b-abatement").textContent = "—";
               document.getElementById("b-adg").textContent = "—";
+              document.getElementById("b-adg").classList.remove("negative");
               document.getElementById("b-co2e").textContent = "—";
               document.getElementById("b-days").textContent = "—";
               document.getElementById("b-intake").textContent = "—";
