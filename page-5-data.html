@@ -1036,7 +1036,7 @@
           </p>
           <p class="dp-methodology-text" style="margin-bottom: 0">
             <b>Why lines start on different dates:</b> a group only appears
-            once it has 30 days of data, and the Control group began later than
+            once it has 14 days of data, and the Control group began later than
             the KleenGrow group.
           </p>
           </details>
@@ -1108,7 +1108,7 @@
             The 30-day average daily gain (ADG) of the KleenGrow group compared
             to the control group, expressed as a percentage advantage, from
             OptiWeigh&rsquo;s own figures. Both groups are measured over the same
-            dates, and each farm is only counted once it has 30 days of data. Today&rsquo;s partial readings are left out until the day is complete. A dashed grey line links periods with no readings.
+            dates, and each farm is only counted once it has 14 days of data. Today&rsquo;s partial readings are left out until the day is complete. A dashed grey line links periods with no readings.
           </p>
           <div class="dp-chart-box">
             <div class="dp-skel dp-skel-chart" id="chart-adg-skeleton"></div>
@@ -1182,7 +1182,7 @@
           <p class="dp-chart-caption">
             Cost per kg of liveweight gain for the KleenGrow and Control
             groups. Within each group, cost and weight gain are measured over
-            the same period. Each line starts once that group has 30 days of
+            the same period. Each line starts once that group has 14 days of
             data, so the Control line starts later because the control group
             began later.
           </p>
@@ -1452,9 +1452,11 @@
         //   - 2026-10-28: the Northern Tasmania farm's first cohort ended.
         //     From this date the trial-wide figures are the cohorts still
         //     reporting (the farm's finished cohort stops contributing).
-        //   - 2026-11-27: its second cohort clears the 30-day display buffer
-        //     (lel_farms.py: live_since 2026-10-28 + 30 days) and joins.
-        // Keep the 2026-11-27 date in step with get_farm_public_ready_date()
+        //   - 2026-11-11: its second cohort clears the 14-day display buffer
+        //     (lel_farms.py: live_since 2026-10-28 + 14 days) and joins.
+        //     (The buffer was cut from 30 to 14 days on 2026-10-29; the 20 Sep
+        //     join above was under the old 30-day rule and stays as recorded.)
+        // Keep the 2026-11-11 date in step with get_farm_public_ready_date()
         // for "Eastbourne Farm - Cohort 2" if live_since ever changes.
         // Wording stays anonymous, as everywhere on this page.
         const FARM_MILESTONES = [
@@ -1467,7 +1469,7 @@
           },
           {
             farm: "Northern Tasmania farm",
-            date: "2026-11-27",
+            date: "2026-11-11",
             text: ["A new cohort joins the trial-wide figures"],
           },
         ];
