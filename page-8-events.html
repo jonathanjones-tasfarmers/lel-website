@@ -4,12 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Events | Low Emissions Livestock Tasmania</title>
-    <meta name="description" content="Workshops, on-farm field days and webinars from the Tasmanian Low Emissions Livestock Project. See what's coming up and register." />
+    <meta name="description" content="Workshops, on-farm field days, webinars and industry events from the Tasmanian Low Emissions Livestock Project. See what's coming up and register." />
     <!-- Sharing preview (update the canonical/og:url with the Hub page URL once the page is created) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Low Emissions Livestock Project" />
     <meta property="og:title" content="Events | Low Emissions Livestock Tasmania" />
-    <meta property="og:description" content="Field days, workshops and webinars from the Tasmanian Low Emissions Livestock Project. Free to attend." />
+    <meta property="og:description" content="Field days, workshops, webinars and industry events from the Tasmanian Low Emissions Livestock Project. Free to attend." />
     <meta property="og:image" content="https://jonathanjones-tasfarmers.github.io/lel-website/hero-events.webp" />
     <meta name="twitter:card" content="summary_large_image" />
     <!--
@@ -127,6 +127,7 @@
       .ev-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
       .ev-tag { font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--tf-mint-100); color: var(--tf-navy-900); }
       .ev-tag.t-webinar { background: oklch(from var(--tf-slate-400) calc(l + 0.17) c h); }
+      .ev-tag.t-industry { background: oklch(from var(--tf-navy-900) 0.9 0.03 h); }
       .ev-tag.t-workshop { background: oklch(from var(--tf-warning) calc(l + 0.3) calc(c - 0.05) h); }
       .ev-meta { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13.5px; color: var(--text-muted); margin: 6px 0 0; }
       .ev-desc { font-size: 14px; line-height: 1.6; margin: 8px 0 0; max-width: 62ch; }
@@ -192,11 +193,13 @@
       .cal-cell.today .cal-num { background: var(--tf-navy-900); color: var(--tf-white); border-radius: 999px; min-width: 24px; height: 24px; display: inline-grid; place-items: center; padding: 0 6px; align-self: flex-start; }
       .cal-pill { font-size: 11px; font-weight: 700; line-height: 1.25; padding: 3px 6px; border-radius: 4px; background: var(--tf-mint-100); color: var(--tf-navy-900); border-left: 3px solid var(--tf-mint-600); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .cal-pill.t-webinar { background: oklch(from var(--tf-slate-400) calc(l + 0.17) c h); border-left-color: var(--tf-slate-600); }
+      .cal-pill.t-industry { background: oklch(from var(--tf-navy-900) 0.9 0.03 h); border-left-color: var(--tf-navy-900); }
       .cal-pill.t-workshop { background: oklch(from var(--tf-warning) calc(l + 0.3) calc(c - 0.05) h); border-left-color: var(--tf-warning); }
       .cal-pill.past { opacity: 0.55; }
       .cal-dots { display: none; gap: 4px; flex-wrap: wrap; }
       .cal-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--tf-mint-600); }
       .cal-dot.t-webinar { background: var(--tf-slate-600); }
+      .cal-dot.t-industry { background: var(--tf-navy-900); }
       .cal-dot.t-workshop { background: var(--tf-warning); }
       .cal-legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; font-size: 12.5px; color: var(--text-muted); }
       .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -211,7 +214,7 @@
       }
 
       /* what to expect */
-      .ev-types { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+      .ev-types { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
       .ev-type { background: var(--surface-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 28px; }
       .ev-type .icon { width: 44px; height: 44px; border-radius: 12px; background: var(--tf-mint-100); display: grid; place-items: center; margin-bottom: 16px; }
       .ev-type .icon svg { width: 24px; height: 24px; stroke: var(--tf-navy-900); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -248,7 +251,7 @@
         <p class="rp-eyebrow on-dark">Events &amp; field days</p>
         <h1 class="rp-h1">See the trial for yourself, <span class="accent">on farm</span>.</h1>
         <p class="rp-lede">
-          Field days, workshops and webinars from the Tasmanian Low Emissions Livestock Project. Meet the farmers, see the data and ask the team your questions.
+          Field days, workshops, webinars and industry events from the Tasmanian Low Emissions Livestock Project. Meet the farmers, see the data and ask the team your questions.
         </p>
       </div>
       <div class="rp-hero-photo" role="img" aria-label="Young black cattle wearing collars investigating a lick block in a Tasmanian paddock"></div>
@@ -276,6 +279,7 @@
             <button type="button" class="ev-chip" data-filter="Field day" aria-pressed="false">Field days</button>
             <button type="button" class="ev-chip" data-filter="Workshop" aria-pressed="false">Workshops</button>
             <button type="button" class="ev-chip" data-filter="Webinar" aria-pressed="false">Webinars</button>
+            <button type="button" class="ev-chip" data-filter="Industry event" aria-pressed="false">Industry events</button>
           </div>
           <div class="ev-right">
             <span class="ev-count" id="count" aria-live="polite"></span>
@@ -302,6 +306,7 @@
             <span><i class="cal-dot"></i> Field day</span>
             <span><i class="cal-dot t-workshop"></i> Workshop</span>
             <span><i class="cal-dot t-webinar"></i> Webinar</span>
+            <span><i class="cal-dot t-industry"></i> Industry event</span>
           </div>
           <div class="cal-day-panel" id="cal-panel"></div>
         </div>
@@ -317,7 +322,7 @@
       <div class="rp-page">
         <p class="rp-eyebrow">Ways to get involved</p>
         <h2 class="rp-h2 rp-narrow rp-reveal">What to expect</h2>
-        <p class="rp-section-intro rp-reveal">Three formats, so you can join in whichever suits your season and your questions.</p>
+        <p class="rp-section-intro rp-reveal">Four formats, so you can join in whichever suits your season and your questions.</p>
         <div class="ev-types">
           <div class="ev-type rp-reveal">
             <div class="icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V10l7-6 7 6v11M10 21v-6h4v6"/></svg></div>
@@ -333,6 +338,11 @@
             <div class="icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
             <h3 class="rp-h3">Webinars</h3>
             <p>Short online updates on results to date, with time for questions. Join from the farm or the office; recordings shared afterwards.</p>
+          </div>
+          <div class="ev-type rp-reveal">
+            <div class="icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M6 21V8h12v13M9 12h2M13 12h2M9 16h2M13 16h2M9 4h6v4H9z"/></svg></div>
+            <h3 class="rp-h3">Industry events</h3>
+            <p>Forums and gatherings run with industry partners, where the project team shares what the trial is finding alongside other speakers and services.</p>
           </div>
         </div>
         <div class="ev-notice rp-reveal">
@@ -358,7 +368,7 @@
           <div>
             <p class="rp-eyebrow on-dark">Stay in the loop</p>
             <h2 class="rp-h2">Hear about events <span style="color: var(--tf-mint-400)">first</span></h2>
-            <p>Leave your details and we'll let you know when new field days, workshops and webinars open for registration. No spam, only project events.</p>
+            <p>Leave your details and we'll let you know when new field days, workshops, webinars and industry events open for registration. No spam, only project events.</p>
           </div>
           <div class="ev-form" id="notify-form">
             <a class="rp-btn rp-btn-mint" href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=npTwzbVyuEOXdeBOUzwFV0cmg3gYLUZFn5pPiUnYgUJUNlc5Qk80OTFJTUVDTlRRU1E2OFROSFoyVi4u" target="_blank" rel="noopener">Ask to be notified</a>
@@ -373,7 +383,7 @@
          EVENTS_SERVICE: URL of the public LEL_Events_View layer in ArcGIS (shows Published events only), ending in /FeatureServer/0
            (expected: https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Events_View/FeatureServer/0).
            Leave "" to use MANUAL_EVENTS below instead.
-         MANUAL_EVENTS item: { id, title, type: "Field day" | "Workshop" | "Webinar", date: "YYYY-MM-DD",
+         MANUAL_EVENTS item: { id, title, type: "Field day" | "Workshop" | "Webinar" | "Industry event", date: "YYYY-MM-DD",
            time: "10:00 am – 1:00 pm", location, travel, desc, audience, bring, with, access, free: true,
            seats, humanitix: "https://…", recap: "https://…", attended, cancelled }                                   */
       var EVENTS_SERVICE = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Events_View/FeatureServer/0";
@@ -382,7 +392,7 @@
       var EVENTS = [];
       var loadFailed = false;
 
-      var TYPES = ["Field day", "Workshop", "Webinar"];
+      var TYPES = ["Field day", "Workshop", "Webinar", "Industry event"];
       function safeUrl(u) { return typeof u === "string" && /^https:\/\/[^\s"'<>]+$/i.test(u.trim()) ? u.trim() : ""; }
       function normalise(r) {
         if (!r || !r.title || !/^\d{4}-\d{2}-\d{2}$/.test(r.date || "")) return null;
@@ -407,7 +417,7 @@
         return new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Hobart", year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
       }
       function fromService(a) {
-        var t = plain(a[FIELDS.type]), type = t.indexOf("field") === 0 ? "Field day" : t.indexOf("work") === 0 ? "Workshop" : t.indexOf("web") === 0 ? "Webinar" : "";
+        var t = plain(a[FIELDS.type]), type = t.indexOf("field") === 0 ? "Field day" : t.indexOf("work") === 0 ? "Workshop" : t.indexOf("web") === 0 ? "Webinar" : t.indexOf("industry") === 0 ? "Industry event" : "";
         return { id: a.globalid || a.GlobalID || a.objectid || a.OBJECTID, title: a[FIELDS.title], type: type, date: serviceDate(a[FIELDS.date]), time: a[FIELDS.time], location: a[FIELDS.location],
           travel: a[FIELDS.travel], desc: a[FIELDS.desc], audience: a[FIELDS.audience], bring: a[FIELDS.bring], with: a[FIELDS.with], access: a[FIELDS.access],
           free: !/^(no|n|false|paid)\b/.test(plain(a[FIELDS.free])), seats: a[FIELDS.seats], humanitix: a[FIELDS.humanitix], recap: a[FIELDS.recap], attended: a[FIELDS.attended],
@@ -426,10 +436,10 @@
       var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
       var TODAY = new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Hobart", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
       var filter = "all";
-      var LABELS = { "Field day": "field days", "Workshop": "workshops", "Webinar": "webinars" };
+      var LABELS = { "Field day": "field days", "Workshop": "workshops", "Webinar": "webinars", "Industry event": "industry events" };
 
       function pd(s) { var p = s.split("-"); return { y: p[0], m: MONTHS[+p[1] - 1], d: +p[2] }; }
-      function tagClass(t) { return t === "Webinar" ? "t-webinar" : t === "Workshop" ? "t-workshop" : ""; }
+      function tagClass(t) { return t === "Webinar" ? "t-webinar" : t === "Workshop" ? "t-workshop" : t === "Industry event" ? "t-industry" : ""; }
       function esc(s) { var e = document.createElement("div"); e.textContent = s; return e.innerHTML; }
 
       function action(ev, past) {
