@@ -270,7 +270,7 @@
         <p class="rp-eyebrow">What's on</p>
         <h2 class="rp-h2 rp-narrow">Upcoming <span class="accent">events</span></h2>
         <p class="rp-section-intro">
-          Free to attend unless noted. Registration is handled through Humanitix so we can keep you updated about any changes.
+          Free to attend unless noted. Registration is handled through each event's own booking page.
         </p>
 
         <div class="ev-toolbar">
@@ -458,7 +458,7 @@
         if (past) return ev.recap ? '<a class="rp-btn rp-btn-outline" href="' + ev.recap + '" target="_blank" rel="noopener">View recap</a>' : "";
         if (ev.cancelled) return '<span class="rp-btn" aria-disabled="true">Cancelled</span>';
         var ics = '<button type="button" class="ev-ics" data-ics="' + ev.id + '">Add to calendar</button>';
-        if (ev.humanitix) return '<a class="rp-btn rp-btn-solid" href="' + ev.humanitix + '" target="_blank" rel="noopener">Register on Humanitix</a>' + (ev.seats ? '<span class="ev-seats">' + ev.seats + ' places</span>' : "") + ics;
+        if (ev.humanitix) return '<a class="rp-btn rp-btn-solid" href="' + ev.humanitix + '" target="_blank" rel="noopener">Register</a>' + (ev.seats ? '<span class="ev-seats">' + ev.seats + ' places</span>' : "") + ics;
         return '<span class="rp-btn" aria-disabled="true">Registration opening soon</span>' + ics;
       }
 
@@ -505,7 +505,7 @@
         if (n) {
           document.getElementById("feature").innerHTML =
             '<div class="ev-feature-body"><p class="rp-eyebrow on-dark">Next up</p><h2 class="rp-h2">' + esc(n.title) + '</h2><p>' + esc(n.desc) + '</p>' +
-            (n.humanitix ? '<a class="rp-btn rp-btn-mint" href="' + n.humanitix + '" target="_blank" rel="noopener">Register on Humanitix</a>' : '<span class="rp-btn" aria-disabled="true">Registration opening soon</span>') +
+            (n.humanitix ? '<a class="rp-btn rp-btn-mint" href="' + n.humanitix + '" target="_blank" rel="noopener">Register</a>' : '<span class="rp-btn" aria-disabled="true">Registration opening soon</span>') +
             '<button type="button" class="ev-ics" data-ics="' + n.id + '">Add to calendar</button></div>' +
             '<div class="ev-feature-meta"><dl><div><dt>Date</dt><dd>' + rangeText(n) + '</dd></div><div><dt>Time</dt><dd>' + esc(n.time) + (n.multi && n.time ? " each day" : "") + '</dd></div><div><dt>Where</dt><dd>' + esc(n.location) + '</dd></div><div><dt>Cost</dt><dd>' + (n.free ? "Free" : "Paid") + '</dd></div></dl></div>';
         }
