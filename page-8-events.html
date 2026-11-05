@@ -384,7 +384,7 @@
            (expected: https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Events_View/FeatureServer/0).
            Leave "" to use MANUAL_EVENTS below instead.
          MANUAL_EVENTS item: { id, title, type: "Field day" | "Workshop" | "Webinar" | "Industry event", date: "YYYY-MM-DD",
-           time: "10:00 am – 1:00 pm", location, travel, desc, audience, bring, with, access, free: true,
+           end: "YYYY-MM-DD" (optional last day of a multi-day event), time: "10:00 am – 1:00 pm" (daily hours), location, travel, desc, audience, bring, with, access, free: true,
            seats, humanitix: "https://…", recap: "https://…", attended, cancelled }                                   */
       var EVENTS_SERVICE = "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Events_View/FeatureServer/0";
       var ENQUIRE_URL = "https://arcg.is/CiTXn";
@@ -397,6 +397,9 @@
       function normalise(r) {
         if (!r || !r.title || !/^\d{4}-\d{2}-\d{2}$/.test(r.date || "")) return null;
         r.id = String(r.id);
+        /* Multi-day events: `end` is the last day. Missing, invalid or earlier than the start = a one-day event. */
+        r.end = /^\d{4}-\d{2}-\d{2}$/.test(r.end || "") && r.end > r.date ? r.end : r.date;
+        r.multi = r.end > r.date;
         r.type = TYPES.indexOf(r.type) > -1 ? r.type : "Event";
         r.time = r.time || ""; r.location = r.location || ""; r.desc = r.desc || "";
         r.humanitix = safeUrl(r.humanitix); r.recap = safeUrl(r.recap);
@@ -405,7 +408,7 @@
       }
       /* Field names created by the Survey123 "Add an LEL event" form (check Data > Fields on the layer if the form is rebuilt). */
       var FIELDS = { title: "untitled_question_1", type: "type_of_event", date: "_date", time: "untitled_question_4", location: "untitled_question_5",
-        travel: "untitled_question_6", desc: "untitled_question_7", audience: "untitled_question_8", bring: "untitled_question_9",
+        end: "untitled_question_18", travel: "untitled_question_6", desc: "untitled_question_7", audience: "untitled_question_8", bring: "untitled_question_9",
         with: "untitled_question_10", access: "untitled_question_11", free: "is_it_free", seats: "number_of_places", status: "untitled_question_14",
         humanitix: "humanitix_link", recap: "recap_link", attended: "attended" };
       function plain(v) { return String(v == null ? "" : v).toLowerCase().replace(/[_-]+/g, " ").trim(); }
@@ -418,7 +421,7 @@
       }
       function fromService(a) {
         var t = plain(a[FIELDS.type]), type = t.indexOf("field") === 0 ? "Field day" : t.indexOf("work") === 0 ? "Workshop" : t.indexOf("web") === 0 ? "Webinar" : t.indexOf("industry") === 0 ? "Industry event" : "";
-        return { id: a.globalid || a.GlobalID || a.objectid || a.OBJECTID, title: a[FIELDS.title], type: type, date: serviceDate(a[FIELDS.date]), time: a[FIELDS.time], location: a[FIELDS.location],
+        return { id: a.globalid || a.GlobalID || a.objectid || a.OBJECTID, title: a[FIELDS.title], type: type, date: serviceDate(a[FIELDS.date]), end: serviceDate(a[FIELDS.end]), time: a[FIELDS.time], location: a[FIELDS.location],
           travel: a[FIELDS.travel], desc: a[FIELDS.desc], audience: a[FIELDS.audience], bring: a[FIELDS.bring], with: a[FIELDS.with], access: a[FIELDS.access],
           free: !/^(no|n|false|paid)\b/.test(plain(a[FIELDS.free])), seats: a[FIELDS.seats], humanitix: a[FIELDS.humanitix], recap: a[FIELDS.recap], attended: a[FIELDS.attended],
           cancelled: plain(a[FIELDS.status]) === "cancelled" };
@@ -438,6 +441,15 @@
       var filter = "all";
       var LABELS = { "Field day": "field days", "Workshop": "workshops", "Webinar": "webinars", "Industry event": "industry events" };
 
+      /* "6–8 May 2027", "30 Apr – 2 May 2027", "30 Dec 2026 – 2 Jan 2027" */
+      function rangeText(ev) {
+        var a = pd(ev.date); if (!ev.multi) return a.d + " " + a.m + " " + a.y;
+        var b = pd(ev.end);
+        if (a.y === b.y && a.m === b.m) return a.d + "–" + b.d + " " + a.m + " " + a.y;
+        if (a.y === b.y) return a.d + " " + a.m + " – " + b.d + " " + b.m + " " + a.y;
+        return a.d + " " + a.m + " " + a.y + " – " + b.d + " " + b.m + " " + b.y;
+      }
+      function addDay(s, n) { var d = new Date(s + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
       function pd(s) { var p = s.split("-"); return { y: p[0], m: MONTHS[+p[1] - 1], d: +p[2] }; }
       function tagClass(t) { return t === "Webinar" ? "t-webinar" : t === "Workshop" ? "t-workshop" : t === "Industry event" ? "t-industry" : ""; }
       function esc(s) { var e = document.createElement("div"); e.textContent = s; return e.innerHTML; }
@@ -463,19 +475,20 @@
       }
 
       function card(ev, past) {
-        var d = pd(ev.date);
+        var d = pd(ev.date), e2 = pd(ev.end);
+        var dBig = ev.multi ? d.d + "–" + e2.d : d.d, mBig = ev.multi && d.m !== e2.m ? d.m + "–" + e2.m : d.m, yBig = ev.multi && d.y !== e2.y ? d.y + "–" + e2.y : d.y;
         return '<article class="ev-card' + (past ? " is-past" : "") + ' rp-reveal">' +
-          '<div class="ev-date"><div class="d">' + d.d + '</div><div class="m">' + d.m + '</div><div class="y">' + d.y + '</div></div>' +
+          '<div class="ev-date"><div class="d">' + dBig + '</div><div class="m">' + mBig + '</div><div class="y">' + yBig + '</div></div>' +
           '<div><div class="ev-tags"><span class="ev-tag ' + tagClass(ev.type) + '">' + ev.type + '</span>' + (ev.cancelled ? '<span class="ev-tag">Cancelled</span>' : "") + (past ? '<span class="ev-tag">Past event</span>' : "") + '</div>' +
           '<h3 class="rp-h3">' + esc(ev.title) + '</h3>' +
-          '<div class="ev-meta"><span>' + esc(ev.time) + '</span><span>' + esc(ev.location) + '</span>' + (ev.travel ? '<span>' + esc(ev.travel) + '</span>' : "") + '<span>' + (ev.free ? "Free" : "Paid") + '</span></div>' +
+          '<div class="ev-meta"><span>' + esc(ev.time) + (ev.multi && ev.time ? " each day" : "") + '</span><span>' + esc(ev.location) + '</span>' + (ev.travel ? '<span>' + esc(ev.travel) + '</span>' : "") + '<span>' + (ev.free ? "Free" : "Paid") + '</span></div>' +
           '<p class="ev-desc">' + esc(ev.desc) + '</p>' + more(ev) + '</div>' +
           '<div class="ev-action">' + action(ev, past) + '</div></article>';
       }
 
       function render() {
-        var upcoming = EVENTS.filter(function (e) { return e.date >= TODAY; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
-        var past = EVENTS.filter(function (e) { return e.date < TODAY; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+        var upcoming = EVENTS.filter(function (e) { return e.end >= TODAY; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+        var past = EVENTS.filter(function (e) { return e.end < TODAY; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; });
         var shown = upcoming.filter(function (e) { return filter === "all" || e.type === filter; });
 
         document.getElementById("upcoming-list").innerHTML = shown.length
@@ -483,19 +496,18 @@
           : '<div class="ev-empty">' + (loadFailed ? "We couldn't load events just now. Please try again shortly or <a href=\"" + ENQUIRE_URL + "\">contact the project team</a>." : "No " + (filter === "all" ? "events" : LABELS[filter]) + " scheduled yet.") + '</div>';
         document.getElementById("upcoming-list").hidden = view !== "list";
         document.getElementById("cal").hidden = view !== "calendar";
-        if (calY === undefined) { var f = (upcoming[0] ? upcoming[0].date : TODAY).split("-"); calY = +f[0]; calM = +f[1] - 1; selDay = upcoming[0] ? upcoming[0].date : null; }
+        if (calY === undefined) { var first0 = upcoming[0] ? (upcoming[0].date < TODAY ? TODAY : upcoming[0].date) : TODAY; var f = first0.split("-"); calY = +f[0]; calM = +f[1] - 1; selDay = upcoming[0] ? first0 : null; }
         if (view === "calendar") renderCal(); else document.getElementById("count").textContent = shown.length + " upcoming";
         document.getElementById("past-list").innerHTML = past.length ? past.map(function (e) { return card(e, true); }).join("") : '<div class="ev-empty">Past events will appear here.</div>';
 
         var n = upcoming.filter(function (e) { return !e.cancelled; })[0];
         document.getElementById("feature-wrap").style.display = n ? "" : "none";
         if (n) {
-          var d = pd(n.date);
           document.getElementById("feature").innerHTML =
             '<div class="ev-feature-body"><p class="rp-eyebrow on-dark">Next up</p><h2 class="rp-h2">' + esc(n.title) + '</h2><p>' + esc(n.desc) + '</p>' +
             (n.humanitix ? '<a class="rp-btn rp-btn-mint" href="' + n.humanitix + '" target="_blank" rel="noopener">Register on Humanitix</a>' : '<span class="rp-btn" aria-disabled="true">Registration opening soon</span>') +
             '<button type="button" class="ev-ics" data-ics="' + n.id + '">Add to calendar</button></div>' +
-            '<div class="ev-feature-meta"><dl><div><dt>Date</dt><dd>' + d.d + ' ' + d.m + ' ' + d.y + '</dd></div><div><dt>Time</dt><dd>' + esc(n.time) + '</dd></div><div><dt>Where</dt><dd>' + esc(n.location) + '</dd></div><div><dt>Cost</dt><dd>' + (n.free ? "Free" : "Paid") + '</dd></div></dl></div>';
+            '<div class="ev-feature-meta"><dl><div><dt>Date</dt><dd>' + rangeText(n) + '</dd></div><div><dt>Time</dt><dd>' + esc(n.time) + (n.multi && n.time ? " each day" : "") + '</dd></div><div><dt>Where</dt><dd>' + esc(n.location) + '</dd></div><div><dt>Cost</dt><dd>' + (n.free ? "Free" : "Paid") + '</dd></div></dl></div>';
         }
         injectSchema();
         observe();
@@ -503,7 +515,7 @@
 
       /* Search-engine event markup (schema.org) for upcoming, non-cancelled events. */
       function injectSchema() {
-        var real = EVENTS.filter(function (e) { return e.date >= TODAY && !e.cancelled; });
+        var real = EVENTS.filter(function (e) { return e.end >= TODAY && !e.cancelled; });
         var old = document.getElementById("ld-events");
         if (old) old.remove();
         if (!real.length) return;
@@ -513,7 +525,7 @@
           var t = parseTimes(e.time) || { start: 540, end: 600 };
           var online = e.type === "Webinar";
           return { "@context": "https://schema.org", "@type": "Event", name: e.title, description: e.desc,
-            startDate: e.date + "T" + pad(Math.floor(t.start / 60)) + ":" + pad(t.start % 60) + ":00", endDate: e.date + "T" + pad(Math.floor(t.end / 60)) + ":" + pad(t.end % 60) + ":00",
+            startDate: e.date + "T" + pad(Math.floor(t.start / 60)) + ":" + pad(t.start % 60) + ":00", endDate: e.end + "T" + pad(Math.floor(t.end / 60)) + ":" + pad(t.end % 60) + ":00",
             eventAttendanceMode: online ? "https://schema.org/OnlineEventAttendanceMode" : "https://schema.org/OfflineEventAttendanceMode",
             eventStatus: "https://schema.org/EventScheduled",
             location: online ? { "@type": "VirtualLocation", url: e.humanitix || "https://lel-indie520d1a051c0.hub.arcgis.com/" } : { "@type": "Place", name: e.location },
@@ -543,10 +555,14 @@
       function vevent(ev, now) {
         var t = parseTimes(ev.time) || { start: 9 * 60, end: 10 * 60 };
         var desc = ev.desc + (ev.humanitix ? "\n\nRegister: " + ev.humanitix : "\n\nRegistration link to follow on the LEL project website.");
-        return ["BEGIN:VEVENT", "UID:lel-event-" + String(ev.id).replace(/[^A-Za-z0-9]/g, "") + "@tasfarmers.com.au", "DTSTAMP:" + now + "Z",
-          "DTSTART;TZID=Australia/Hobart:" + stamp(ev.date, t.start), "DTEND;TZID=Australia/Hobart:" + stamp(ev.date, t.end),
+        /* A multi-day event goes in as an all-day event across its dates; the daily hours move into the description. */
+        if (ev.multi) desc = (ev.time ? "Daily hours: " + ev.time + "\n\n" : "") + desc;
+        var when = ev.multi
+          ? ["DTSTART;VALUE=DATE:" + ev.date.replace(/-/g, ""), "DTEND;VALUE=DATE:" + addDay(ev.end, 1).replace(/-/g, "")]
+          : ["DTSTART;TZID=Australia/Hobart:" + stamp(ev.date, t.start), "DTEND;TZID=Australia/Hobart:" + stamp(ev.date, t.end)];
+        return ["BEGIN:VEVENT", "UID:lel-event-" + String(ev.id).replace(/[^A-Za-z0-9]/g, "") + "@tasfarmers.com.au", "DTSTAMP:" + now + "Z"].concat(when, [
           "SUMMARY:" + icsText(ev.title), "LOCATION:" + icsText(ev.location), "DESCRIPTION:" + icsText(desc),
-          "END:VEVENT"];
+          "END:VEVENT"]);
       }
       function downloadIcs(evs, filename) {
         var now = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
@@ -568,7 +584,7 @@
         var b = e.target.closest("[data-ics]");
         if (!b) return;
         if (b.dataset.ics === "all") {
-          var up = EVENTS.filter(function (x) { return x.date >= TODAY && !x.cancelled; });
+          var up = EVENTS.filter(function (x) { return x.end >= TODAY && !x.cancelled; });
           if (up.length) downloadIcs(up, "LEL-upcoming-events.ics");
           return;
         }
@@ -585,12 +601,12 @@
         var offset = (new Date(calY, calM, 1).getDay() + 6) % 7; /* Monday start */
         var days = new Date(calY, calM + 1, 0).getDate();
         var html = DOW.map(function (d) { return '<div class="cal-dow">' + d + '</div>'; }).join("");
-        var monthCount = 0, firstEv = null;
+        var monthIds = {}, firstEv = null;
         for (var i = 0; i < offset; i++) html += '<div class="cal-cell blank"></div>';
         for (var d = 1; d <= days; d++) {
           var key = calY + "-" + pad(calM + 1) + "-" + pad(d);
-          var day = evs.filter(function (e) { return e.date === key; });
-          monthCount += day.length;
+          var day = evs.filter(function (e) { return e.date <= key && key <= e.end; });
+          day.forEach(function (e) { monthIds[e.id] = 1; });
           if (day.length && !firstEv) firstEv = key;
           var cls = "cal-cell" + (day.length ? " has" : "") + (key === TODAY ? " today" : "") + (key === selDay ? " sel" : "");
           var inner = '<span class="cal-num">' + d + '</span>' +
@@ -600,13 +616,14 @@
             ? '<button type="button" class="' + cls + '" data-day="' + key + '" aria-label="' + fmtLong(key) + ', ' + day.length + (day.length > 1 ? " events" : " event") + '">' + inner + '</button>'
             : '<div class="' + cls + '">' + inner + '</div>';
         }
+        var monthCount = Object.keys(monthIds).length;
         document.getElementById("cal-grid").innerHTML = html;
         document.getElementById("cal-title").textContent = FULL_MONTHS[calM] + " " + calY;
         document.getElementById("count").textContent = monthCount + (monthCount === 1 ? " event this month" : " events this month");
 
-        var selEvs = selDay ? evs.filter(function (e) { return e.date === selDay; }) : [];
+        var selEvs = selDay ? evs.filter(function (e) { return e.date <= selDay && selDay <= e.end; }) : [];
         document.getElementById("cal-panel").innerHTML = selEvs.length
-          ? '<h3 class="rp-h3">' + fmtLong(selDay) + '</h3>' + selEvs.map(function (e) { return card(e, e.date < TODAY); }).join("")
+          ? '<h3 class="rp-h3">' + fmtLong(selDay) + '</h3>' + selEvs.map(function (e) { return card(e, e.end < TODAY); }).join("")
           : (monthCount ? '<p class="ev-count">Select a highlighted day to see event details.</p>' : '<div class="ev-empty">No events this month.</div>');
         document.querySelectorAll("#cal-panel .rp-reveal").forEach(function (el) { el.classList.add("is-visible"); });
       }
@@ -614,9 +631,9 @@
       function shiftMonth(n) {
         calM += n;
         if (calM < 0) { calM = 11; calY--; } else if (calM > 11) { calM = 0; calY++; }
-        var prefix = calY + "-" + pad(calM + 1);
-        var first = EVENTS.filter(function (e) { return e.date.indexOf(prefix) === 0 && (filter === "all" || e.type === filter); }).sort(function (a, b) { return a.date < b.date ? -1 : 1; })[0];
-        selDay = first ? first.date : null;
+        var prefix = calY + "-" + pad(calM + 1), mStart = prefix + "-01", mEnd = prefix + "-" + pad(new Date(calY, calM + 1, 0).getDate());
+        var first = EVENTS.filter(function (e) { return e.date <= mEnd && e.end >= mStart && (filter === "all" || e.type === filter); }).sort(function (a, b) { return a.date < b.date ? -1 : 1; })[0];
+        selDay = first ? (first.date < mStart ? mStart : first.date) : null;
         renderCal();
       }
       document.getElementById("cal-prev").addEventListener("click", function () { shiftMonth(-1); });
