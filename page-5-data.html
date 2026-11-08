@@ -1822,7 +1822,7 @@
           async function fetchLatest(field, extra) {
             const data = await q(ECON_URL, {
               where: `treatment='${treatment}' AND farm_name='${AGGREGATE_LABEL}' AND ${field} IS NOT NULL`,
-              outFields: `treatment,${field},cost_per_head_aud,weight_gain_kg_per_head,calculation_date`,
+              outFields: `treatment,${field},cost_per_head_aud,weight_gain_kg_per_head,calculation_date,notes`,
               orderByFields: "calculation_date DESC",
               resultRecordCount: "1",
               f: "json",
@@ -1835,6 +1835,7 @@
                   costPerHead: row.cost_per_head_aud,
                   weightGainKg: row.weight_gain_kg_per_head,
                   matched: field === "cost_per_kg_gain_ow_aud",
+                  notes: row.notes || "",
                 }
               : null;
           }
@@ -1863,6 +1864,21 @@
             : reading.costPerHead != null && reading.weightGainKg != null
               ? `$${reading.costPerHead.toFixed(2)}/head spend over ${reading.weightGainKg.toFixed(1)}kg gain: `
               : "";
+          // Held reading (2026-11-09): when a cohort restart leaves too little
+          // history for a fair figure, the pipeline keeps the last full reading and
+          // says so in notes ("Held last matched-window cost per kg gain ($0.20, as
+          // at 2026-11-04): ..."). Show that date and why, not today's run date.
+          const held = /Held last matched-window cost per kg gain \(\$[\d.]+, as at (\d{4}-\d{2}-\d{2})\)/.exec(
+            reading.notes || "",
+          );
+          if (held) {
+            metaEl.textContent =
+              "last full reading, as at " +
+              held[1] +
+              ": newer groups of cattle are still building history";
+            metaEl.classList.remove("stale");
+            return;
+          }
           metaEl.textContent =
             basis +
             "as at " +
