@@ -1021,9 +1021,11 @@
             <p class="dp-methodology-text">
             <b>ADG difference</b> is how much faster (+) or slower (&minus;) KleenGrow
             cattle gained weight than Control cattle, as a percentage of the Control gain.
-            ADG is average daily gain: each group&rsquo;s average weight gain
-            from the start of the trial to date, divided by the days elapsed,
-            using OptiWeigh weights and combined across trial sites.
+            ADG is average daily gain. This is the whole trial to date, not a recent
+            window: each group&rsquo;s weight gain across every cohort so far,
+            with both groups compared over the same dates within each cohort,
+            using OptiWeigh weights, and combined across cohorts by the number
+            of animal-days behind each.
           </p>
           <p class="dp-methodology-text">
             <b>Cost per kg of gain</b> is what it cost to produce each kg of
@@ -2328,7 +2330,7 @@
         function fetchStartToDate() {
           return q(ADG_COMPARISON_URL, {
             where: "farm_name='" + AGGREGATE_LABEL + "' AND window_days=9999 AND eligible='Y'",
-            outFields: "comparison_date,window_days,diff_pct,seafeed_adg,control_adg,eligible",
+            outFields: "comparison_date,window_days,diff_pct,seafeed_adg,control_adg,eligible,farms_included",
             orderByFields: "comparison_date DESC",
             resultRecordCount: "1",
             f: "json",
@@ -2440,11 +2442,14 @@
                   daysSinceEpochMs(adgHeadline.comparison_date) > STALE_AFTER_DAYS;
                 adgMetaEl.textContent =
                   (adgHeadline.window_days === 9999
-                    ? "KleenGrow vs Control, start of trial to date: " +
+                    ? "KleenGrow vs Control, whole trial to date: " +
                       Math.round(adgHeadline.seafeed_adg).toLocaleString("en-AU") +
                       " vs " +
                       Math.round(adgHeadline.control_adg).toLocaleString("en-AU") +
-                      " g/day"
+                      " g/day" +
+                      (adgHeadline.farms_included > 1
+                        ? " (" + adgHeadline.farms_included + " cohorts)"
+                        : "")
                     : "KleenGrow vs Control, " +
                       adgHeadline.window_days +
                       "-day average") +
