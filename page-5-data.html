@@ -1431,7 +1431,7 @@
                     new URLSearchParams({
                       where: "1=1",
                       outFields:
-                        "record_date,abatement_rate_pct,intake_g_per_hd_day,methane_abated_g_per_hd_day,co2e_abated_t,animal_days,cohorts",
+                        "record_date,abatement_rate_pct,intake_g_per_hd_day,methane_abated_g_per_hd_day,co2e_abated_t,animal_days,cohorts,adg_seafeed_g,adg_control_g,adg_diff_pct,adg_cohorts",
                       orderByFields: "record_date ASC",
                       resultRecordCount: "2000",
                       f: "json",
@@ -1781,6 +1781,46 @@
         // built from weight gain divided by days, which smoothed the mob average twice.
         async function loadAdg() {
           try {
+            // 2026-11-18: the chart is the WHOLE-TRIAL ADG advantage as it stood on each date (script 28 ->
+            // LEL_Trial_Headline_view), replacing the rolling 30-day line. Falls back to the 30-day line if
+            // the series can't be read.
+            const wt = await window.LEL_WHOLE_TRIAL();
+            const wtAdg = wt ? wt.filter((r) => r.adg_diff_pct != null) : [];
+            if (wtAdg.length) {
+              const sect = document.getElementById("chart-adg").closest(".dp-chart-section");
+              const cap = sect && sect.querySelector(".dp-chart-caption");
+              if (cap)
+                cap.textContent =
+                  "The whole-trial average daily gain (ADG) of the KleenGrow group compared to the control group, as a percentage advantage, from the start of the trial to each date. Both groups are compared over the same dates within each cohort, and cohorts are combined by animal-days. The line starts once a cohort has 30 matched days, and early points move a lot because they rest on a few weeks of data from one cohort. A step can reflect a cohort joining or finishing rather than a change in the effect.";
+              renderLineChart(
+                "chart-adg",
+                "chart-adg-empty",
+                wtAdg.map((r) => fmtDate(r.record_date)),
+                [
+                  {
+                    label: "KleenGrow vs Control (whole-trial ADG advantage, %)",
+                    data: wtAdg.map((r) => r.adg_diff_pct),
+                    borderColor: MINT,
+                    backgroundColor: "rgba(58,169,137,0.12)",
+                    fill: { value: 0 },
+                    tension: 0.25,
+                    spanGaps: true,
+                    pointRadius: 0,
+                    segment: {
+                      borderColor: (ctx) => segmentColorBySign(ctx, MINT, RED),
+                      backgroundColor: (ctx) =>
+                        segmentColorBySign(
+                          ctx,
+                          "rgba(58,169,137,0.12)",
+                          "rgba(192,57,43,0.12)",
+                        ),
+                    },
+                  },
+                ],
+                "Whole-trial ADG advantage (%)",
+              );
+              return;
+            }
             const data = await q(WEIGHTS_URL, {
               where: `farm_name='${AGGREGATE_LABEL}' AND treatment_group IN ('seafeed','control') AND adg IS NOT NULL`,
               outFields: "snapshot_date,treatment_group,adg",
