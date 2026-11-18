@@ -939,12 +939,12 @@
         </p>
         <div class="dp-stats-grid dp-reveal">
           <div class="dp-stat-hero">
-            <p>Modelled abatement rate</p>
+            <p id="b-abatement-label">Modelled abatement rate</p>
             <p class="dp-stat-value" id="b-abatement">
               <span class="dp-skel-white" style="width: 110px; height: 34px"></span>
             </p>
             <div class="dp-hero-substat">
-              <p class="dp-hero-substat-label">Average KleenGrow consumption</p>
+              <p class="dp-hero-substat-label" id="b-intake-label">Average KleenGrow consumption</p>
               <p class="dp-hero-substat-sub">Per head/day</p>
               <p class="dp-hero-substat-value" id="b-intake">
                 <span class="dp-skel-white" style="width: 64px; height: 24px"></span>
@@ -1047,7 +1047,10 @@
         <div class="dp-chart-section dp-reveal">
           <h3 class="dp-h3">Methane abatement over time</h3>
           <p class="dp-chart-caption">
-            The modelled abatement rate for the KleenGrow group.
+            The modelled abatement rate for the KleenGrow group. When the
+            whole-trial series is available this is the rate over the entire
+            trial to date, which settles as evidence builds rather than
+            following the latest intake day to day.
           </p>
           <div class="dp-chart-box">
             <div
@@ -1411,6 +1414,48 @@
       }
     </script>
     <script>
+      // WHOLE-TRIAL MODELLED ABATEMENT (2026-11-18): one row per day of the whole-trial-to-date figures
+      // (script 28 -> LEL_Trial_Headline, read-only public view, aggregated, no farm names).
+      // HEADLINE_URL stays empty until that view is shared; every block below then falls back to the
+      // older figures, so the page works either way. Resolves to an ascending array of rows, or null.
+      window.LEL_HEADLINE_URL = "";
+      window.LEL_WHOLE_TRIAL = (function () {
+        var p = null;
+        return function () {
+          if (!p) {
+            p = window.LEL_HEADLINE_URL
+              ? fetch(
+                  window.LEL_HEADLINE_URL +
+                    "?" +
+                    new URLSearchParams({
+                      where: "1=1",
+                      outFields:
+                        "record_date,abatement_rate_pct,intake_g_per_hd_day,methane_abated_g_per_hd_day,co2e_abated_t,animal_days,cohorts",
+                      orderByFields: "record_date ASC",
+                      resultRecordCount: "2000",
+                      f: "json",
+                    }),
+                  )
+                  .then(function (r) {
+                    return r.json();
+                  })
+                  .then(function (d) {
+                    return d.features && d.features.length
+                      ? d.features.map(function (f) {
+                          return f.attributes;
+                        })
+                      : null;
+                  })
+                  .catch(function () {
+                    return null;
+                  })
+              : Promise.resolve(null);
+          }
+          return p;
+        };
+      })();
+    </script>
+    <script>
       // ================= CHARTS + COST OF PRODUCTION =================
       (function () {
         const EMISSIONS_URL =
@@ -1662,6 +1707,28 @@
 
         async function loadAbatement() {
           try {
+            const wt = await window.LEL_WHOLE_TRIAL();
+            if (wt) {
+              renderLineChart(
+                "chart-abatement",
+                "chart-abatement-empty",
+                wt.map((r) => fmtDate(r.record_date)),
+                [
+                  {
+                    label: "Whole trial to date (%)",
+                    data: wt.map((r) => r.abatement_rate_pct),
+                    borderColor: MINT,
+                    backgroundColor: "rgba(58,169,137,0.12)",
+                    fill: true,
+                    tension: 0.35,
+                    spanGaps: true,
+                    pointRadius: 0,
+                  },
+                ],
+                "Modelled abatement, whole trial to date (%)",
+              );
+              return;
+            }
             const data = await q(EMISSIONS_URL, {
               where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`,
               outFields: "abatement_rate,record_date",
@@ -2082,6 +2149,18 @@
           return data.features[0].attributes;
         }
         async function fetchLatestEmissions() {
+          const wt = await window.LEL_WHOLE_TRIAL();
+          if (wt) {
+            const l = wt[wt.length - 1];
+            return {
+              methane_abated_g_per_hd_day: l.methane_abated_g_per_hd_day,
+              intake_g_per_hd_day: l.intake_g_per_hd_day,
+              abatement_rate: l.abatement_rate_pct,
+              record_date: l.record_date,
+              co2e_abated_t: l.co2e_abated_t,
+              first_date: wt[0].record_date,
+            };
+          }
           const params = new URLSearchParams({
             where: `treatment='seafeed' AND farm_name='${AGGREGATE_LABEL}'`,
             outFields:
@@ -2211,7 +2290,7 @@
             console.error("GWP fetch failed, using default 28:", err);
           });
           try {
-            const [, econ, emissions, firstAbatementMs] = await Promise.all([
+            const [, econ, emissions, firstAbatementMs0] = await Promise.all([
               gwpPromise,
               fetchLatestEconomics(),
               fetchLatestEmissions(),
@@ -2219,12 +2298,15 @@
                 return null;
               }),
             ]);
+            const firstAbatementMs =
+              emissions.first_date != null ? emissions.first_date : firstAbatementMs0;
             latestEmissions = emissions;
             const abatedPerHead = econ.cumulative_ch4_abated_kg_per_head || 0;
             const headCount = econ.representative_head_count || 0;
             const totalKgCh4 = abatedPerHead * headCount;
             const totalKgCo2e = totalKgCh4 * GWP;
-            const totalTonnesCo2e = totalKgCo2e / 1000;
+            const totalTonnesCo2e =
+              emissions.co2e_abated_t != null ? emissions.co2e_abated_t : totalKgCo2e / 1000;
             const illustrativeValue =
               totalTonnesCo2e * REFERENCE_PRICE_AUD_PER_TONNE;
             valueOut.textContent =
@@ -2307,6 +2389,21 @@
         }
 
         function fetchLatestSeafeedEmissions() {
+          return window.LEL_WHOLE_TRIAL().then(function (wt) {
+            if (wt) {
+              var l = wt[wt.length - 1];
+              return {
+                abatement_rate: l.abatement_rate_pct,
+                intake_g_per_hd_day: l.intake_g_per_hd_day,
+                record_date: l.record_date,
+                co2e_abated_t: l.co2e_abated_t,
+              };
+            }
+            return fetchLatestSeafeedEmissionsLegacy();
+          });
+        }
+
+        function fetchLatestSeafeedEmissionsLegacy() {
           return q(EMISSIONS_URL, {
             where: "treatment='seafeed' AND farm_name='" + AGGREGATE_LABEL + "'",
             outFields: "abatement_rate,intake_g_per_hd_day,record_date",
@@ -2505,7 +2602,12 @@
               }
 
               var co2e = "—";
-              if (
+              if (emissions && emissions.co2e_abated_t != null) {
+                co2e =
+                  emissions.co2e_abated_t >= 1
+                    ? emissions.co2e_abated_t.toFixed(2) + " t"
+                    : Math.round(emissions.co2e_abated_t * 1000).toLocaleString() + " kg";
+              } else if (
                 seafeedEcon &&
                 seafeedEcon.cumulative_ch4_abated_kg_per_head != null &&
                 seafeedEcon.representative_head_count != null
@@ -2538,6 +2640,13 @@
                   ? Math.round(emissions.intake_g_per_hd_day) + " g"
                   : "—";
 
+              if (emissions && emissions.co2e_abated_t != null) {
+                // whole-trial mode: say so on the tiles
+                document.getElementById("b-abatement-label").textContent =
+                  "Modelled abatement, whole trial to date";
+                document.getElementById("b-intake-label").textContent =
+                  "Average KleenGrow consumption, whole trial";
+              }
               document.getElementById("b-abatement").textContent = abatement;
               var adgValEl = document.getElementById("b-adg");
               adgValEl.textContent = adg;
