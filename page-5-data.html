@@ -1416,9 +1416,10 @@
     <script>
       // WHOLE-TRIAL MODELLED ABATEMENT (2026-11-18): one row per day of the whole-trial-to-date figures
       // (script 28 -> LEL_Trial_Headline, read-only public view, aggregated, no farm names).
-      // HEADLINE_URL stays empty until that view is shared; every block below then falls back to the
+      // If this URL is empty or the view is unreachable, every block below falls back to the
       // older figures, so the page works either way. Resolves to an ascending array of rows, or null.
-      window.LEL_HEADLINE_URL = "";
+      window.LEL_HEADLINE_URL =
+        "https://services6.arcgis.com/RkRGg1mAki7yG3EG/arcgis/rest/services/LEL_Trial_Headline_view/FeatureServer/0/query";
       window.LEL_WHOLE_TRIAL = (function () {
         var p = null;
         return function () {
