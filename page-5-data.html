@@ -1047,10 +1047,9 @@
         <div class="dp-chart-section dp-reveal">
           <h3 class="dp-h3">Methane abatement over time</h3>
           <p class="dp-chart-caption">
-            The modelled abatement rate for the KleenGrow group. When the
-            whole-trial series is available this is the rate over the entire
-            trial to date, which settles as evidence builds rather than
-            following the latest intake day to day.
+            The modelled abatement rate for the KleenGrow group over the entire
+            trial to date, as it stood on each day. It settles as evidence
+            builds rather than following the latest intake day to day.
           </p>
           <div class="dp-chart-box">
             <div
@@ -1350,10 +1349,10 @@
         <div class="dp-calc-box dp-reveal">
           <p class="dp-calc-title">Estimate it for your own herd</p>
           <p class="dp-calc-intro">
-            This calculator applies the trial's latest methane abatement results
-            (per head per day) to a herd of your selected size, assuming that
-            KleenGrow is being consumed at the same intake rate currently
-            being recorded in the trial. This is not a guarantee, your actual
+            This calculator applies the trial's whole-trial methane abatement
+            results (the average per head per day since the trial began) to a
+            herd of your selected size, assuming that KleenGrow is being
+            consumed at the trial's average intake rate. This is not a guarantee, your actual
             result will depend on your animals, feeding conditions and
             KleenGrow intake.
           </p>
@@ -2305,7 +2304,7 @@
                 " kg";
           calcRateSub.textContent =
             abatementRate != null
-              ? "At the trial’s current " +
+              ? "At the trial’s whole-trial " +
                 abatementRate.toFixed(1) +
                 "% modelled abatement rate"
               : "";
@@ -2316,10 +2315,10 @@
             });
           const intakeNote =
             intakeGPerHdDay != null
-              ? " (" + intakeGPerHdDay.toFixed(0) + " g KleenGrow/head/day)"
+              ? " (average intake " + intakeGPerHdDay.toFixed(0) + " g KleenGrow/head/day)"
               : "";
           calcNote.textContent =
-            "Based on the trial’s most recent per-head daily methane abatement" +
+            "Based on the trial’s whole-trial average methane abatement per head per day" +
             intakeNote +
             ". Illustrative only, see disclosure above.";
           calcNote.style.color = "#6b7c8a";
