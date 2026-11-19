@@ -253,7 +253,7 @@
         <span class="tf-step-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"></polyline><polyline points="14 7 21 7 21 14"></polyline></svg></span>
         <span class="tf-step-num">2</span>
       </div>
-      <p class="tf-step-title">We add the trial's measured difference</p>
+      <p class="tf-step-title">We add the program's measured difference</p>
       <p class="tf-step-text">Just the SeaFeed-vs-control gap, applied on top of your numbers.</p>
     </div>
     <div class="tf-step-arrow">&#8594;</div>
@@ -286,7 +286,7 @@
     </div>
   </div>
 
-  <p class="tf-explainer-disclaimer">An estimate, not a guarantee - updates automatically as trial data grows. Not financial advice.</p>
+  <p class="tf-explainer-disclaimer">An estimate, not a guarantee - updates automatically as program data grows. Not financial advice.</p>
 
   <!-- ============ EXAMPLE CASE STUDY ============ -->
   <!-- Hero numbers up front (matches the real results panel's own
@@ -305,9 +305,9 @@
     <div><a class="tf-jumplink" id="case-study-jumplink">Try it with your own numbers &#8595;</a></div>
   </div>
 
-  <div class="tf-status-row" id="status-row" title="Updates automatically as more farms come online and the trial runs longer.">
+  <div class="tf-status-row" id="status-row" title="Updates automatically as more farms come online and the program runs longer.">
     <span class="tf-live-dot pulse" id="live-dot"></span>
-    <span class="tf-status-text" id="status-text">Loading live trial data…</span>
+    <span class="tf-status-text" id="status-text">Loading live program data…</span>
   </div>
 
   <div class="tf-toggle-pair">
@@ -438,7 +438,7 @@
   </div>
   <div class="tf-info-wrap" id="confidence-wrap">
     <p class="tf-footnote" id="confidence-note">
-      This estimate uses your own mob numbers plus the SeaFeed-vs-control difference measured in the trial so far, not a market forecast. It does not account for seasonal price variation, transport, or other on-farm costs. Not financial advice, for a full assessment of your operation, speak with your accountant or farm business advisor alongside using this tool.
+      This estimate uses your own mob numbers plus the SeaFeed-vs-control difference measured in the program so far, not a market forecast. It does not account for seasonal price variation, transport, or other on-farm costs. Not financial advice, for a full assessment of your operation, speak with your accountant or farm business advisor alongside using this tool.
     </p>
     <p class="tf-footnote" id="sampleSizeNote"></p>
   </div>
@@ -697,7 +697,7 @@
       } else {
         eyebrowText = "At these inputs, SeaFeed costs more";
         stat1Value = 0; stat1Unit = "days sooner";
-        stat1Caption = "no turnoff advantage at current trial figures";
+        stat1Caption = "no turnoff advantage at current program figures";
       }
     } else {
       const d = Math.max(num("durationDays"), 1);
@@ -729,7 +729,7 @@
       } else {
         eyebrowText = `Over ${d} days, SeaFeed costs more`;
         stat1Value = "0"; stat1Unit = "kg more";
-        stat1Caption = "no growth advantage at current trial figures";
+        stat1Caption = "no growth advantage at current program figures";
       }
     }
 
@@ -792,7 +792,7 @@
 
     el("case-study-detail").innerHTML = `
       <p>A ${demoHerd}-head mob at ${demoCurrent}kg, aiming for ${demoTarget}kg, fed at $${demoCopDayBau.toFixed(2)}/head/day and growing at ${demoAdgBau.toFixed(2)}kg/day under business as usual - this calculator's own default settings below, so you can compare directly.</p>
-      <p>Trial's measured SeaFeed difference today: <span class="tf-case-highlight">+${Math.round(adgUpliftKgPerDay * 1000)} g/day</span> faster growth, <span class="tf-case-highlight">+${fmtMoney2(incrementalCostPerHeadDay)}/head/day</span> extra feed cost, from ${daysOfData} days of trial data.</p>
+      <p>Program's measured SeaFeed difference today: <span class="tf-case-highlight">+${Math.round(adgUpliftKgPerDay * 1000)} g/day</span> faster growth, <span class="tf-case-highlight">+${fmtMoney2(incrementalCostPerHeadDay)}/head/day</span> extra feed cost, from ${daysOfData} days of program data.</p>
       <div class="tf-case-study-stats">
         <div class="tf-case-stat-card bau">
           <p class="tf-case-stat-label">Business as usual</p>
@@ -803,7 +803,7 @@
           <p class="tf-case-stat-value">${Math.round(daysSea)} days &middot; ${fmtMoney2(copKgSea)}/kg</p>
         </div>
       </div>
-      <p class="tf-case-note">Uses this calculator's default inputs and today's live trial differential. Change any figure below to see it for your own mob.</p>
+      <p class="tf-case-note">Uses this calculator's default inputs and today's live program differential. Change any figure below to see it for your own mob.</p>
     `;
     reportHeightToParent(); // belt-and-braces alongside the MutationObserver, see its comment above
   }
@@ -847,9 +847,9 @@
 
       if (!seafeed || !control || seafeed.cost_per_head_aud == null || control.cost_per_head_aud == null ||
           seafeed.weight_gain_kg_per_head == null || control.weight_gain_kg_per_head == null || !seafeed.days_of_data) {
-        setStatus("Not enough trial data yet", "error");
+        setStatus("Not enough program data yet", "error");
         el("input-panel").style.display = "none";
-        el("case-study-hero").innerHTML = "<p class=\"tf-case-hero-caption\">Not enough trial data yet for a live worked example - check back as the trial progresses.</p>";
+        el("case-study-hero").innerHTML = "<p class=\"tf-case-hero-caption\">Not enough program data yet for a live worked example - check back as the program progresses.</p>";
         el("case-study-toggle").style.display = "none";
         return;
       }
@@ -893,7 +893,7 @@
 
       if (adgUpliftKgPerDay <= 0) {
         el("no-gain-block").style.display = "block";
-        el("no-gain-block").textContent = `The SeaFeed group has not shown faster growth than the control group in trial data so far (difference: ${(adgUpliftKgPerDay).toFixed(3)} kg/day). Methane abatement may still be occurring, but a cost-of-production advantage cannot be shown from this trial yet, you can still explore the numbers below.`;
+        el("no-gain-block").textContent = `The SeaFeed group has not shown faster growth than the control group in program data so far (difference: ${(adgUpliftKgPerDay).toFixed(3)} kg/day). Methane abatement may still be occurring, but a cost-of-production advantage cannot be shown from this program yet, you can still explore the numbers below.`;
       }
 
       // Preliminary framing folded into the one status line instead of a
@@ -911,7 +911,7 @@
         new Date(control.calculation_date).getTime()
       );
       const dataUpdatedText = fmtDateFromEpoch(calcDateMs);
-      setStatus(`Early trial data, ${daysOfData} days, trial-wide · data as at ${dataUpdatedText}`, "pulse preliminary");
+      setStatus(`Early program data, ${daysOfData} days, program-wide · data as at ${dataUpdatedText}`, "pulse preliminary");
 
       renderCaseStudy();
       calc();

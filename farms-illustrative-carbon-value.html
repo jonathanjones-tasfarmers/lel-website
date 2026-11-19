@@ -290,7 +290,7 @@
   <p class="eyebrow">Illustrative value</p>
   <h2>What the abatement to date could be worth</h2>
   <p class="intro">
-    A rough sense of scale, not a revenue figure, this trial hasn't generated or sold any
+    A rough sense of scale, not a revenue figure, this project hasn't generated or sold any
     carbon credits. Shown here against a current market reference price so the modelled
     abatement means something beyond a percentage, with a calculator below to see what it
     could look like for your own herd.
@@ -304,12 +304,12 @@
     <div class="disclosure-details" id="disclosure-details">
       <p class="disclosure-text">
         No carbon credits (ACCUs or otherwise) have been issued, held, or sold in connection with
-        this trial. Generating real, tradeable credits requires formal project registration,
+        this project. Generating real, tradeable credits requires formal project registration,
         an approved methodology, and independent third-party verification under a scheme such as
         Australia's ACCU Scheme, none of which this project has undertaken.
       </p>
       <p class="disclosure-text">
-        The figure below is a purely illustrative calculation: this trial's own modelled CO2‑e
+        The figure below is a purely illustrative calculation: this program's own modelled CO2‑e
         abatement estimate, multiplied by a current market reference price, to show roughly what
         scale of value comparable verified abatement might represent if it were ever formally
         registered. It is not income, revenue, or an asset this project holds.
@@ -346,14 +346,14 @@
       A$42/tonne around compliance deadlines. CO2‑e figures use the AR5 100-year GWP factor (28),
       consistent with
       <a href="https://www.recfit.tas.gov.au/what_is_recfit/climate_change/greenhouse_gas_emissions/tasmanian-greenhouse-gas-emissions-report-2026" target="_blank" rel="noopener">Tasmania's official greenhouse gas reporting</a>.
-      Whether this trial's methodology would qualify for a registered ACCU method has not been assessed.
+      Whether this project's methodology would qualify for a registered ACCU method has not been assessed.
     </p>
   </div>
   <div class="calc-box">
     <p class="calc-title">Estimate it for your own herd</p>
     <p class="calc-intro">
-      Scales the trial's most recent per-head, per-day methane abatement across a herd of your
-      size, as if it were fed SeaFeed at the same intake rate the trial is currently recording.
+      Scales the program's most recent per-head, per-day methane abatement across a herd of your
+      size, as if it were fed SeaFeed at the same intake rate the program is currently recording.
       Not a guarantee: your herd's actual result depends on your cattle, feeding conditions and
       intake.
     </p>
@@ -376,12 +376,12 @@
       <div class="calc-stat-card">
         <p class="calc-stat-label">Estimated SeaFeed cost per year</p>
         <p class="calc-stat-value" id="calc-cost-out"><span class="tf-skel" style="width:84px; height:20px;"></span></p>
-        <p class="calc-stat-sub">Indicative, based on the trial's average cost to date</p>
+        <p class="calc-stat-sub">Indicative, based on the program's average cost to date</p>
       </div>
     </div>
     <a href="#" class="more-info-toggle" id="calc-info-toggle">Information ▾</a>
     <div class="footnote-wrap" id="calc-info-wrap">
-      <p class="calc-note" id="calc-note">Loading live trial data…</p>
+      <p class="calc-note" id="calc-note">Loading live program data…</p>
     </div>
   </div>
 </div>
@@ -486,7 +486,7 @@
       calcRateSub.textContent = '—';
       calcValueOut.textContent = '—';
       calcCostOut.textContent = '—';
-      calcNote.textContent = 'Live trial data unavailable right now, try again shortly.';
+      calcNote.textContent = 'Live program data unavailable right now, try again shortly.';
       calcNote.style.color = '#c98a2e';
       return;
     }
@@ -503,7 +503,7 @@
       ? herdCo2eTonnesPerYear.toFixed(1) + ' t'
       : Math.round(herdCo2eTonnesPerYear * 1000).toLocaleString() + ' kg';
     calcRateSub.textContent = abatementRate != null
-      ? 'At the trial’s current ' + abatementRate.toFixed(1) + '% modelled abatement rate'
+      ? 'At the program’s current ' + abatementRate.toFixed(1) + '% modelled abatement rate'
       : '';
     calcValueOut.textContent = '$' + herdValuePerYear.toLocaleString(undefined, { maximumFractionDigits: 0 });
     // Estimated feeding cost, derived from the trial's average cost-per-head
@@ -517,7 +517,7 @@
       calcCostOut.textContent = '—';
     }
     const intakeNote = intakeGPerHdDay != null ? ' (' + intakeGPerHdDay.toFixed(0) + ' g SeaFeed/head/day)' : '';
-    calcNote.textContent = 'Based on the trial’s most recent per-head daily methane abatement' + intakeNote + '. Illustrative only, see disclosure above.';
+    calcNote.textContent = 'Based on the program’s most recent per-head daily methane abatement' + intakeNote + '. Illustrative only, see disclosure above.';
     calcNote.style.color = '#6b7c8a';
   }
   herdSizeInput.addEventListener('input', updateHerdCalculator);

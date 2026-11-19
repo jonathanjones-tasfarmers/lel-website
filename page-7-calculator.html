@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Economic Feasibility Calculator | Low Emissions Livestock</title>
     <!-- SEO head block added 2026-08-26 — see page-1-home.html's copy of this comment for why the <title>/description differ from the on-page H1. -->
-    <meta name="description" content="Estimate the cost and payback of SeaFeed lick blocks for your own herd, built from real Low Emissions Livestock trial data." />
+    <meta name="description" content="Estimate the cost and payback of SeaFeed lick blocks for your own herd, built from real Low Emissions Livestock program data." />
     <link rel="canonical" href="https://lel-indie520d1a051c0.hub.arcgis.com/pages/4628b8f4a42a439bad1a05447139e865" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Low Emissions Livestock Project" />
     <meta property="og:title" content="Economic Feasibility Calculator | Low Emissions Livestock" />
-    <meta property="og:description" content="Estimate the cost and payback of SeaFeed lick blocks for your own herd, built from real Low Emissions Livestock trial data." />
+    <meta property="og:description" content="Estimate the cost and payback of SeaFeed lick blocks for your own herd, built from real Low Emissions Livestock program data." />
     <meta property="og:url" content="https://lel-indie520d1a051c0.hub.arcgis.com/pages/4628b8f4a42a439bad1a05447139e865" />
     <meta property="og:image" content="https://jonathanjones-tasfarmers.github.io/lel-website/hero-calc.webp" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Economic Feasibility Calculator | Low Emissions Livestock" />
-    <meta name="twitter:description" content="Estimate the cost and payback of SeaFeed lick blocks for your own herd, built from real Low Emissions Livestock trial data." />
+    <meta name="twitter:description" content="Estimate the cost and payback of SeaFeed lick blocks for your own herd, built from real Low Emissions Livestock program data." />
     <meta name="twitter:image" content="https://jonathanjones-tasfarmers.github.io/lel-website/hero-calc.webp" />
     <script type="application/ld+json">
     {
@@ -1034,7 +1034,7 @@
           <span class="accent">bottom line</span>.
         </h1>
         <p class="cp-lede">
-          Built from real trial results, not published averages. Enter your own
+          Built from real program results, not published averages. Enter your own
           herd size, growth rate and costs, the calculator does the rest.
         </p>
       </div>
@@ -1063,9 +1063,9 @@
         </p>
         <p class="cp-body cp-reveal">
           The calculator is built on the measured difference between the
-          lick block and control groups in this trial and can be
+          lick block and control groups in this program and can be
           applied to your own herd size, growth rate and cost of
-          production. As the trial continues and more farms come online
+          production. As the program continues and more farms come online
           and contribute data, the numbers behind the project become more
           reliable. For now, the results should be treated as the current
           best available evidence, not a final answer.
@@ -1125,7 +1125,7 @@
               ></span>
               <span class="tf-step-num">2</span>
             </div>
-            <p class="tf-step-title">We add the trial's measured difference</p>
+            <p class="tf-step-title">We add the program's measured difference</p>
             <p class="tf-step-text">
               Just the lick-block-vs-control gap, applied on top of your numbers.
             </p>
@@ -1252,7 +1252,7 @@
 
         <div class="tf-wrap">
           <p class="tf-explainer-disclaimer">
-            An estimate, not a guarantee - updates automatically as trial data
+            An estimate, not a guarantee - updates automatically as program data
             grows. Not financial advice.
           </p>
 
@@ -1285,11 +1285,11 @@
             <div
               class="tf-status-row"
               id="status-row"
-              title="Updates automatically as more farms come online and the trial runs longer."
+              title="Updates automatically as more farms come online and the program runs longer."
             >
               <span class="tf-live-dot pulse" id="live-dot"></span>
               <span class="tf-status-text" id="status-text"
-                >Loading live trial data…</span
+                >Loading live program data…</span
               >
             </div>
 
@@ -1600,7 +1600,7 @@
             <div class="tf-info-wrap" id="confidence-wrap">
               <p class="tf-footnote" id="confidence-note">
                 This estimate uses your own mob numbers plus the
-                lick-block-vs-control difference measured in the trial so far, not
+                lick-block-vs-control difference measured in the program so far, not
                 a market forecast. It does not account for seasonal price
                 variation, transport, or other on-farm costs. Not financial
                 advice, for a full assessment of your operation, speak with your
@@ -1942,7 +1942,7 @@
               eyebrowText = "At these inputs, the lick block costs more";
               stat1Value = 0;
               stat1Unit = "days sooner";
-              stat1Caption = "no turnoff advantage at current trial figures";
+              stat1Caption = "no turnoff advantage at current program figures";
             }
           } else {
             const d = Math.max(num("durationDays"), 1);
@@ -1976,7 +1976,7 @@
               eyebrowText = `Over ${d} days, the lick block costs more`;
               stat1Value = "0";
               stat1Unit = "kg more";
-              stat1Caption = "no growth advantage at current trial figures";
+              stat1Caption = "no growth advantage at current program figures";
             }
           }
 
@@ -2037,7 +2037,7 @@
 
           el("case-study-detail").innerHTML = `
       <p>A ${demoHerd}-head mob at ${demoCurrent}kg, aiming for ${demoTarget}kg, fed at $${demoCopDayBau.toFixed(2)}/head/day and growing at ${demoAdgBau.toFixed(2)}kg/day under business as usual - this calculator's own default settings below, so you can compare directly.</p>
-      <p>Trial's measured lick block difference today: <span class="tf-case-highlight">+${Math.round(adgUpliftKgPerDay * 1000)} g/day</span> faster growth, <span class="tf-case-highlight">+${fmtMoney2(incrementalCostPerHeadDay)}/head/day</span> extra feed cost, from ${daysOfData} days of trial data.</p>
+      <p>Program's measured lick block difference today: <span class="tf-case-highlight">+${Math.round(adgUpliftKgPerDay * 1000)} g/day</span> faster growth, <span class="tf-case-highlight">+${fmtMoney2(incrementalCostPerHeadDay)}/head/day</span> extra feed cost, from ${daysOfData} days of program data.</p>
       <div class="tf-case-study-stats">
         <div class="tf-case-stat-card bau">
           <p class="tf-case-stat-label">Business as usual</p>
@@ -2048,7 +2048,7 @@
           <p class="tf-case-stat-value">${Math.round(daysSea)} days &middot; ${fmtMoney2(copKgSea)}/kg</p>
         </div>
       </div>
-      <p class="tf-case-note">Uses this calculator's default inputs and today's live trial differential. Change any figure below to see it for your own mob.</p>
+      <p class="tf-case-note">Uses this calculator's default inputs and today's live program differential. Change any figure below to see it for your own mob.</p>
     `;
         }
 
@@ -2162,10 +2162,10 @@
               control.weight_gain_kg_per_head == null ||
               !seafeed.days_of_data
             ) {
-              setStatus("Not enough trial data yet", "error");
+              setStatus("Not enough program data yet", "error");
               el("input-panel").style.display = "none";
               el("case-study-hero").innerHTML =
-                '<p class="tf-case-hero-caption">Not enough trial data yet for a live worked example - check back as the trial progresses.</p>';
+                '<p class="tf-case-hero-caption">Not enough program data yet for a live worked example - check back as the program progresses.</p>';
               el("case-study-toggle").style.display = "none";
               return;
             }
@@ -2225,7 +2225,7 @@
             if (adgUpliftKgPerDay <= 0) {
               el("no-gain-block").style.display = "block";
               el("no-gain-block").textContent =
-                `The lick block group has not shown faster growth than the control group in trial data so far (difference: ${adgUpliftKgPerDay.toFixed(3)} kg/day). Methane abatement may still be occurring, but a cost-of-production advantage cannot be shown from this trial yet, you can still explore the numbers below.`;
+                `The lick block group has not shown faster growth than the control group in program data so far (difference: ${adgUpliftKgPerDay.toFixed(3)} kg/day). Methane abatement may still be occurring, but a cost-of-production advantage cannot be shown from this program yet, you can still explore the numbers below.`;
             }
 
             const calcDateMs = Math.min(
@@ -2234,7 +2234,7 @@
             );
             const dataUpdatedText = fmtDateFromEpoch(calcDateMs);
             setStatus(
-              `Early trial data, ${daysOfData} days, trial-wide · data as at ${dataUpdatedText}`,
+              `Early program data, ${daysOfData} days, program-wide · data as at ${dataUpdatedText}`,
               "pulse preliminary",
             );
 
@@ -2290,7 +2290,7 @@
             banner.className = "tf-field-note";
             banner.style.marginBottom = "14px";
             banner.textContent =
-              `Pre-filled with ${farm}'s own Control-group trial data as the starting point — change any figure below to explore other scenarios.`;
+              `Pre-filled with ${farm}'s own Control-group program data as the starting point — change any figure below to explore other scenarios.`;
             el("input-panel").insertBefore(banner, el("input-panel").firstChild);
           }
 
