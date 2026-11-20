@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Low Emissions Livestock: new events</title>
+  <subtitle>Events that are open for registration. Used to email people who asked to be notified.</subtitle>
+  <id>https://jonathanjones-tasfarmers.github.io/lel-website/events-feed.xml</id>
+  <link rel="self" href="https://jonathanjones-tasfarmers.github.io/lel-website/events-feed.xml"/>
+  <link rel="alternate" href="https://lel-indie520d1a051c0.hub.arcgis.com/pages/f81fbf4601c441d988b183c84bab6214"/>
+  <updated>2026-11-05T00:41:42Z</updated>
+  <entry>
+    <id>urn:lel-event:14f4cf00-ac29-40dc-b55d-463d17ec8a47</id>
+    <title>AgFest</title>
+    <link rel="alternate" href="https://quercuspark.com.au/agfest-field-days-2027/"/>
+    <published>2026-11-05T00:41:42Z</published>
+    <updated>2026-11-05T00:41:42Z</updated>
+    <category term="Industry event"/>
+    <summary type="text">Thursday 6 May 2027 to Saturday 8 May 2027, 8:00 am - 4:00 pm | 415 Oaks Rd, Carrick TAS 7291 | Paid event. Join Tasmania’s rural community for a 3 day celebration of our agriculture, innovation, and rural life.</summary>
+    <content type="html">&lt;p&gt;&lt;b&gt;Industry event&lt;/b&gt;&lt;/p&gt;&lt;p&gt;Join Tasmania’s rural community for a 3 day celebration of our agriculture, innovation, and rural life.&lt;/p&gt;&lt;table&gt;&lt;tr&gt;&lt;td style="padding:4px 12px 4px 0;color:#5b6b78"&gt;&lt;b&gt;When&lt;/b&gt;&lt;/td&gt;&lt;td style="padding:4px 0"&gt;Thursday 6 May 2027 to Saturday 8 May 2027, 8:00 am - 4:00 pm&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="padding:4px 12px 4px 0;color:#5b6b78"&gt;&lt;b&gt;Where&lt;/b&gt;&lt;/td&gt;&lt;td style="padding:4px 0"&gt;415 Oaks Rd, Carrick TAS 7291 (30 min from Launceston)&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="padding:4px 12px 4px 0;color:#5b6b78"&gt;&lt;b&gt;Cost&lt;/b&gt;&lt;/td&gt;&lt;td style="padding:4px 0"&gt;Paid event&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="padding:4px 12px 4px 0;color:#5b6b78"&gt;&lt;b&gt;Who it's for&lt;/b&gt;&lt;/td&gt;&lt;td style="padding:4px 0"&gt;Everyone&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;p&gt;&lt;a href="https://quercuspark.com.au/agfest-field-days-2027/"&gt;Register for this event&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+</feed>
