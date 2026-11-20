@@ -1,0 +1,30 @@
+name: Events feed
+
+# Builds events-feed.xml from the public LEL_Events_View so a Power Automate RSS trigger can email
+# people on the registration list when a new event is ready to announce. No secrets needed: it only
+# reads the public view and commits its own two output files.
+on:
+  schedule:
+    - cron: "17 */3 * * *"     # every 3 hours
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: events-feed
+  cancel-in-progress: false
+
+jobs:
+  feed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the feed
+        run: python3 scripts/events_feed.py
+      - name: Commit if it changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add events-feed.xml events-feed-state.json
+          if git diff --cached --quiet; then echo "No change."; else git commit -m "Events feed: update"; git push; fi
